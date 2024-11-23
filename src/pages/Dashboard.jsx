@@ -1,26 +1,35 @@
 import React from 'react'
-import { Box, Heading, Button, VStack, Text } from '@chakra-ui/react'
-import { useAuth } from '../contexts/AuthContext'
-import { useNavigate } from 'react-router-dom'
+import {
+  Box,
+  Heading,
+  SimpleGrid,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+} from '@chakra-ui/react'
 
-function Dashboard() {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
-
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
-
+const Dashboard = () => {
   return (
     <Box p={8}>
-      <VStack spacing={6} align="stretch">
-        <Heading>Dashboard</Heading>
-        <Text fontSize="lg">Bem-vindo, {user?.email}</Text>
-        <Button onClick={handleLogout} colorScheme="red" size="md" w="fit-content">
-          Sair
-        </Button>
-      </VStack>
+      <Heading mb={6}>Dashboard</Heading>
+      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
+        <Stat p={4} shadow="md" border="1px" borderColor="gray.200" borderRadius="md">
+          <StatLabel>Vendas Hoje</StatLabel>
+          <StatNumber>R$ 5.670</StatNumber>
+          <StatHelpText>23% maior que ontem</StatHelpText>
+        </Stat>
+        <Stat p={4} shadow="md" border="1px" borderColor="gray.200" borderRadius="md">
+          <StatLabel>Clientes Ativos</StatLabel>
+          <StatNumber>45</StatNumber>
+          <StatHelpText>5 novos esta semana</StatHelpText>
+        </Stat>
+        <Stat p={4} shadow="md" border="1px" borderColor="gray.200" borderRadius="md">
+          <StatLabel>Produtos em Estoque</StatLabel>
+          <StatNumber>234</StatNumber>
+          <StatHelpText>12 abaixo do mínimo</StatHelpText>
+        </Stat>
+      </SimpleGrid>
     </Box>
   )
 }

@@ -1,18 +1,13 @@
 import React from 'react'
-import { createRoot } from 'react-dom/client'
-import { ChakraProvider, ColorModeScript } from '@chakra-ui/react'
+import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { ChakraProvider } from '@chakra-ui/react'
 import App from './App'
-import '@fontsource/inter'
 
-const container = document.getElementById('root')
-const root = createRoot(container)
-
-root.render(
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <ChakraProvider>
-        <ColorModeScript initialColorMode="light" />
         <App />
       </ChakraProvider>
     </BrowserRouter>

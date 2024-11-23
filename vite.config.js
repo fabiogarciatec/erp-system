@@ -38,10 +38,10 @@ export default defineConfig({
     }),
   ],
   server: {
-    port: 3000,
+    port: 3002,
   },
   preview: {
-    port: 3000,
+    port: 3002,
   },
   build: {
     outDir: 'dist',

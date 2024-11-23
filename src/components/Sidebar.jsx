@@ -1,100 +1,87 @@
 import React from 'react'
-import { Box, VStack, Icon, Text, Link as ChakraLink, Flex } from '@chakra-ui/react'
-import { Link as RouterLink } from 'react-router-dom'
-import {
-  FiHome,
-  FiUsers,
-  FiBox,
-  FiDollarSign,
-  FiShoppingBag,
-  FiTruck,
-  FiSettings,
-  FiBarChart2,
-  FiFileText,
-  FiGrid,
-} from 'react-icons/fi'
+import { Box, VStack, Text, Link, Flex, Icon, Button } from '@chakra-ui/react'
+import { Link as RouterLink, useNavigate } from 'react-router-dom'
+import { FiHome, FiUsers, FiBox, FiTruck, FiDollarSign, FiTool, FiLogOut } from 'react-icons/fi'
+import { useAuth } from '../contexts/AuthContext'
 
-const NavItem = ({ icon, children, to }) => {
+const MenuItem = ({ icon, children, to }) => {
   return (
-    <ChakraLink
+    <Link
       as={RouterLink}
       to={to}
-      style={{ textDecoration: 'none' }}
-      _focus={{ boxShadow: 'none' }}
+      w="full"
+      _hover={{ textDecoration: 'none', bg: 'gray.100' }}
+      p={3}
+      borderRadius="md"
     >
-      <Flex
-        align="center"
-        p="4"
-        mx="4"
-        borderRadius="lg"
-        role="group"
-        cursor="pointer"
-        _hover={{
-          bg: 'cyan.400',
-          color: 'white',
-        }}
-      >
-        <Icon
-          mr="4"
-          fontSize="16"
-          as={icon}
-          _groupHover={{
-            color: 'white',
-          }}
-        />
-        <Text fontSize="1.1rem">{children}</Text>
+      <Flex align="center">
+        <Icon as={icon} boxSize={5} mr={3} />
+        <Text fontSize="md">{children}</Text>
       </Flex>
-    </ChakraLink>
+    </Link>
   )
 }
 
 const Sidebar = () => {
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
   return (
     <Box
       as="nav"
       pos="fixed"
-      top="0"
       left="0"
+      w="60"
+      top="0"
       h="100vh"
-      pb="10"
-      overflowX="hidden"
-      overflowY="auto"
       bg="white"
       borderRight="1px"
       borderRightColor="gray.200"
-      w="60"
+      px={4}
     >
-      <VStack spacing={1} align="stretch" mt="8">
-        <NavItem icon={FiHome} to="/">
-          Dashboard
-        </NavItem>
-        <NavItem icon={FiUsers} to="/users">
-          Usuários
-        </NavItem>
-        <NavItem icon={FiGrid} to="/companies">
-          Empresas
-        </NavItem>
-        <NavItem icon={FiBox} to="/products">
-          Produtos
-        </NavItem>
-        <NavItem icon={FiShoppingBag} to="/services">
-          Serviços
-        </NavItem>
-        <NavItem icon={FiDollarSign} to="/sales">
-          Vendas
-        </NavItem>
-        <NavItem icon={FiTruck} to="/suppliers">
-          Fornecedores
-        </NavItem>
-        <NavItem icon={FiBarChart2} to="/reports">
-          Relatórios
-        </NavItem>
-        <NavItem icon={FiFileText} to="/invoices">
-          Notas Fiscais
-        </NavItem>
-        <NavItem icon={FiSettings} to="/settings">
-          Configurações
-        </NavItem>
+      <VStack spacing={6} align="stretch" py={8}>
+        <Box>
+          <Text fontSize="xl" fontWeight="bold" mb={8} px={3}>
+            ERP System
+          </Text>
+          <VStack spacing={2} align="stretch">
+            <MenuItem icon={FiHome} to="/">
+              Dashboard
+            </MenuItem>
+            <MenuItem icon={FiUsers} to="/users">
+              Usuários
+            </MenuItem>
+            <MenuItem icon={FiBox} to="/products">
+              Produtos
+            </MenuItem>
+            <MenuItem icon={FiTruck} to="/suppliers">
+              Fornecedores
+            </MenuItem>
+            <MenuItem icon={FiDollarSign} to="/sales">
+              Vendas
+            </MenuItem>
+            <MenuItem icon={FiTool} to="/services">
+              Serviços
+            </MenuItem>
+          </VStack>
+        </Box>
+        <Box mt="auto">
+          <Button
+            w="full"
+            variant="ghost"
+            leftIcon={<FiLogOut />}
+            onClick={handleLogout}
+            justifyContent="flex-start"
+            px={3}
+          >
+            Sair
+          </Button>
+        </Box>
       </VStack>
     </Box>
   )
