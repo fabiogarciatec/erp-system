@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React from 'react'
 import {
   Box,
   Button,
@@ -8,54 +8,24 @@ import {
   VStack,
   Heading,
   Text,
-  useToast,
-  Container,
-  InputGroup,
-  InputRightElement,
-  IconButton,
-  Divider,
-  HStack,
   Link,
+  useToast,
 } from '@chakra-ui/react'
-import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom'
-import { MdVisibility, MdVisibilityOff, MdBusiness } from 'react-icons/md'
-import { useAuth } from '../contexts/AuthContext'
+import { Link as RouterLink } from 'react-router-dom'
 
-export default function Login() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const { signIn } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
+function Login() {
   const toast = useToast()
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
-    setLoading(true)
-
-    try {
-      await signIn(email, password)
-      const from = location.state?.from?.pathname || '/'
-      navigate(from, { replace: true })
-      toast({
-        title: 'Login realizado com sucesso',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      })
-    } catch (error) {
-      toast({
-        title: 'Erro ao fazer login',
-        description: error.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-    } finally {
-      setLoading(false)
-    }
+    // Implementar lógica de login aqui
+    toast({
+      title: 'Login em desenvolvimento',
+      description: 'A funcionalidade de login será implementada em breve.',
+      status: 'info',
+      duration: 3000,
+      isClosable: true,
+    })
   }
 
   return (
@@ -65,87 +35,55 @@ export default function Login() {
       alignItems="center"
       justifyContent="center"
       bg="gray.50"
-      py={10}
     >
-      <Container maxW="md">
-        <VStack spacing={8}>
-          <Box textAlign="center">
-            <Heading size="lg" mb={2}>Bem-vindo ao ERP</Heading>
-            <Text color="gray.600">Faça login para continuar</Text>
-          </Box>
-
-          <Box
-            bg="white"
-            p={8}
-            borderRadius="lg"
-            boxShadow="lg"
-            w="100%"
-          >
-            <VStack as="form" spacing={4} onSubmit={handleSubmit}>
+      <Box
+        p={8}
+        maxWidth="400px"
+        borderWidth={1}
+        borderRadius={8}
+        boxShadow="lg"
+        bg="white"
+      >
+        <VStack spacing={4} align="stretch">
+          <Heading textAlign="center">ERP System</Heading>
+          <Text textAlign="center" color="gray.600">
+            Faça login para acessar o sistema
+          </Text>
+          <form onSubmit={handleSubmit}>
+            <VStack spacing={4}>
               <FormControl isRequired>
                 <FormLabel>Email</FormLabel>
                 <Input
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Seu email"
+                  placeholder="seu@email.com"
                 />
               </FormControl>
-
               <FormControl isRequired>
                 <FormLabel>Senha</FormLabel>
-                <InputGroup>
-                  <Input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Sua senha"
-                  />
-                  <InputRightElement>
-                    <IconButton
-                      aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                      icon={showPassword ? <MdVisibilityOff /> : <MdVisibility />}
-                      variant="ghost"
-                      onClick={() => setShowPassword(!showPassword)}
-                    />
-                  </InputRightElement>
-                </InputGroup>
+                <Input
+                  type="password"
+                  placeholder="********"
+                />
               </FormControl>
-
               <Button
                 type="submit"
                 colorScheme="blue"
-                size="lg"
-                w="100%"
-                isLoading={loading}
+                width="full"
               >
                 Entrar
               </Button>
             </VStack>
-
-            <VStack mt={6} spacing={4}>
-              <Divider />
-              <Text color="gray.600">Não tem uma empresa cadastrada?</Text>
-              <Button
-                as={RouterLink}
-                to="/register"
-                w="100%"
-                variant="outline"
-                colorScheme="blue"
-                leftIcon={<MdBusiness />}
-              >
-                Cadastrar Minha Empresa
-              </Button>
-            </VStack>
-          </Box>
-
-          <HStack spacing={2} color="gray.600" fontSize="sm">
-            <Link href="#" color="blue.500">Termos de Uso</Link>
-            <Text>•</Text>
-            <Link href="#" color="blue.500">Política de Privacidade</Link>
-          </HStack>
+          </form>
+          <Text textAlign="center">
+            Não tem uma conta?{' '}
+            <Link as={RouterLink} to="/register" color="blue.500">
+              Registre-se
+            </Link>
+          </Text>
         </VStack>
-      </Container>
+      </Box>
     </Box>
   )
 }
+
+export default Login

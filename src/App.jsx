@@ -1,9 +1,11 @@
 import React from 'react'
-import { useState } from 'react'
-import { ChakraProvider, Box } from '@chakra-ui/react'
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import Sidebar from './components/Sidebar'
-import MainLayout from './layouts/MainLayout'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { Box } from '@chakra-ui/react'
+import { ChakraProvider } from '@chakra-ui/react'
+import { BrowserRouter as Router } from 'react-router-dom'
+import { AuthProvider } from './contexts/AuthContext'
+
+// Pages
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import CompanyRegistration from './pages/CompanyRegistration'
@@ -14,7 +16,10 @@ import ServiceList from './pages/services/ServiceList'
 import SalesList from './pages/sales/SalesList'
 import UserList from './pages/users/UserList'
 import MarketingList from './pages/marketing/MarketingList'
-import { AuthProvider, useAuth } from './contexts/AuthContext'
+
+// Layout
+import MainLayout from './layouts/MainLayout'
+import Sidebar from './components/Sidebar'
 
 const PrivateRoute = ({ children }) => {
   const { user } = useAuth()
@@ -38,53 +43,33 @@ const PublicRoute = ({ children }) => {
   return children
 }
 
-const AppContent = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const location = useLocation()
-  const isPublicRoute = ['/login', '/register'].includes(location.pathname)
-
-  const handleSidebarResize = (collapsed) => {
-    setSidebarCollapsed(collapsed)
-  }
-
-  return (
-    <Box minH="100vh">
-      {!isPublicRoute && (
-        <Sidebar onResize={handleSidebarResize} />
-      )}
-      <Box
-        ml={isPublicRoute ? 0 : (sidebarCollapsed ? '60px' : '240px')}
-        transition="margin-left 0.2s ease"
-        p={isPublicRoute ? 0 : 4}
-      >
-        <Routes>
-          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-          <Route path="/register" element={<PublicRoute><CompanyRegistration /></PublicRoute>} />
-          
-          {/* Protected Routes */}
-          <Route path="/" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
-            <Route index element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-            <Route path="companies" element={<PrivateRoute><CompaniesList /></PrivateRoute>} />
-            <Route path="customers" element={<PrivateRoute><CustomerList /></PrivateRoute>} />
-            <Route path="products" element={<PrivateRoute><ProductList /></PrivateRoute>} />
-            <Route path="services" element={<PrivateRoute><ServiceList /></PrivateRoute>} />
-            <Route path="sales" element={<PrivateRoute><SalesList /></PrivateRoute>} />
-            <Route path="users" element={<PrivateRoute><UserList /></PrivateRoute>} />
-            <Route path="marketing" element={<PrivateRoute><MarketingList /></PrivateRoute>} />
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Box>
-    </Box>
-  )
-}
-
 function App() {
   return (
     <ChakraProvider>
       <Router>
         <AuthProvider>
-          <AppContent />
+          <Box minH="100vh">
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+              <Route path="/register" element={<PublicRoute><CompanyRegistration /></PublicRoute>} />
+              
+              {/* Protected Routes */}
+              <Route element={<PrivateRoute><MainLayout /></PrivateRoute>}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/companies" element={<CompaniesList />} />
+                <Route path="/customers" element={<CustomerList />} />
+                <Route path="/products" element={<ProductList />} />
+                <Route path="/services" element={<ServiceList />} />
+                <Route path="/sales" element={<SalesList />} />
+                <Route path="/users" element={<UserList />} />
+                <Route path="/marketing" element={<MarketingList />} />
+              </Route>
+
+              {/* Fallback Route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Box>
         </AuthProvider>
       </Router>
     </ChakraProvider>
