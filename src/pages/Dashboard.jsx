@@ -1,39 +1,28 @@
-import { Box, SimpleGrid, Stat, StatLabel, StatNumber, StatHelpText, Card, CardBody } from '@chakra-ui/react'
+import React from 'react'
+import { Box, Heading, Button, VStack, Text } from '@chakra-ui/react'
+import { useAuth } from '../contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
-export default function Dashboard() {
+function Dashboard() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
   return (
-    <Box>
-      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
-        <Card>
-          <CardBody>
-            <Stat>
-              <StatLabel>Vendas Hoje</StatLabel>
-              <StatNumber>R$ 0,00</StatNumber>
-              <StatHelpText>Atualizado agora</StatHelpText>
-            </Stat>
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardBody>
-            <Stat>
-              <StatLabel>Clientes</StatLabel>
-              <StatNumber>0</StatNumber>
-              <StatHelpText>Total de clientes</StatHelpText>
-            </Stat>
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardBody>
-            <Stat>
-              <StatLabel>Produtos</StatLabel>
-              <StatNumber>0</StatNumber>
-              <StatHelpText>Em estoque</StatHelpText>
-            </Stat>
-          </CardBody>
-        </Card>
-      </SimpleGrid>
+    <Box p={8}>
+      <VStack spacing={6} align="stretch">
+        <Heading>Dashboard</Heading>
+        <Text fontSize="lg">Bem-vindo, {user?.email}</Text>
+        <Button onClick={handleLogout} colorScheme="red" size="md" w="fit-content">
+          Sair
+        </Button>
+      </VStack>
     </Box>
   )
 }
+
+export default Dashboard
