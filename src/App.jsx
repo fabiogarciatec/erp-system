@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
-import Sidebar from './components/Sidebar'
+import MainLayout from './layouts/MainLayout'
 import UserList from './pages/users/UserList'
 
 // Componente de loading
@@ -20,16 +20,6 @@ const LoadingScreen = () => (
   </Center>
 )
 
-// Componente de layout com sidebar
-const Layout = ({ children }) => (
-  <div style={{ display: 'flex' }}>
-    <Sidebar />
-    <main style={{ flexGrow: 1, marginLeft: '16rem', padding: '2rem' }}>
-      {children}
-    </main>
-  </div>
-)
-
 // Componente de rota protegida
 const ProtectedRoute = ({ children }) => {
   const { user, loading, initialized } = useAuth()
@@ -43,7 +33,7 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" replace />
   }
 
-  return <Layout>{children}</Layout>
+  return <MainLayout>{children}</MainLayout>
 }
 
 // Componente de rota pública
@@ -77,23 +67,26 @@ const AppRoutes = () => {
       />
       
       {/* Rotas protegidas */}
-      <Route 
-        path="/" 
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } 
-      />
-
-      <Route 
-        path="/users" 
-        element={
-          <ProtectedRoute>
-            <UserList />
-          </ProtectedRoute>
-        } 
-      />
+      <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      
+      {/* Cadastros */}
+      <Route path="/cadastros/clientes" element={<ProtectedRoute><UserList /></ProtectedRoute>} />
+      <Route path="/cadastros/produtos" element={<ProtectedRoute><div>Produtos</div></ProtectedRoute>} />
+      <Route path="/cadastros/servicos" element={<ProtectedRoute><div>Serviços</div></ProtectedRoute>} />
+      
+      {/* Vendas */}
+      <Route path="/vendas/produtos" element={<ProtectedRoute><div>Vendas de Produtos</div></ProtectedRoute>} />
+      <Route path="/vendas/ordem-servico" element={<ProtectedRoute><div>Ordem de Serviço</div></ProtectedRoute>} />
+      <Route path="/vendas/fretes" element={<ProtectedRoute><div>Fretes</div></ProtectedRoute>} />
+      
+      {/* Marketing */}
+      <Route path="/marketing/campanhas" element={<ProtectedRoute><div>Campanhas</div></ProtectedRoute>} />
+      <Route path="/marketing/contatos" element={<ProtectedRoute><div>Contatos</div></ProtectedRoute>} />
+      <Route path="/marketing/disparos" element={<ProtectedRoute><div>Disparos em Massa</div></ProtectedRoute>} />
+      
+      {/* Configurações */}
+      <Route path="/configuracoes/empresa" element={<ProtectedRoute><div>Empresa</div></ProtectedRoute>} />
+      <Route path="/configuracoes/usuarios" element={<ProtectedRoute><UserList /></ProtectedRoute>} />
       
       {/* Redireciona qualquer outra rota para a home */}
       <Route path="*" element={<Navigate to="/" replace />} />
@@ -102,14 +95,14 @@ const AppRoutes = () => {
 }
 
 // Componente principal
-const App = () => {
+function App() {
   return (
     <ChakraProvider>
-      <Router>
-        <AuthProvider>
+      <AuthProvider>
+        <Router>
           <AppRoutes />
-        </AuthProvider>
-      </Router>
+        </Router>
+      </AuthProvider>
     </ChakraProvider>
   )
 }
