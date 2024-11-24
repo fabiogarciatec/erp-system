@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Sidebar from './components/Sidebar'
+import UserList from './pages/users/UserList'
 
 // Componente de loading
 const LoadingScreen = () => (
@@ -75,12 +76,21 @@ const AppRoutes = () => {
         } 
       />
       
-      {/* Rota protegida */}
+      {/* Rotas protegidas */}
       <Route 
         path="/" 
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+
+      <Route 
+        path="/users" 
+        element={
+          <ProtectedRoute>
+            <UserList />
           </ProtectedRoute>
         } 
       />

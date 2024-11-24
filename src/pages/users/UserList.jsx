@@ -10,23 +10,31 @@ import {
   ModalHeader,
   ModalBody,
   ModalCloseButton,
-  FormControl,
-  FormLabel,
-  Input,
-  VStack,
-  Select,
-  HStack,
-  IconButton,
   Badge,
+  Text,
+  HStack,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  Card,
+  CardHeader,
+  CardBody,
+  Heading,
+  Flex,
+  Spacer,
 } from '@chakra-ui/react'
-import { MdAdd, MdEdit, MdDelete } from 'react-icons/md'
+import { MdAdd, MdSearch } from 'react-icons/md'
 import { supabase } from '../../services/supabase'
 import DataTable from '../../components/DataTable'
+import UserForm from './components/UserForm'
+import UserActions from './components/UserActions'
 
 export default function UserList() {
   const [users, setUsers] = useState([])
+  const [filteredUsers, setFilteredUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedUser, setSelectedUser] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
 
@@ -41,6 +49,21 @@ export default function UserList() {
     fetchUsers()
   }, [])
 
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredUsers(users)
+    } else {
+      const query = searchQuery.toLowerCase()
+      const filtered = users.filter(
+        user =>
+          user.full_name?.toLowerCase().includes(query) ||
+          user.email?.toLowerCase().includes(query) ||
+          user.role?.toLowerCase().includes(query)
+      )
+      setFilteredUsers(filtered)
+    }
+  }, [searchQuery, users])
+
   const fetchUsers = async () => {
     try {
       setLoading(true)
@@ -52,6 +75,7 @@ export default function UserList() {
       if (error) throw error
 
       setUsers(data)
+      setFilteredUsers(data)
     } catch (error) {
       console.error('Erro ao buscar usuários:', error)
       toast({
@@ -80,7 +104,7 @@ export default function UserList() {
       email: user.email || '',
       full_name: user.full_name || '',
       role: user.role || 'user',
-      password: '', // Senha vazia para edição
+      password: '',
     })
     onOpen()
   }
@@ -110,6 +134,33 @@ export default function UserList() {
       console.error('Erro ao excluir usuário:', error)
       toast({
         title: 'Erro ao excluir usuário',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+    }
+  }
+
+  const handleResetPassword = async (user) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+
+      if (error) throw error
+
+      toast({
+        title: 'Email de redefinição de senha enviado',
+        description: 'O usuário receberá instruções por email',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      })
+    } catch (error) {
+      console.error('Erro ao resetar senha:', error)
+      toast({
+        title: 'Erro ao resetar senha',
         description: error.message,
         status: 'error',
         duration: 5000,
@@ -215,7 +266,11 @@ export default function UserList() {
               : 'blue'
           }
         >
-          {value}
+          {value === 'admin'
+            ? 'Administrador'
+            : value === 'manager'
+            ? 'Gerente'
+            : 'Usuário'}
         </Badge>
       ),
     },
@@ -223,116 +278,79 @@ export default function UserList() {
       header: 'Ações',
       accessor: 'actions',
       cell: (_, row) => (
-        <HStack spacing={2}>
-          <IconButton
-            icon={<MdEdit />}
-            aria-label="Editar"
-            size="sm"
-            onClick={() => handleEdit(row)}
-          />
-          <IconButton
-            icon={<MdDelete />}
-            aria-label="Excluir"
-            size="sm"
-            colorScheme="red"
-            onClick={() => handleDelete(row)}
-          />
-        </HStack>
+        <UserActions
+          user={row}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onResetPassword={handleResetPassword}
+        />
       ),
     },
   ]
 
   return (
-    <Box>
-      <Box mb={4}>
-        <Button
-          leftIcon={<MdAdd />}
-          colorScheme="blue"
-          onClick={() => {
-            setSelectedUser(null)
-            setFormData({
-              email: '',
-              full_name: '',
-              role: 'user',
-              password: '',
-            })
-            onOpen()
-          }}
-        >
-          Novo Usuário
-        </Button>
-      </Box>
+    <Card>
+      <CardHeader>
+        <Flex alignItems="center">
+          <Heading size="md">Usuários</Heading>
+          <Spacer />
+          <Button
+            leftIcon={<MdAdd />}
+            colorScheme="blue"
+            onClick={() => {
+              setSelectedUser(null)
+              setFormData({
+                email: '',
+                full_name: '',
+                role: 'user',
+                password: '',
+              })
+              onOpen()
+            }}
+          >
+            Novo Usuário
+          </Button>
+        </Flex>
+      </CardHeader>
 
-      <DataTable
-        columns={columns}
-        data={users}
-        isLoading={loading}
-      />
+      <CardBody>
+        <Box mb={4}>
+          <InputGroup>
+            <InputLeftElement pointerEvents="none">
+              <MdSearch />
+            </InputLeftElement>
+            <Input
+              placeholder="Buscar usuários..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </InputGroup>
+        </Box>
 
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            {selectedUser ? 'Editar Usuário' : 'Novo Usuário'}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <form onSubmit={handleSubmit}>
-              <VStack spacing={4}>
-                <FormControl isRequired>
-                  <FormLabel>Nome Completo</FormLabel>
-                  <Input
-                    name="full_name"
-                    value={formData.full_name}
-                    onChange={handleInputChange}
-                  />
-                </FormControl>
+        <DataTable
+          columns={columns}
+          data={filteredUsers}
+          isLoading={loading}
+        />
 
-                {!selectedUser && (
-                  <FormControl isRequired>
-                    <FormLabel>Email</FormLabel>
-                    <Input
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                    />
-                  </FormControl>
-                )}
-
-                {!selectedUser && (
-                  <FormControl isRequired>
-                    <FormLabel>Senha</FormLabel>
-                    <Input
-                      name="password"
-                      type="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                    />
-                  </FormControl>
-                )}
-
-                <FormControl>
-                  <FormLabel>Função</FormLabel>
-                  <Select
-                    name="role"
-                    value={formData.role}
-                    onChange={handleInputChange}
-                  >
-                    <option value="user">Usuário</option>
-                    <option value="manager">Gerente</option>
-                    <option value="admin">Administrador</option>
-                  </Select>
-                </FormControl>
-
-                <Button type="submit" colorScheme="blue" width="100%">
-                  {selectedUser ? 'Atualizar' : 'Criar'}
-                </Button>
-              </VStack>
-            </form>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-    </Box>
+        <Modal isOpen={isOpen} onClose={onClose}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
+              {selectedUser ? 'Editar Usuário' : 'Novo Usuário'}
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <UserForm
+                formData={formData}
+                handleInputChange={handleInputChange}
+                handleSubmit={handleSubmit}
+                isEdit={!!selectedUser}
+              />
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+      </CardBody>
+    </Card>
   )
 }

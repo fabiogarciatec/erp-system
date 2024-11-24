@@ -192,6 +192,14 @@ const Sidebar = () => {
           </Text>
 
           <MenuItem
+            icon={FiUsers}
+            to="/users"
+            isActive={isActive('/users')}
+          >
+            Usuários
+          </MenuItem>
+
+          <MenuItem
             icon={FiGrid}
             hasSubmenu
             isOpen={activeSubmenu === 'companies'}
