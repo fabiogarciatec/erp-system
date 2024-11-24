@@ -1,5 +1,5 @@
-import { Box, Flex, VStack, Icon, Text, Link as ChakraLink, Button, Spacer } from '@chakra-ui/react'
-import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { Box, Flex, VStack, Icon, Text, Link as ChakraLink, Button, Spacer, Collapse } from '@chakra-ui/react'
+import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { 
   MdDashboard, 
   MdPeople, 
@@ -10,9 +10,12 @@ import {
   MdInventory,
   MdMiscellaneousServices,
   MdBusiness,
-  MdTune
+  MdTune,
+  MdKeyboardArrowDown,
+  MdKeyboardArrowRight
 } from 'react-icons/md'
 import { useAuth } from '../contexts/AuthContext'
+import { useState } from 'react'
 
 const menuItems = [
   { 
@@ -76,30 +79,76 @@ const menuItems = [
 ]
 
 const MenuItem = ({ icon, text, path, subItems }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const location = useLocation()
+  const isActive = location.pathname === path || 
+                  (subItems && subItems.some(item => location.pathname === item.path))
+
+  const handleClick = (e) => {
+    if (subItems) {
+      e.preventDefault()
+      setIsOpen(!isOpen)
+    }
+  }
+
   return (
-    <VStack align="start" w="full">
-      <ChakraLink as={Link} to={path} w="full" _hover={{ bg: 'gray.100' }} p={2} borderRadius="md">
-        <Flex align="center">
-          <Icon as={icon} boxSize={5} />
-          <Text ml={2}>{text}</Text>
+    <VStack align="start" w="full" spacing={1}>
+      <ChakraLink
+        as={Link}
+        to={path}
+        w="full"
+        p={2}
+        borderRadius="md"
+        onClick={handleClick}
+        bg={isActive ? 'blue.50' : 'transparent'}
+        color={isActive ? 'blue.600' : 'inherit'}
+        _hover={{
+          bg: isActive ? 'blue.100' : 'gray.100',
+          color: isActive ? 'blue.700' : 'inherit'
+        }}
+      >
+        <Flex align="center" justify="space-between">
+          <Flex align="center">
+            <Icon as={icon} boxSize={5} />
+            <Text ml={2}>{text}</Text>
+          </Flex>
+          {subItems && (
+            <Icon 
+              as={isOpen ? MdKeyboardArrowDown : MdKeyboardArrowRight} 
+              boxSize={5}
+              transition="transform 0.2s"
+              transform={isOpen ? 'rotate(0deg)' : 'rotate(0deg)'}
+            />
+          )}
         </Flex>
       </ChakraLink>
+      
       {subItems && (
-        <VStack align="start" pl={6} w="full">
-          {subItems.map((item) => (
-            <ChakraLink
-              key={item.path}
-              as={Link}
-              to={item.path}
-              w="full"
-              _hover={{ bg: 'gray.100' }}
-              p={2}
-              borderRadius="md"
-            >
-              {item.text}
-            </ChakraLink>
-          ))}
-        </VStack>
+        <Collapse in={isOpen} animateOpacity>
+          <VStack align="start" pl={6} w="full" spacing={1}>
+            {subItems.map((item) => {
+              const isSubItemActive = location.pathname === item.path
+              return (
+                <ChakraLink
+                  key={item.path}
+                  as={Link}
+                  to={item.path}
+                  w="full"
+                  p={2}
+                  borderRadius="md"
+                  bg={isSubItemActive ? 'blue.50' : 'transparent'}
+                  color={isSubItemActive ? 'blue.600' : 'inherit'}
+                  _hover={{
+                    bg: isSubItemActive ? 'blue.100' : 'gray.100',
+                    color: isSubItemActive ? 'blue.700' : 'inherit'
+                  }}
+                >
+                  {item.text}
+                </ChakraLink>
+              )
+            })}
+          </VStack>
+        </Collapse>
       )}
     </VStack>
   )
@@ -130,8 +179,8 @@ export default function MainLayout() {
   return (
     <Flex h="100vh">
       {/* Sidebar */}
-      <Box w="250px" bg="white" p={4} shadow="sm">
-        <VStack align="stretch" spacing={8} h="100%">
+      <Box w="250px" bg="white" p={4} shadow="sm" overflowY="auto">
+        <VStack align="stretch" spacing={8} minH="100%">
           {/* Logo ou Nome do Sistema */}
           <Box p={4}>
             <Text fontSize="xl" fontWeight="bold">ERP System</Text>
