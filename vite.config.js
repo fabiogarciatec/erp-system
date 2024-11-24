@@ -28,7 +28,15 @@ export default defineConfig(({ command, mode }) => {
       commonjsOptions: {
         include: [],
         transformMixedEsModules: true
-      }
+      },
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'react-vendor': ['react', 'react-dom'],
+            'chakra-vendor': ['@chakra-ui/react', '@emotion/react', '@emotion/styled'],
+          },
+        },
+      },
     },
     define: {
       // Garante que as variáveis de ambiente estejam disponíveis
