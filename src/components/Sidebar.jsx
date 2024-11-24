@@ -192,24 +192,6 @@ const Sidebar = () => {
           </Text>
 
           <MenuItem
-            icon={FiUsers}
-            hasSubmenu
-            isOpen={activeSubmenu === 'users'}
-            onClick={() => toggleSubmenu('users')}
-            isActive={location.pathname.startsWith('/users')}
-          >
-            Usuários
-          </MenuItem>
-          <Collapse in={activeSubmenu === 'users'} animateOpacity>
-            <SubMenuItem to="/users" isActive={isActive('/users')}>
-              Lista de Usuários
-            </SubMenuItem>
-            <SubMenuItem to="/users/roles" isActive={isActive('/users/roles')}>
-              Permissões
-            </SubMenuItem>
-          </Collapse>
-
-          <MenuItem
             icon={FiGrid}
             hasSubmenu
             isOpen={activeSubmenu === 'companies'}
@@ -368,11 +350,11 @@ const Sidebar = () => {
             <SubMenuItem to="/settings/general" isActive={isActive('/settings/general')}>
               Geral
             </SubMenuItem>
-            <SubMenuItem to="/settings/email" isActive={isActive('/settings/email')}>
-              Email
-            </SubMenuItem>
             <SubMenuItem to="/settings/users" isActive={isActive('/settings/users')}>
               Usuários
+            </SubMenuItem>
+            <SubMenuItem to="/settings/email" isActive={isActive('/settings/email')}>
+              Email
             </SubMenuItem>
             <SubMenuItem to="/settings/integrations" isActive={isActive('/settings/integrations')}>
               Integrações
