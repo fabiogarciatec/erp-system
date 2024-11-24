@@ -2,11 +2,12 @@ import React, { useState } from 'react'
 import {
   Box,
   Button,
+  Container,
   FormControl,
   FormLabel,
+  Heading,
   Input,
   VStack,
-  Heading,
   useToast,
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
@@ -15,15 +16,18 @@ import { useAuth } from '../contexts/AuthContext'
 const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const { login } = useAuth()
+  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const { login } = useAuth()
   const toast = useToast()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setIsLoading(true)
+    
     try {
       await login(email, password)
-      navigate('/')
+      navigate('/', { replace: true })
     } catch (error) {
       toast({
         title: 'Erro ao fazer login',
@@ -32,41 +36,66 @@ const Login = () => {
         duration: 3000,
         isClosable: true,
       })
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <Box minH="100vh" display="flex" alignItems="center" justifyContent="center">
-      <Box p={8} maxWidth="400px" borderWidth={1} borderRadius={8} boxShadow="lg">
-        <VStack spacing={4} align="flex-start" w="full">
-          <Heading>Login</Heading>
-          <FormControl id="email">
-            <FormLabel>Email</FormLabel>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </FormControl>
-          <FormControl id="password">
-            <FormLabel>Senha</FormLabel>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </FormControl>
-          <Button
-            colorScheme="blue"
-            width="full"
-            onClick={handleSubmit}
-            size="lg"
-            fontSize="md"
-          >
-            Entrar
-          </Button>
-        </VStack>
-      </Box>
+    <Box 
+      minH="100vh" 
+      display="flex" 
+      alignItems="center" 
+      justifyContent="center"
+      bg="gray.50"
+    >
+      <Container maxW="md">
+        <Box 
+          p={8} 
+          bg="white" 
+          borderRadius="lg" 
+          boxShadow="lg"
+          border="1px"
+          borderColor="gray.200"
+        >
+          <VStack spacing={6}>
+            <Heading size="lg">Login</Heading>
+            <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+              <VStack spacing={4}>
+                <FormControl isRequired>
+                  <FormLabel>Email</FormLabel>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    bg="white"
+                  />
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Senha</FormLabel>
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    bg="white"
+                  />
+                </FormControl>
+                <Button
+                  type="submit"
+                  colorScheme="blue"
+                  width="100%"
+                  size="lg"
+                  mt={4}
+                  isLoading={isLoading}
+                  loadingText="Entrando..."
+                >
+                  Entrar
+                </Button>
+              </VStack>
+            </form>
+          </VStack>
+        </Box>
+      </Container>
     </Box>
   )
 }

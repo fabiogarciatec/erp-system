@@ -1,27 +1,29 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
 
 const AuthContext = createContext(null)
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('isAuthenticated') === 'true'
+  })
 
   const login = async (email, password) => {
-    // Simulação de login - em produção, isso seria uma chamada real à API
+    // Simulação de autenticação
     if (email && password) {
-      setUser({ email })
-      localStorage.setItem('user', JSON.stringify({ email }))
+      setIsAuthenticated(true)
+      localStorage.setItem('isAuthenticated', 'true')
       return true
     }
     throw new Error('Email e senha são obrigatórios')
   }
 
   const logout = () => {
-    setUser(null)
-    localStorage.removeItem('user')
+    setIsAuthenticated(false)
+    localStorage.removeItem('isAuthenticated')
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   )

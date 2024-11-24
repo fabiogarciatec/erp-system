@@ -1,46 +1,49 @@
 import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
-import { Box, Flex } from '@chakra-ui/react'
-import { AuthProvider, useAuth } from './contexts/AuthContext'
-
-// Pages
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Box } from '@chakra-ui/react'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
-
-// Components
 import Sidebar from './components/Sidebar'
+import Users from './pages/settings/Users'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 
-// Componente PrivateRoute simplificado
-const PrivateRoute = ({ children }) => {
-  const { user } = useAuth()
-  return user ? children : <Navigate to="/login" replace />
+function AppContent() {
+  const { isAuthenticated } = useAuth()
+
+  // Se não estiver autenticado, mostra apenas o login
+  if (!isAuthenticated) {
+    return (
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    )
+  }
+
+  // Se estiver autenticado, mostra o layout com sidebar
+  return (
+    <Box display="flex" minH="100vh">
+      <Box as="nav" w="16rem" position="fixed" h="100vh">
+        <Sidebar />
+      </Box>
+      <Box ml="16rem" flex="1" p={6} bg="gray.50">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/settings/users" element={<Users />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Box>
+    </Box>
+  )
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <Box minH="100vh">
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/*"
-            element={
-              <PrivateRoute>
-                <Flex>
-                  <Sidebar />
-                  <Box ml="60" flex="1" p={8}>
-                    <Routes>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
-                  </Box>
-                </Flex>
-              </PrivateRoute>
-            }
-          />
-        </Routes>
-      </Box>
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
 
