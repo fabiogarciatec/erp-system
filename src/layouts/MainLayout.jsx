@@ -1,4 +1,4 @@
-import { Box, Flex, VStack, Icon, Text, Link as ChakraLink, Button, Spacer, Collapse } from '@chakra-ui/react'
+import { Box, Flex, VStack, Icon, Text, Button, Spacer, Collapse, useDisclosure } from '@chakra-ui/react'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { 
   MdDashboard, 
@@ -7,8 +7,6 @@ import {
   MdCampaign,
   MdSettings,
   MdLogout,
-  MdInventory,
-  MdMiscellaneousServices,
   MdBusiness,
   MdTune,
   MdKeyboardArrowDown,
@@ -21,36 +19,30 @@ const menuItems = [
   { 
     icon: MdDashboard, 
     text: 'Dashboard', 
-    path: '/',
+    path: '/dashboard',
     section: 'MENU'
   },
   { 
     icon: MdPeople, 
-    text: 'Clientes', 
-    path: '/cadastros/clientes',
-    section: 'CADASTROS'
-  },
-  {
-    icon: MdInventory,
-    text: 'Produtos',
-    path: '/cadastros/produtos',
-    section: 'CADASTROS'
-  },
-  {
-    icon: MdMiscellaneousServices,
-    text: 'Serviços',
-    path: '/cadastros/servicos',
-    section: 'CADASTROS'
+    text: 'Cadastros', 
+    path: '/customers',
+    section: 'CADASTROS',
+    subItems: [
+      { text: 'Clientes', path: '/customers' },
+      { text: 'Fornecedores', path: '/suppliers' },
+      { text: 'Produtos', path: '/products' },
+      { text: 'Serviços', path: '/services' }
+    ]
   },
   { 
     icon: MdShoppingCart, 
     text: 'Vendas', 
-    path: '/vendas',
-    section: 'VENDAS',
+    path: '/sales',
+    section: 'OPERAÇÕES',
     subItems: [
-      { text: 'Produtos', path: '/vendas/produtos' },
-      { text: 'Ordem de Serviço', path: '/vendas/ordem-servico' },
-      { text: 'Fretes', path: '/vendas/fretes' }
+      { text: 'Pedidos', path: '/sales/orders' },
+      { text: 'Orçamentos', path: '/sales/quotes' },
+      { text: 'Ordens de Serviço', path: '/sales/service-orders' }
     ]
   },
   { 
@@ -59,94 +51,108 @@ const menuItems = [
     path: '/marketing',
     section: 'MARKETING',
     subItems: [
-      { text: 'Campanhas', path: '/marketing/campanhas' },
-      { text: 'Contatos', path: '/marketing/contatos' },
-      { text: 'Disparos em massa', path: '/marketing/disparos' }
+      { text: 'Campanhas', path: '/marketing/campaigns' },
+      { text: 'E-mail Marketing', path: '/marketing/email' },
+      { text: 'Leads', path: '/marketing/leads' }
     ]
   },
-  { 
-    icon: MdBusiness, 
-    text: 'Empresa', 
-    path: '/configuracoes/empresa',
-    section: 'CONFIGURAÇÕES'
+  {
+    icon: MdBusiness,
+    text: 'Empresas',
+    path: '/companies/profile',
+    section: 'CONFIGURAÇÕES',
+    subItems: [
+      { text: 'Minha Empresa', path: '/companies/profile' },
+      { text: 'Filiais', path: '/companies/branches' }
+    ]
   },
-  { 
-    icon: MdPeople, 
-    text: 'Usuários', 
-    path: '/configuracoes/usuarios',
-    section: 'CONFIGURAÇÕES'
+  {
+    icon: MdPeople,
+    text: 'Usuários',
+    path: '/users/list',
+    section: 'CONFIGURAÇÕES',
+    subItems: [
+      { text: 'Lista de Usuários', path: '/users/list' },
+      { text: 'Permissões', path: '/users/roles' }
+    ]
+  },
+  {
+    icon: MdTune,
+    text: 'Configurações',
+    path: '/settings/general',
+    section: 'CONFIGURAÇÕES',
+    subItems: [
+      { text: 'Geral', path: '/settings/general' },
+      { text: 'Integrações', path: '/settings/integrations' }
+    ]
   }
 ]
 
 const MenuItem = ({ icon, text, path, subItems }) => {
   const [isOpen, setIsOpen] = useState(false)
+  const navigate = useNavigate()
   const location = useLocation()
+  
   const isActive = location.pathname === path || 
                   (subItems && subItems.some(item => location.pathname === item.path))
 
   const handleClick = (e) => {
+    e.preventDefault()
     if (subItems) {
-      e.preventDefault()
       setIsOpen(!isOpen)
+    } else {
+      navigate(path)
     }
   }
 
   return (
     <VStack align="start" w="full" spacing={1}>
-      <ChakraLink
-        as={Link}
-        to={path}
+      <Box
+        as="button"
+        onClick={handleClick}
         w="full"
         p={2}
         borderRadius="md"
-        onClick={handleClick}
         bg={isActive ? 'blue.50' : 'transparent'}
-        color={isActive ? 'blue.600' : 'inherit'}
+        color={isActive ? 'blue.500' : 'gray.700'}
         _hover={{
-          bg: isActive ? 'blue.100' : 'gray.100',
-          color: isActive ? 'blue.700' : 'inherit'
+          bg: isActive ? 'blue.50' : 'gray.50'
         }}
+        display="flex"
+        alignItems="center"
       >
-        <Flex align="center" justify="space-between">
-          <Flex align="center">
-            <Icon as={icon} boxSize={5} />
-            <Text ml={2}>{text}</Text>
-          </Flex>
-          {subItems && (
-            <Icon 
-              as={isOpen ? MdKeyboardArrowDown : MdKeyboardArrowRight} 
-              boxSize={5}
-              transition="transform 0.2s"
-              transform={isOpen ? 'rotate(0deg)' : 'rotate(0deg)'}
-            />
-          )}
-        </Flex>
-      </ChakraLink>
-      
+        <Icon as={icon} mr={3} />
+        <Text flex="1" textAlign="left">{text}</Text>
+        {subItems && (
+          <Icon 
+            as={isOpen ? MdKeyboardArrowDown : MdKeyboardArrowRight} 
+            ml={2}
+          />
+        )}
+      </Box>
+
       {subItems && (
         <Collapse in={isOpen} animateOpacity>
-          <VStack align="start" pl={6} w="full" spacing={1}>
-            {subItems.map((item) => {
-              const isSubItemActive = location.pathname === item.path
-              return (
-                <ChakraLink
-                  key={item.path}
-                  as={Link}
-                  to={item.path}
-                  w="full"
-                  p={2}
-                  borderRadius="md"
-                  bg={isSubItemActive ? 'blue.50' : 'transparent'}
-                  color={isSubItemActive ? 'blue.600' : 'inherit'}
-                  _hover={{
-                    bg: isSubItemActive ? 'blue.100' : 'gray.100',
-                    color: isSubItemActive ? 'blue.700' : 'inherit'
-                  }}
-                >
-                  {item.text}
-                </ChakraLink>
-              )
-            })}
+          <VStack align="start" w="full" pl={6} mt={1}>
+            {subItems.map((item) => (
+              <Box
+                key={item.path}
+                as="button"
+                onClick={() => navigate(item.path)}
+                w="full"
+                p={2}
+                borderRadius="md"
+                bg={location.pathname === item.path ? 'blue.50' : 'transparent'}
+                color={location.pathname === item.path ? 'blue.500' : 'gray.700'}
+                _hover={{
+                  bg: location.pathname === item.path ? 'blue.50' : 'gray.50'
+                }}
+                display="flex"
+                alignItems="center"
+              >
+                <Text flex="1" textAlign="left">{item.text}</Text>
+              </Box>
+            ))}
           </VStack>
         </Collapse>
       )}
@@ -154,20 +160,11 @@ const MenuItem = ({ icon, text, path, subItems }) => {
   )
 }
 
-export default function MainLayout() {
+const MainLayout = () => {
   const { logout } = useAuth()
   const navigate = useNavigate()
 
-  const handleLogout = async () => {
-    try {
-      await logout()
-      // Não precisamos do navigate aqui pois o logout já redireciona
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error)
-    }
-  }
-
-  // Agrupar itens do menu por seção
+  // Group menu items by section
   const menuSections = menuItems.reduce((acc, item) => {
     if (!acc[item.section]) {
       acc[item.section] = []
@@ -177,37 +174,44 @@ export default function MainLayout() {
   }, {})
 
   return (
-    <Flex h="100vh">
+    <Flex h="100vh" bg="gray.50">
       {/* Sidebar */}
-      <Box w="250px" bg="white" p={4} shadow="sm" overflowY="auto">
-        <VStack align="stretch" spacing={8} minH="100%">
-          {/* Logo ou Nome do Sistema */}
-          <Box p={4}>
-            <Text fontSize="xl" fontWeight="bold">ERP System</Text>
+      <Box w="280px" bg="white" borderRight="1px" borderColor="gray.200" p={4} overflowY="auto">
+        <VStack spacing={6} align="stretch" h="full">
+          {/* Logo or Brand */}
+          <Box p={2}>
+            <Text fontSize="xl" fontWeight="bold" color="blue.500">
+              ERP System
+            </Text>
           </Box>
 
-          {/* Menu Items por Seção */}
-          {Object.entries(menuSections).map(([section, items]) => (
-            <VStack key={section} align="stretch" spacing={4}>
-              <Text fontSize="sm" color="gray.500" fontWeight="bold" px={4}>
-                {section}
-              </Text>
-              {items.map((item) => (
-                <MenuItem key={item.path} {...item} />
-              ))}
-            </VStack>
-          ))}
+          {/* Menu Sections */}
+          <VStack spacing={6} align="stretch" flex="1">
+            {Object.entries(menuSections).map(([section, items]) => (
+              <VStack key={section} align="start" spacing={2}>
+                <Text fontSize="sm" color="gray.500" fontWeight="medium" px={2}>
+                  {section}
+                </Text>
+                {items.map((item) => (
+                  <MenuItem
+                    key={item.path}
+                    icon={item.icon}
+                    text={item.text}
+                    path={item.path}
+                    subItems={item.subItems}
+                  />
+                ))}
+              </VStack>
+            ))}
+          </VStack>
 
-          {/* Spacer para empurrar o botão de logout para baixo */}
-          <Spacer />
-
-          {/* Botão de Logout */}
+          {/* Logout Button */}
           <Button
+            leftIcon={<MdLogout />}
             variant="ghost"
-            onClick={handleLogout}
-            leftIcon={<Icon as={MdLogout} />}
-            justifyContent="flex-start"
-            w="100%"
+            w="full"
+            justifyContent="start"
+            onClick={logout}
             mb={4}
           >
             Sair
@@ -216,9 +220,11 @@ export default function MainLayout() {
       </Box>
 
       {/* Main Content */}
-      <Box flex="1" bg="gray.50" p={8} overflowY="auto">
+      <Box flex="1" p={8} overflowY="auto">
         <Outlet />
       </Box>
     </Flex>
   )
 }
+
+export default MainLayout
