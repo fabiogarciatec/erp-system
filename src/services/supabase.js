@@ -3,17 +3,30 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
+console.log('Environment Check:', {
+  mode: import.meta.env.MODE,
+  supabaseUrl: supabaseUrl ? 'Defined' : 'Undefined',
+  supabaseKey: supabaseAnonKey ? 'Defined' : 'Undefined'
+})
+
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Variáveis de ambiente do Supabase não configuradas')
+  console.error('Erro: Variáveis de ambiente do Supabase não configuradas:', {
+    url: !!supabaseUrl,
+    key: !!supabaseAnonKey
+  })
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder-url.supabase.co',
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
   }
-})
+)
 
 export const signIn = async (email, password) => {
   console.log('Tentando fazer login com email:', email)

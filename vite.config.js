@@ -6,7 +6,13 @@ import { resolve } from 'path'
 export default defineConfig(({ command, mode }) => {
   // Carrega as variáveis de ambiente com base no modo (development/production)
   const env = loadEnv(mode, process.cwd(), '')
-  
+
+  console.log('Building with env:', {
+    mode,
+    supabaseUrl: env.VITE_SUPABASE_URL ? 'Defined' : 'Undefined',
+    supabaseKey: env.VITE_SUPABASE_ANON_KEY ? 'Defined' : 'Undefined'
+  })
+
   return {
     plugins: [react()],
     base: '/',
@@ -47,9 +53,11 @@ export default defineConfig(({ command, mode }) => {
       include: ['hoist-non-react-statics', '@emotion/react']
     },
     define: {
-      'process.env.NODE_ENV': JSON.stringify(mode),
-      'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
-      'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY)
+      __VITE_SUPABASE_URL__: JSON.stringify(env.VITE_SUPABASE_URL || ''),
+      __VITE_SUPABASE_ANON_KEY__: JSON.stringify(env.VITE_SUPABASE_ANON_KEY || ''),
+      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL || ''),
+      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || ''),
+      'import.meta.env.MODE': JSON.stringify(mode)
     }
   }
 })
