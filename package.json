@@ -4,9 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "clean": "rimraf dist node_modules/.vite",
+    "start": "vite"
   },
   "dependencies": {
     "@chakra-ui/react": "^2.8.1",
@@ -22,6 +24,8 @@
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.0.3",
+    "cross-env": "^7.0.3",
+    "rimraf": "^6.0.1",
     "vite": "^4.4.5"
   }
 }
