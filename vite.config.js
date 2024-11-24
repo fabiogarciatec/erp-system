@@ -10,8 +10,7 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [react()],
     server: {
-      port: 5173, // Porta padrão do Vite
-      strictPort: true, // Falha se a porta estiver em uso
+      port: 3000, // Mudando para porta 3000
       host: true, // Permite acesso externo
       watch: {
         usePolling: true, // Melhor compatibilidade com Windows
