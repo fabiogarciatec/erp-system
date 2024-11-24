@@ -18,25 +18,34 @@ export default defineConfig(({ command, mode }) => {
     },
     resolve: {
       alias: {
-        '@': resolve(__dirname, './src'), // Permite importações usando @
-        'hoist-non-react-statics': 'hoist-non-react-statics/dist/hoist-non-react-statics.cjs.js'
-      },
+        '@': resolve(__dirname, './src'), // Permits importações using @
+      }
     },
     build: {
       outDir: 'dist',
       sourcemap: true,
       commonjsOptions: {
-        include: [],
+        include: [
+          /node_modules/,
+          /hoist-non-react-statics/,
+          /@emotion\/react/
+        ],
+        requireReturnsDefault: 'namespace',
         transformMixedEsModules: true
       },
       rollupOptions: {
+        external: ['react', 'react-dom'],
         output: {
           manualChunks: {
-            'react-vendor': ['react', 'react-dom'],
-            'chakra-vendor': ['@chakra-ui/react', '@emotion/react', '@emotion/styled'],
-          },
-        },
-      },
+            'vendor': ['react', 'react-dom'],
+            'emotion': ['@emotion/react', '@emotion/styled'],
+            'chakra': ['@chakra-ui/react']
+          }
+        }
+      }
+    },
+    optimizeDeps: {
+      include: ['hoist-non-react-statics', '@emotion/react']
     },
     define: {
       // Garante que as variáveis de ambiente estejam disponíveis
