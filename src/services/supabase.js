@@ -54,7 +54,18 @@ export const signOut = async () => {
   console.log('Tentando fazer logout')
   
   try {
-    const { error } = await supabase.auth.signOut()
+    // Primeiro verifica se há uma sessão ativa
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session) {
+      console.log('Nenhuma sessão ativa encontrada')
+      return { error: null }
+    }
+
+    // Procede com o logout
+    const { error } = await supabase.auth.signOut({
+      scope: 'local'  // Garante que apenas a sessão local seja limpa
+    })
     
     if (error) {
       console.error('Erro no signOut:', error)
