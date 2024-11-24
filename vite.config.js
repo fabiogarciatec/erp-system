@@ -9,6 +9,7 @@ export default defineConfig(({ command, mode }) => {
   
   return {
     plugins: [react()],
+    base: '/',
     server: {
       port: 3000, // Mudando para porta 3000
       host: true, // Permite acesso externo
@@ -22,19 +23,15 @@ export default defineConfig(({ command, mode }) => {
       }
     },
     build: {
-      outDir: 'dist',
-      sourcemap: true,
       commonjsOptions: {
         include: [
           /node_modules/,
           /hoist-non-react-statics/,
           /@emotion\/react/
         ],
-        requireReturnsDefault: 'namespace',
-        transformMixedEsModules: true
+        requireReturnsDefault: 'namespace'
       },
       rollupOptions: {
-        external: ['react', 'react-dom'],
         output: {
           manualChunks: {
             'emotion': ['@emotion/react', '@emotion/styled'],
@@ -42,16 +39,17 @@ export default defineConfig(({ command, mode }) => {
             'vendor': ['react-icons', 'react-router-dom', 'framer-motion']
           }
         }
-      }
+      },
+      sourcemap: true,
+      chunkSizeWarningLimit: 1000
     },
     optimizeDeps: {
       include: ['hoist-non-react-statics', '@emotion/react']
     },
     define: {
-      // Garante que as variáveis de ambiente estejam disponíveis
+      'process.env.NODE_ENV': JSON.stringify(mode),
       'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
-      'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
-      'process.env': env
+      'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY)
     }
   }
 })
