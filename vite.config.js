@@ -37,9 +37,9 @@ export default defineConfig(({ command, mode }) => {
         external: ['react', 'react-dom'],
         output: {
           manualChunks: {
-            'vendor': ['react', 'react-dom'],
             'emotion': ['@emotion/react', '@emotion/styled'],
-            'chakra': ['@chakra-ui/react']
+            'chakra': ['@chakra-ui/react'],
+            'vendor': ['react-icons', 'react-router-dom', 'framer-motion']
           }
         }
       }
