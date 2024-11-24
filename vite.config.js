@@ -1,30 +1,39 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
+import { resolve } from 'path'
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    port: 3002,
-    host: true,
-    open: true,
-    strictPort: true,
-    watch: {
-      usePolling: true,
-      interval: 100
-    }
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src')
-    }
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: true,
-    commonjsOptions: {
-      include: []
+export default defineConfig(({ command, mode }) => {
+  // Carrega as variáveis de ambiente com base no modo (development/production)
+  const env = loadEnv(mode, process.cwd(), '')
+  
+  return {
+    plugins: [react()],
+    server: {
+      port: 5173, // Porta padrão do Vite
+      strictPort: true, // Falha se a porta estiver em uso
+      host: true, // Permite acesso externo
+      watch: {
+        usePolling: true, // Melhor compatibilidade com Windows
+      },
+    },
+    resolve: {
+      alias: {
+        '@': resolve(__dirname, './src'), // Permite importações usando @
+      },
+    },
+    build: {
+      outDir: 'dist',
+      sourcemap: true,
+      commonjsOptions: {
+        include: []
+      }
+    },
+    define: {
+      // Garante que as variáveis de ambiente estejam disponíveis
+      'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
+      'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
+      'process.env': env
     }
   }
 })

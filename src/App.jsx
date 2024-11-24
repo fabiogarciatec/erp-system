@@ -1,49 +1,106 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { Box } from '@chakra-ui/react'
+import { ChakraProvider, Spinner, Center } from '@chakra-ui/react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Sidebar from './components/Sidebar'
-import Users from './pages/settings/Users'
-import { AuthProvider, useAuth } from './contexts/AuthContext'
 
-function AppContent() {
-  const { isAuthenticated } = useAuth()
+// Componente de loading
+const LoadingScreen = () => (
+  <Center h="100vh">
+    <Spinner
+      thickness="4px"
+      speed="0.65s"
+      emptyColor="gray.200"
+      color="blue.500"
+      size="xl"
+    />
+  </Center>
+)
 
-  // Se não estiver autenticado, mostra apenas o login
-  if (!isAuthenticated) {
-    return (
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    )
+// Componente de layout com sidebar
+const Layout = ({ children }) => (
+  <div style={{ display: 'flex' }}>
+    <Sidebar />
+    <main style={{ flexGrow: 1, marginLeft: '16rem', padding: '2rem' }}>
+      {children}
+    </main>
+  </div>
+)
+
+// Componente de rota protegida
+const ProtectedRoute = ({ children }) => {
+  const { user, loading, initialized } = useAuth()
+
+  if (!initialized || loading) {
+    return <LoadingScreen />
   }
 
-  // Se estiver autenticado, mostra o layout com sidebar
+  if (!user) {
+    console.log('Usuário não autenticado, redirecionando para login...')
+    return <Navigate to="/login" replace />
+  }
+
+  return <Layout>{children}</Layout>
+}
+
+// Componente de rota pública
+const PublicRoute = ({ children }) => {
+  const { user, loading, initialized } = useAuth()
+
+  if (!initialized || loading) {
+    return <LoadingScreen />
+  }
+
+  if (user) {
+    console.log('Usuário já autenticado, redirecionando para dashboard...')
+    return <Navigate to="/" replace />
+  }
+
+  return children
+}
+
+// Componente de rotas
+const AppRoutes = () => {
   return (
-    <Box display="flex" minH="100vh">
-      <Box as="nav" w="16rem" position="fixed" h="100vh">
-        <Sidebar />
-      </Box>
-      <Box ml="16rem" flex="1" p={6} bg="gray.50">
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/settings/users" element={<Users />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Box>
-    </Box>
+    <Routes>
+      {/* Rota pública */}
+      <Route 
+        path="/login" 
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        } 
+      />
+      
+      {/* Rota protegida */}
+      <Route 
+        path="/" 
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Redireciona qualquer outra rota para a home */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
 
-function App() {
+// Componente principal
+const App = () => {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </BrowserRouter>
+    <ChakraProvider>
+      <Router>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </Router>
+    </ChakraProvider>
   )
 }
 

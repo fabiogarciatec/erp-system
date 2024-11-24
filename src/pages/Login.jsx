@@ -16,6 +16,8 @@ import {
   IconButton,
   Alert,
   AlertIcon,
+  AlertTitle,
+  AlertDescription,
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -56,14 +58,21 @@ const Login = () => {
 
     setIsLoading(true)
     try {
+      console.log('Tentando fazer login...')
       await login(email, password)
+      console.log('Login bem-sucedido, redirecionando...')
       navigate('/', { replace: true })
     } catch (error) {
-      setLoginError(
-        error.message === 'Invalid login credentials'
-          ? 'Email ou senha inválidos'
-          : 'Erro ao fazer login. Tente novamente.'
-      )
+      console.error('Erro no formulário de login:', error)
+      let errorMessage = 'Erro ao fazer login. Tente novamente.'
+      
+      if (error.message === 'Invalid login credentials') {
+        errorMessage = 'Email ou senha inválidos'
+      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.'
+      }
+      
+      setLoginError(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -95,7 +104,12 @@ const Login = () => {
             {loginError && (
               <Alert status="error" borderRadius="md">
                 <AlertIcon />
-                {loginError}
+                <Box flex="1">
+                  <AlertTitle>Erro no Login</AlertTitle>
+                  <AlertDescription display="block">
+                    {loginError}
+                  </AlertDescription>
+                </Box>
               </Alert>
             )}
             
@@ -109,9 +123,11 @@ const Login = () => {
                     onChange={(e) => {
                       setEmail(e.target.value)
                       setErrors({ ...errors, email: '' })
+                      setLoginError('')
                     }}
                     placeholder="seu@email.com"
                     bg="white"
+                    isDisabled={isLoading}
                   />
                   <FormErrorMessage>{errors.email}</FormErrorMessage>
                 </FormControl>
@@ -125,9 +141,11 @@ const Login = () => {
                       onChange={(e) => {
                         setPassword(e.target.value)
                         setErrors({ ...errors, password: '' })
+                        setLoginError('')
                       }}
                       placeholder="Sua senha"
                       bg="white"
+                      isDisabled={isLoading}
                     />
                     <InputRightElement>
                       <IconButton
@@ -135,6 +153,7 @@ const Login = () => {
                         icon={showPassword ? <FiEyeOff /> : <FiEye />}
                         variant="ghost"
                         onClick={() => setShowPassword(!showPassword)}
+                        isDisabled={isLoading}
                       />
                     </InputRightElement>
                   </InputGroup>
