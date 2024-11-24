@@ -23,7 +23,8 @@ export const supabase = createClient(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true
+      detectSessionInUrl: true,
+      storage: window.localStorage
     }
   }
 )
@@ -59,23 +60,30 @@ export const signOut = async () => {
     
     if (!session) {
       console.log('Nenhuma sessão ativa encontrada')
+      // Limpa qualquer dado residual de sessão
+      window.localStorage.removeItem('supabase.auth.token')
       return { error: null }
     }
 
     // Procede com o logout
-    const { error } = await supabase.auth.signOut({
-      scope: 'local'  // Garante que apenas a sessão local seja limpa
-    })
+    const { error } = await supabase.auth.signOut()
     
     if (error) {
       console.error('Erro no signOut:', error)
       throw error
     }
 
+    // Limpa manualmente o storage após o logout
+    window.localStorage.removeItem('supabase.auth.token')
     console.log('Logout bem sucedido')
     return { error: null }
   } catch (error) {
     console.error('Erro ao fazer logout:', error)
+    // Em caso de erro de sessão ausente, limpa o storage
+    if (error.message.includes('Auth session missing')) {
+      window.localStorage.removeItem('supabase.auth.token')
+      return { error: null }
+    }
     return { error }
   }
 }
