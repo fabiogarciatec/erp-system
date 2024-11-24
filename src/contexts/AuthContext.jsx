@@ -14,6 +14,7 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
+  const [userProfile, setUserProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [initialized, setInitialized] = useState(false)
   const toast = useToast()
@@ -95,6 +96,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true)
       await signOut()
       setUser(null)
+      setUserProfile(null)
       
       toast({
         title: 'Logout realizado com sucesso',
@@ -111,6 +113,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Erro no logout:', error)
       // Mesmo com erro, vamos tentar limpar o estado e redirecionar
       setUser(null)
+      setUserProfile(null)
       
       toast({
         title: 'Aviso',
@@ -130,6 +133,8 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    userProfile,
+    setUserProfile,
     loading,
     initialized,
     login,

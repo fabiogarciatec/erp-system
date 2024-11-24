@@ -1,68 +1,97 @@
-import { useState, useEffect } from 'react'
 import {
-  Box,
+  Card,
+  CardHeader,
+  CardBody,
   Button,
-  useDisclosure,
-  useToast,
+  Heading,
+  Text,
+  Flex,
+  Spacer,
+  HStack,
+  Box,
+  Input,
+  InputGroup,
+  InputLeftElement,
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalCloseButton,
+  useDisclosure,
+  useToast,
   Badge,
-  Text,
-  HStack,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  Card,
-  CardHeader,
-  CardBody,
-  Heading,
-  Flex,
-  Spacer,
+  IconButton,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Tooltip,
+  Icon,
 } from '@chakra-ui/react'
-import { MdAdd, MdSearch } from 'react-icons/md'
+import { useEffect, useState } from 'react'
+import { MdAdd, MdSearch, MdEdit, MdDelete, MdMoreVert } from 'react-icons/md'
 import { supabase } from '../../services/supabase'
+import { useAuth } from '../../contexts/AuthContext'
 import DataTable from '../../components/DataTable'
 import UserForm from './components/UserForm'
-import UserActions from './components/UserActions'
+import DeleteAlert from '../../components/DeleteAlert'
+import { formatPhone, cleanPhone } from '../../utils/formatters'
 
 export default function UserList() {
-  const [users, setUsers] = useState([])
-  const [filteredUsers, setFilteredUsers] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [selectedUser, setSelectedUser] = useState(null)
-  const [searchQuery, setSearchQuery] = useState('')
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const { user, userProfile, setUserProfile } = useAuth()
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState(null)
   const toast = useToast()
 
   const [formData, setFormData] = useState({
     email: '',
     full_name: '',
+    phone: '',
     role: 'user',
+    status: 'active',
     password: '',
   })
 
   useEffect(() => {
-    fetchUsers()
-  }, [])
+    if (user) {
+      fetchUserProfile()
+    }
+  }, [user])
 
   useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredUsers(users)
-    } else {
-      const query = searchQuery.toLowerCase()
-      const filtered = users.filter(
-        user =>
-          user.full_name?.toLowerCase().includes(query) ||
-          user.email?.toLowerCase().includes(query) ||
-          user.role?.toLowerCase().includes(query)
-      )
-      setFilteredUsers(filtered)
+    if (userProfile) {
+      fetchUsers()
     }
-  }, [searchQuery, users])
+  }, [userProfile])
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*, companies:company_id(*)')
+        .eq('id', user.id)
+        .single()
+
+      if (error) throw error
+
+      setUserProfile(data)
+    } catch (error) {
+      console.error('Erro ao buscar perfil do usuário:', error)
+      toast({
+        title: 'Erro ao carregar perfil',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+    }
+  }
 
   const fetchUsers = async () => {
     try {
@@ -70,16 +99,190 @@ export default function UserList() {
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
-        .order('created_at', { ascending: false })
+        .eq('company_id', userProfile.company_id)
+        .order('full_name')
 
       if (error) throw error
 
       setUsers(data)
-      setFilteredUsers(data)
     } catch (error) {
       console.error('Erro ao buscar usuários:', error)
       toast({
-        title: 'Erro ao carregar usuários',
+        title: 'Erro ao buscar usuários',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getRoleBadge = (role) => {
+    const roles = {
+      admin: { color: 'red', label: 'Administrador' },
+      manager: { color: 'purple', label: 'Gerente' },
+      sales: { color: 'green', label: 'Vendedor' },
+      support: { color: 'blue', label: 'Suporte' },
+      user: { color: 'gray', label: 'Usuário' },
+    }
+    return roles[role] || { color: 'gray', label: role }
+  }
+
+  const getStatusBadge = (status) => {
+    const statuses = {
+      active: { color: 'green', label: 'Ativo' },
+      inactive: { color: 'gray', label: 'Inativo' },
+      suspended: { color: 'yellow', label: 'Suspenso' },
+      blocked: { color: 'red', label: 'Bloqueado' },
+    }
+    return statuses[status] || { color: 'gray', label: status }
+  }
+
+  const columns = [
+    {
+      header: 'Nome',
+      accessorKey: 'full_name',
+    },
+    {
+      header: 'Email',
+      accessorKey: 'email',
+    },
+    {
+      header: 'Telefone',
+      accessorKey: 'phone',
+      cell: ({ value }) => formatPhone(value),
+    },
+    {
+      header: 'Função',
+      accessorKey: 'role',
+      cell: ({ value }) => {
+        const badge = getRoleBadge(value)
+        return (
+          <Badge colorScheme={badge.color} variant="subtle">
+            {badge.label}
+          </Badge>
+        )
+      },
+    },
+    {
+      header: 'Status',
+      accessorKey: 'status',
+      cell: ({ value }) => {
+        const badge = getStatusBadge(value)
+        return (
+          <Badge colorScheme={badge.color} variant="subtle">
+            {badge.label}
+          </Badge>
+        )
+      },
+    },
+    {
+      header: 'Ações',
+      accessorKey: 'actions',
+      cell: ({ row }) => (
+        <HStack spacing={2}>
+          <Tooltip label="Editar usuário" placement="top">
+            <IconButton
+              icon={<Icon as={MdEdit} boxSize={5} />}
+              aria-label="Editar usuário"
+              size="sm"
+              colorScheme="blue"
+              variant="ghost"
+              onClick={() => handleEdit(row.original)}
+            />
+          </Tooltip>
+          <Tooltip label="Excluir usuário" placement="top">
+            <IconButton
+              icon={<Icon as={MdDelete} boxSize={5} />}
+              aria-label="Excluir usuário"
+              size="sm"
+              colorScheme="red"
+              variant="ghost"
+              onClick={() => handleDeleteClick(row.original)}
+            />
+          </Tooltip>
+        </HStack>
+      ),
+    },
+  ]
+
+  const filteredUsers = users.filter(user => {
+    const searchLower = searchQuery.toLowerCase()
+    return (
+      user.full_name.toLowerCase().includes(searchLower) ||
+      user.email.toLowerCase().includes(searchLower) ||
+      (user.phone && user.phone.includes(searchQuery))
+    )
+  })
+
+  const handleNewUser = () => {
+    setSelectedUser(null)
+    setFormData({
+      email: '',
+      full_name: '',
+      phone: '',
+      role: 'user',
+      status: 'active',
+      password: '',
+    })
+    onOpen()
+  }
+
+  const handleEdit = (user) => {
+    setSelectedUser(user)
+    setFormData({
+      ...user,
+      password: '',
+    })
+    onOpen()
+  }
+
+  const handleDeleteClick = (user) => {
+    setUserToDelete(user)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleDelete = async () => {
+    try {
+      setLoading(true)
+
+      // Verifica se é o último admin da empresa
+      const { data: admins, error: adminsError } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('company_id', userProfile.company_id)
+        .eq('role', 'admin')
+
+      if (adminsError) throw adminsError
+
+      if (userToDelete.role === 'admin' && admins.length === 1) {
+        throw new Error('Não é possível excluir o último administrador da empresa')
+      }
+
+      // Remove o perfil do usuário
+      const { error: deleteError } = await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('id', userToDelete.id)
+
+      if (deleteError) throw deleteError
+
+      toast({
+        title: 'Usuário excluído',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      })
+
+      setIsDeleteDialogOpen(false)
+      setUserToDelete(null)
+      fetchUsers()
+    } catch (error) {
+      console.error('Erro ao excluir usuário:', error)
+      toast({
+        title: 'Erro ao excluir usuário',
         description: error.message,
         status: 'error',
         duration: 5000,
@@ -92,130 +295,71 @@ export default function UserList() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }))
-  }
-
-  const handleEdit = (user) => {
-    setSelectedUser(user)
-    setFormData({
-      email: user.email || '',
-      full_name: user.full_name || '',
-      role: user.role || 'user',
-      password: '',
-    })
-    onOpen()
-  }
-
-  const handleDelete = async (user) => {
-    if (!window.confirm('Tem certeza que deseja excluir este usuário?')) {
-      return
-    }
-
-    try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .delete()
-        .eq('id', user.id)
-
-      if (error) throw error
-
-      toast({
-        title: 'Usuário excluído',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      })
-
-      fetchUsers()
-    } catch (error) {
-      console.error('Erro ao excluir usuário:', error)
-      toast({
-        title: 'Erro ao excluir usuário',
-        description: error.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-    }
-  }
-
-  const handleResetPassword = async (user) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      })
-
-      if (error) throw error
-
-      toast({
-        title: 'Email de redefinição de senha enviado',
-        description: 'O usuário receberá instruções por email',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      })
-    } catch (error) {
-      console.error('Erro ao resetar senha:', error)
-      toast({
-        title: 'Erro ao resetar senha',
-        description: error.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setLoading(true)
+
+    // Limpa o telefone antes de enviar para o banco
+    const cleanedFormData = {
+      ...formData,
+      phone: cleanPhone(formData.phone)
+    }
+
     try {
       if (selectedUser) {
-        // Atualização
-        const updateData = {
-          full_name: formData.full_name,
-          role: formData.role,
-        }
-
+        // Atualizar usuário
         const { error } = await supabase
           .from('user_profiles')
-          .update(updateData)
+          .update({
+            full_name: cleanedFormData.full_name,
+            phone: cleanedFormData.phone,
+            role: cleanedFormData.role,
+            status: cleanedFormData.status,
+            updated_at: new Date(),
+          })
           .eq('id', selectedUser.id)
 
         if (error) throw error
 
         toast({
-          title: 'Usuário atualizado',
+          title: 'Usuário atualizado com sucesso',
           status: 'success',
           duration: 3000,
           isClosable: true,
         })
       } else {
-        // Criação
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
+        // Criar novo usuário
+        const { data: { user }, error: signUpError } = await supabase.auth.signUp({
+          email: cleanedFormData.email,
+          password: cleanedFormData.password,
         })
 
-        if (authError) throw authError
+        if (signUpError) throw signUpError
 
         const { error: profileError } = await supabase
           .from('user_profiles')
           .insert([
             {
-              id: authData.user.id,
-              email: formData.email,
-              full_name: formData.full_name,
-              role: formData.role,
+              id: user.id,
+              company_id: userProfile.company_id,
+              full_name: cleanedFormData.full_name,
+              email: cleanedFormData.email,
+              phone: cleanedFormData.phone,
+              role: cleanedFormData.role,
+              status: cleanedFormData.status,
             },
           ])
 
         if (profileError) throw profileError
 
         toast({
-          title: 'Usuário criado',
+          title: 'Usuário criado com sucesso',
           description: 'Um email de confirmação foi enviado.',
           status: 'success',
           duration: 5000,
@@ -225,13 +369,6 @@ export default function UserList() {
 
       onClose()
       fetchUsers()
-      setFormData({
-        email: '',
-        full_name: '',
-        role: 'user',
-        password: '',
-      })
-      setSelectedUser(null)
     } catch (error) {
       console.error('Erro ao salvar usuário:', error)
       toast({
@@ -241,116 +378,114 @@ export default function UserList() {
         duration: 5000,
         isClosable: true,
       })
+    } finally {
+      setLoading(false)
     }
   }
-
-  const columns = [
-    {
-      header: 'Nome',
-      accessor: 'full_name',
-    },
-    {
-      header: 'Email',
-      accessor: 'email',
-    },
-    {
-      header: 'Função',
-      accessor: 'role',
-      cell: (value) => (
-        <Badge
-          colorScheme={
-            value === 'admin'
-              ? 'red'
-              : value === 'manager'
-              ? 'purple'
-              : 'blue'
-          }
-        >
-          {value === 'admin'
-            ? 'Administrador'
-            : value === 'manager'
-            ? 'Gerente'
-            : 'Usuário'}
-        </Badge>
-      ),
-    },
-    {
-      header: 'Ações',
-      accessor: 'actions',
-      cell: (_, row) => (
-        <UserActions
-          user={row}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onResetPassword={handleResetPassword}
-        />
-      ),
-    },
-  ]
 
   return (
     <Card>
       <CardHeader>
-        <Flex alignItems="center">
-          <Heading size="md">Usuários</Heading>
-          <Spacer />
-          <Button
-            leftIcon={<MdAdd />}
-            colorScheme="blue"
-            onClick={() => {
-              setSelectedUser(null)
-              setFormData({
-                email: '',
-                full_name: '',
-                role: 'user',
-                password: '',
-              })
-              onOpen()
-            }}
-          >
-            Novo Usuário
-          </Button>
+        <Flex align="center" gap={4}>
+          <Box flex="1">
+            <Heading size="md">Usuários</Heading>
+            <Text color="gray.600" fontSize="sm">
+              Gerencie os usuários da sua empresa
+            </Text>
+          </Box>
+          <HStack spacing={4}>
+            <InputGroup maxW="300px">
+              <InputLeftElement pointerEvents="none">
+                <Icon as={MdSearch} boxSize={5} color="gray.500" />
+              </InputLeftElement>
+              <Input
+                placeholder="Buscar usuários..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </InputGroup>
+            <Button
+              leftIcon={<Icon as={MdAdd} boxSize={5} />}
+              colorScheme="blue"
+              onClick={handleNewUser}
+              size="md"
+              minW="180px"
+            >
+              Adicionar Usuário
+            </Button>
+          </HStack>
         </Flex>
       </CardHeader>
 
       <CardBody>
-        <Box mb={4}>
-          <InputGroup>
-            <InputLeftElement pointerEvents="none">
-              <MdSearch />
-            </InputLeftElement>
-            <Input
-              placeholder="Buscar usuários..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </InputGroup>
-        </Box>
-
         <DataTable
           columns={columns}
           data={filteredUsers}
           isLoading={loading}
         />
-
-        <Modal isOpen={isOpen} onClose={onClose}>
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>
-              {selectedUser ? 'Editar Usuário' : 'Novo Usuário'}
-            </ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              <UserForm
-                formData={formData}
-                handleInputChange={handleInputChange}
-                handleSubmit={handleSubmit}
-                isEdit={!!selectedUser}
-              />
-            </ModalBody>
-          </ModalContent>
-        </Modal>
       </CardBody>
+
+      <Modal
+        isOpen={isOpen}
+        onClose={() => {
+          onClose()
+          setSelectedUser(null)
+          setFormData({
+            email: '',
+            full_name: '',
+            phone: '',
+            role: 'user',
+            status: 'active',
+            password: '',
+          })
+        }}
+        size="md"
+        isCentered
+      >
+        <ModalOverlay
+          bg="blackAlpha.300"
+          backdropFilter="blur(10px)"
+        />
+        <ModalContent>
+          <ModalHeader>
+            <Flex alignItems="center" gap={2}>
+              {selectedUser ? (
+                <>
+                  <MdEdit />
+                  Editar Usuário
+                </>
+              ) : (
+                <>
+                  <MdAdd />
+                  Adicionar Usuário
+                </>
+              )}
+            </Flex>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            <UserForm
+              formData={formData}
+              handleInputChange={handleInputChange}
+              handleSubmit={(e) => handleSubmit(e)}
+              isEdit={!!selectedUser}
+              isLoading={loading}
+            />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      <DeleteAlert
+        isOpen={isDeleteDialogOpen}
+        onClose={() => {
+          setIsDeleteDialogOpen(false)
+          setUserToDelete(null)
+        }}
+        onConfirm={handleDelete}
+        title="Excluir Usuário"
+        message={`Tem certeza que deseja excluir o usuário "${userToDelete?.full_name}"?`}
+        isLoading={loading}
+      />
     </Card>
   )
 }

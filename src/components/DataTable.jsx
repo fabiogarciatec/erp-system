@@ -9,6 +9,7 @@ import {
   Text,
   Spinner,
   Center,
+  TableContainer,
 } from '@chakra-ui/react'
 
 export default function DataTable({
@@ -19,7 +20,7 @@ export default function DataTable({
   if (isLoading) {
     return (
       <Center py={8}>
-        <Spinner size="xl" color="blue.500" />
+        <Spinner size="xl" color="blue.500" thickness="4px" />
       </Center>
     )
   }
@@ -27,13 +28,15 @@ export default function DataTable({
   if (!data.length) {
     return (
       <Center py={8}>
-        <Text color="gray.500">Nenhum registro encontrado</Text>
+        <Text color="gray.500" fontSize="lg">
+          Nenhum registro encontrado
+        </Text>
       </Center>
     )
   }
 
   return (
-    <Box overflowX="auto">
+    <TableContainer>
       <Table variant="simple">
         <Thead>
           <Tr>
@@ -45,17 +48,18 @@ export default function DataTable({
         <Tbody>
           {data.map((row, rowIndex) => (
             <Tr key={rowIndex}>
-              {columns.map((column, colIndex) => (
-                <Td key={colIndex}>
-                  {column.cell
-                    ? column.cell(row[column.accessor], row)
-                    : row[column.accessor]}
-                </Td>
-              ))}
+              {columns.map((column, colIndex) => {
+                const value = row[column.accessorKey]
+                return (
+                  <Td key={`${rowIndex}-${colIndex}`}>
+                    {column.cell ? column.cell({ row: { original: row }, value }) : value}
+                  </Td>
+                )
+              })}
             </Tr>
           ))}
         </Tbody>
       </Table>
-    </Box>
+    </TableContainer>
   )
 }
