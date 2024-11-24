@@ -93,25 +93,36 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       setLoading(true)
-      const { error } = await signOut()
-      if (error) throw error
-
+      await signOut()
       setUser(null)
+      
       toast({
-        title: 'Logout realizado com sucesso!',
+        title: 'Logout realizado com sucesso',
         status: 'success',
-        duration: 3000,
+        duration: 2000,
         isClosable: true,
       })
+
+      // Redireciona após um pequeno delay para o toast aparecer
+      setTimeout(() => {
+        window.location.href = '/login'
+      }, 500)
     } catch (error) {
       console.error('Erro no logout:', error)
+      // Mesmo com erro, vamos tentar limpar o estado e redirecionar
+      setUser(null)
+      
       toast({
-        title: 'Erro no logout',
-        description: error.message,
-        status: 'error',
-        duration: 3000,
+        title: 'Aviso',
+        description: 'Sua sessão foi encerrada',
+        status: 'info',
+        duration: 2000,
         isClosable: true,
       })
+
+      setTimeout(() => {
+        window.location.href = '/login'
+      }, 500)
     } finally {
       setLoading(false)
     }

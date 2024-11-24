@@ -155,13 +155,13 @@ const MenuItem = ({ icon, text, path, subItems }) => {
 }
 
 export default function MainLayout() {
-  const { signOut } = useAuth()
+  const { logout } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = async () => {
     try {
-      await signOut()
-      navigate('/login')
+      await logout()
+      // Não precisamos do navigate aqui pois o logout já redireciona
     } catch (error) {
       console.error('Erro ao fazer logout:', error)
     }

@@ -21,10 +21,9 @@ export const supabase = createClient(
   supabaseAnonKey || 'placeholder-key',
   {
     auth: {
-      persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storage: window.localStorage
+      persistSession: true,
+      detectSessionInUrl: false
     }
   }
 )
@@ -55,17 +54,7 @@ export const signOut = async () => {
   console.log('Tentando fazer logout')
   
   try {
-    // Primeiro verifica se há uma sessão ativa
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    if (!session) {
-      console.log('Nenhuma sessão ativa encontrada')
-      // Limpa qualquer dado residual de sessão
-      window.localStorage.removeItem('supabase.auth.token')
-      return { error: null }
-    }
-
-    // Procede com o logout
+    // Tenta fazer o logout
     const { error } = await supabase.auth.signOut()
     
     if (error) {
@@ -73,18 +62,30 @@ export const signOut = async () => {
       throw error
     }
 
-    // Limpa manualmente o storage após o logout
-    window.localStorage.removeItem('supabase.auth.token')
-    console.log('Logout bem sucedido')
+    // Limpa dados locais
+    if (typeof window !== 'undefined') {
+      const keys = Object.keys(localStorage)
+      keys.forEach(key => {
+        if (key.includes('supabase') || key.includes('auth')) {
+          localStorage.removeItem(key)
+        }
+      })
+    }
+
+    console.log('Logout realizado com sucesso')
     return { error: null }
   } catch (error) {
     console.error('Erro ao fazer logout:', error)
-    // Em caso de erro de sessão ausente, limpa o storage
-    if (error.message.includes('Auth session missing')) {
-      window.localStorage.removeItem('supabase.auth.token')
-      return { error: null }
+    // Mesmo com erro, tenta limpar o localStorage
+    if (typeof window !== 'undefined') {
+      const keys = Object.keys(localStorage)
+      keys.forEach(key => {
+        if (key.includes('supabase') || key.includes('auth')) {
+          localStorage.removeItem(key)
+        }
+      })
     }
-    return { error }
+    throw error
   }
 }
 
