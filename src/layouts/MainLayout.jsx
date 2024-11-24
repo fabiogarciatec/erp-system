@@ -72,12 +72,6 @@ const menuItems = [
     text: 'Usuários', 
     path: '/configuracoes/usuarios',
     section: 'CONFIGURAÇÕES'
-  },
-  { 
-    icon: MdTune, 
-    text: 'Ajustes', 
-    path: '/configuracoes/ajustes',
-    section: 'CONFIGURAÇÕES'
   }
 ]
 
