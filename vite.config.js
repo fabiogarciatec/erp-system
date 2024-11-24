@@ -20,13 +20,15 @@ export default defineConfig(({ command, mode }) => {
     resolve: {
       alias: {
         '@': resolve(__dirname, './src'), // Permite importações usando @
+        'hoist-non-react-statics': 'hoist-non-react-statics/dist/hoist-non-react-statics.cjs.js'
       },
     },
     build: {
       outDir: 'dist',
       sourcemap: true,
       commonjsOptions: {
-        include: []
+        include: [],
+        transformMixedEsModules: true
       }
     },
     define: {
