@@ -4,8 +4,7 @@
 
 [build.environment]
   NODE_VERSION = "18.17.0"
-  NPM_FLAGS = "--legacy-peer-deps --no-audit"
-  VITE_SOME_KEY = "123"
+  NPM_FLAGS = "--legacy-peer-deps"
 
 [[redirects]]
   from = "/*"
