@@ -15,7 +15,7 @@ import {
   InputRightElement,
   IconButton,
 } from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -29,21 +29,32 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   const { handleSignIn } = useAuth();
 
   useEffect(() => {
     const handleRecoveryToken = async () => {
-      const hash = window.location.hash;
+      // Pega o hash da URL completa
+      const fullUrl = window.location.href;
+      const hashIndex = fullUrl.indexOf('#');
+      const hash = hashIndex >= 0 ? fullUrl.slice(hashIndex) : '';
+
+      console.log('URL completa:', fullUrl);
+      console.log('Hash encontrado:', hash);
+
       if (!hash || !hash.includes('type=recovery')) {
+        console.log('Hash inválido ou não é recuperação de senha');
         navigate('/login');
         return;
       }
 
       try {
+        // Tenta obter o usuário atual usando o token da URL
         const { data: { user }, error } = await supabase.auth.getUser();
         
         if (error || !user?.email) {
+          console.error('Erro ao obter usuário:', error);
           toast({
             title: 'Link inválido ou expirado',
             description: 'Por favor, solicite um novo link de redefinição de senha.',
@@ -55,6 +66,7 @@ const ResetPassword = () => {
           return;
         }
 
+        console.log('Email do usuário recuperado:', user.email);
         setEmail(user.email);
       } catch (error) {
         console.error('Erro ao verificar usuário:', error);
@@ -63,7 +75,7 @@ const ResetPassword = () => {
     };
 
     handleRecoveryToken();
-  }, [navigate, toast]);
+  }, [navigate, toast, location]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -91,12 +103,19 @@ const ResetPassword = () => {
     try {
       setLoading(true);
       
+      console.log('Iniciando atualização de senha para:', email);
+      
       // Atualiza a senha
       const { error: updateError } = await supabase.auth.updateUser({
         password: password
       });
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Erro ao atualizar senha:', updateError);
+        throw updateError;
+      }
+
+      console.log('Senha atualizada com sucesso');
 
       // Faz login com a nova senha
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
@@ -104,7 +123,12 @@ const ResetPassword = () => {
         password
       });
 
-      if (signInError) throw signInError;
+      if (signInError) {
+        console.error('Erro ao fazer login:', signInError);
+        throw signInError;
+      }
+
+      console.log('Login realizado com sucesso');
 
       toast({
         title: 'Senha atualizada',
@@ -116,8 +140,9 @@ const ResetPassword = () => {
 
       // Aguarda um pouco para garantir que o estado foi atualizado
       setTimeout(() => {
+        console.log('Redirecionando para o dashboard');
         navigate('/', { replace: true });
-      }, 1000);
+      }, 1500);
 
     } catch (error) {
       console.error('Erro ao redefinir senha:', error);
