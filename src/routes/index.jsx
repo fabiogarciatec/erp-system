@@ -10,6 +10,7 @@ import Permissions from '../pages/permissions'
 import PlaceholderPage from '../components/PlaceholderPage'
 import { ProtectedRoute } from '../components/ProtectedRoute'
 import AcessoNegado from '../pages/acesso-negado/AcessoNegado'
+import ResetPassword from '../pages/reset-password/ResetPassword'
 
 // Componente de loading
 const LoadingScreen = () => (
@@ -63,6 +64,16 @@ const AppRoutes = () => {
         element={
           <PublicRoute>
             <Login />
+          </PublicRoute>
+        } 
+      />
+      
+      {/* Rota pública de redefinição de senha */}
+      <Route 
+        path="/reset-password" 
+        element={
+          <PublicRoute>
+            <ResetPassword />
           </PublicRoute>
         } 
       />

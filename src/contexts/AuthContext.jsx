@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useToast } from '@chakra-ui/react'
 import { supabase, signIn, signOut, getCurrentUser, onAuthStateChange } from '../services/supabase'
+import { useNavigate } from 'react-router-dom'
 
 const AuthContext = createContext(null)
 
@@ -20,6 +21,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [initialized, setInitialized] = useState(false)
   const toast = useToast()
+  const navigate = useNavigate()
 
   // Carrega o perfil e permissões do usuário
   const loadUserProfile = async (userId, userData) => {
@@ -127,63 +129,59 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  // Efeito para carregar o usuário inicial
   useEffect(() => {
     let mounted = true
+    let unsubscribe
 
-    const loadUser = async () => {
+    const initialize = async () => {
       try {
-        const currentUser = await getCurrentUser()
-        
-        if (!mounted) return
-
-        if (!currentUser) {
-          console.log('Nenhum usuário autenticado')
-          setUser(null)
-          setUserProfile(null)
-          setUserRole(null)
-          setUserPermissions([])
-          setInitialized(true)
-          setLoading(false)
-          return
+        // Verifica se há um token de redefinição de senha na URL
+        const hash = window.location.hash;
+        if (hash && hash.includes('type=recovery')) {
+          setLoading(false);
+          setInitialized(true);
+          return;
         }
 
-        console.log('Usuário inicial carregado:', currentUser)
-        setUser(currentUser)
-        await loadUserProfile(currentUser.id, currentUser)
-        setInitialized(true)
-        setLoading(false)
-      } catch (error) {
-        console.error('Erro ao carregar usuário inicial:', error)
+        const { data: { session } } = await supabase.auth.getSession()
+        
         if (mounted) {
-          setUser(null)
-          setUserProfile(null)
-          setUserRole(null)
-          setUserPermissions([])
-          setInitialized(true)
+          if (session?.user) {
+            await loadUserProfile(session.user.id, session.user)
+            setUser(session.user)
+          } else {
+            setUser(null)
+            setUserRole(null)
+            setUserPermissions([])
+          }
           setLoading(false)
+          setInitialized(true)
+        }
+
+        // Subscribe to auth changes
+        unsubscribe = supabase.auth.onAuthStateChange(async (event, session) => {
+          console.log('Auth state changed:', event, session)
+          if (mounted) {
+            if (session?.user) {
+              setUser(session.user)
+              await loadUserProfile(session.user.id, session.user)
+            } else {
+              setUser(null)
+              setUserRole(null)
+              setUserPermissions([])
+            }
+          }
+        })
+      } catch (error) {
+        console.error('Erro ao inicializar auth:', error)
+        if (mounted) {
+          setLoading(false)
+          setInitialized(true)
         }
       }
     }
 
-    loadUser()
-
-    // Configurar listener de mudanças de autenticação
-    const { unsubscribe } = onAuthStateChange(async (event, session) => {
-      console.log('Evento de autenticação:', event, session)
-      if (!mounted) return
-
-      const newUser = session?.user ?? null
-      setUser(newUser)
-
-      if (newUser) {
-        await loadUserProfile(newUser.id, newUser)
-      } else {
-        setUserProfile(null)
-        setUserRole(null)
-        setUserPermissions([])
-      }
-    })
+    initialize()
 
     return () => {
       mounted = false
