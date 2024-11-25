@@ -10,27 +10,31 @@ export const ProtectedRoute = ({
   adminOnly = false
 }) => {
   const location = useLocation();
-  const { checkAllPermissions, checkAnyPermission, checkRoutePermission } = usePermissions();
-  const { userRole } = useAuth();
+  const { hasPermission, userRole, loading } = usePermissions();
+  const { user } = useAuth();
+
+  // Se ainda está carregando, mostra nada ou um loader
+  if (loading) {
+    return null;
+  }
+
+  // Se não estiver autenticado, redireciona para o login
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
 
   // Verifica se a rota é apenas para admin
   if (adminOnly && userRole !== 'admin') {
     return <Navigate to="/acesso-negado" state={{ from: location }} replace />;
   }
 
-  // Primeiro verifica se o usuário tem permissão para a rota atual
-  const hasRoutePermission = checkRoutePermission(location.pathname);
-  if (!hasRoutePermission) {
-    return <Navigate to="/acesso-negado" state={{ from: location }} replace />;
-  }
-
-  // Depois verifica as permissões específicas do componente
+  // Verifica as permissões específicas do componente
   if (requiredPermissions.length > 0) {
-    const hasComponentPermission = requireAll 
-      ? checkAllPermissions(requiredPermissions)
-      : checkAnyPermission(requiredPermissions);
+    const hasAccess = requireAll 
+      ? requiredPermissions.every(permission => hasPermission(permission))
+      : requiredPermissions.some(permission => hasPermission(permission));
 
-    if (!hasComponentPermission) {
+    if (!hasAccess) {
       return <Navigate to="/acesso-negado" state={{ from: location }} replace />;
     }
   }

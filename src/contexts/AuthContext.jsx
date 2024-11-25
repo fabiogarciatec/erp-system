@@ -149,7 +149,7 @@ export const AuthProvider = ({ children }) => {
     initializeAuth()
 
     // Configura o listener de mudanças na autenticação
-    const { unsubscribe } = onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
       console.log('Mudança no estado de autenticação:', event, session)
 
       if (event === 'SIGNED_IN') {
@@ -165,7 +165,7 @@ export const AuthProvider = ({ children }) => {
 
     return () => {
       console.log('Limpando listener de autenticação')
-      unsubscribe()
+      subscription.unsubscribe()
     }
   }, [])
 
@@ -248,6 +248,55 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Função para recarregar as permissões do usuário
+  const reloadUserPermissions = async () => {
+    if (!user?.id) {
+      console.log('Nenhum usuário logado para recarregar permissões')
+      return
+    }
+    
+    try {
+      console.log('Recarregando permissões do usuário...')
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          roles:role_id (
+            name,
+            role_permissions (
+              permission_key
+            )
+          )
+        `)
+        .eq('id', user.id)
+        .single()
+
+      if (error) throw error
+
+      console.log('Perfil atualizado:', profile)
+      setUserProfile(profile)
+      setUserRole(profile.roles?.name || 'user')
+      setUserPermissions(profile.roles?.role_permissions?.map(p => p.permission_key) || [])
+
+      toast({
+        title: 'Permissões atualizadas',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      })
+    } catch (error) {
+      console.error('Erro ao recarregar permissões:', error)
+      toast({
+        title: 'Erro ao atualizar permissões',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+      throw error
+    }
+  }
+
   const value = {
     user,
     userProfile,
@@ -257,6 +306,7 @@ export const AuthProvider = ({ children }) => {
     initialized,
     signIn: handleSignIn,
     signOut: handleSignOut,
+    reloadUserPermissions
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
