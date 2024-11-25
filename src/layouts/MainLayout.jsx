@@ -133,14 +133,15 @@ const MenuItem = ({ icon, text, path, subItems, isOpen, onToggle }) => {
 }
 
 const MainLayout = () => {
-  const { logout } = useAuth()
+  const { signOut } = useAuth()
   const navigate = useNavigate()
   const [openMenus, setOpenMenus] = useState({})
   const { isOpen: isSidebarOpen, onToggle: onSidebarToggle } = useDisclosure({ defaultIsOpen: true })
 
   const handleLogout = async () => {
     try {
-      await logout()
+      const { error } = await signOut()
+      if (error) throw error
       navigate('/login')
     } catch (error) {
       console.error('Erro ao fazer logout:', error)
@@ -199,19 +200,22 @@ const MainLayout = () => {
           </Box>
 
           {/* Menu Sections */}
-          <VStack spacing={6} align="stretch" flex="1">
+          <VStack spacing={6} align="stretch" flex={1}>
             {Object.entries(menuSections).map(([section, items]) => (
-              <VStack key={section} align="stretch" spacing={2}>
-                <Text fontSize="sm" color="gray.500" fontWeight="medium" px={2}>
+              <VStack key={section} align="stretch" spacing={1}>
+                <Text
+                  fontSize="xs"
+                  fontWeight="bold"
+                  color="gray.500"
+                  px={3}
+                  py={2}
+                >
                   {section}
                 </Text>
                 {items.map((item) => (
                   <MenuItem
-                    key={item.path || item.text}
-                    icon={item.icon}
-                    text={item.text}
-                    path={item.path}
-                    subItems={item.subItems}
+                    key={item.text}
+                    {...item}
                     isOpen={openMenus[item.text]}
                     onToggle={() => toggleMenu(item.text)}
                   />
@@ -222,10 +226,12 @@ const MainLayout = () => {
 
           {/* Logout Button */}
           <Button
+            variant="ghost"
+            w="full"
+            justifyContent="flex-start"
             leftIcon={<Icon as={MdLogout} />}
             onClick={handleLogout}
-            variant="ghost"
-            justifyContent="flex-start"
+            color="gray.700"
             _hover={{ bg: 'gray.100' }}
           >
             Sair
@@ -234,22 +240,8 @@ const MainLayout = () => {
       </Box>
 
       {/* Main Content */}
-      <Box
-        flex="1"
-        bg="gray.50"
-        p={4}
-        overflowY="auto"
-        transition="all 0.3s"
-        w={{ base: '100%', md: 'calc(100% - 280px)' }}
-      >
-        <Box 
-          w="full"
-          maxW="100%"
-          mx="auto"
-          px={4}
-        >
-          <Outlet />
-        </Box>
+      <Box flex={1} p={8} bg="gray.50" overflowY="auto">
+        <Outlet />
       </Box>
     </Flex>
   )

@@ -153,8 +153,16 @@ const AppRoutes = () => {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="fornecedores" 
+            element={
+              <ProtectedRoute requiredPermissions={['companies.view']}>
+                <PlaceholderPage title="Lista de Fornecedores" />
+              </ProtectedRoute>
+            } 
+          />
         </Route>
-        
+
         {/* Vendas */}
         <Route path="/vendas">
           <Route 
@@ -181,8 +189,16 @@ const AppRoutes = () => {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="orcamentos" 
+            element={
+              <ProtectedRoute requiredPermissions={['sales.view']}>
+                <PlaceholderPage title="Orçamentos" />
+              </ProtectedRoute>
+            } 
+          />
         </Route>
-        
+
         {/* Marketing */}
         <Route path="/marketing">
           <Route 
@@ -205,12 +221,12 @@ const AppRoutes = () => {
             path="disparos" 
             element={
               <ProtectedRoute requiredPermissions={['marketing.view']}>
-                <PlaceholderPage title="Disparos em Massa" />
+                <PlaceholderPage title="Disparos" />
               </ProtectedRoute>
             } 
           />
         </Route>
-        
+
         {/* Configurações */}
         <Route path="/configuracoes">
           <Route 
@@ -232,26 +248,13 @@ const AppRoutes = () => {
           <Route 
             path="permissoes" 
             element={
-              <ProtectedRoute adminOnly>
+              <ProtectedRoute requiredPermissions={['users.view', 'users.edit']} requireAll={true}>
                 <Permissions />
               </ProtectedRoute>
             } 
           />
         </Route>
       </Route>
-      
-      {/* Rota para páginas não encontradas */}
-      <Route 
-        path="*" 
-        element={
-          <AuthenticatedRoute>
-            <PlaceholderPage 
-              title="Página não encontrada" 
-              description="A página que você está procurando não existe."
-            />
-          </AuthenticatedRoute>
-        } 
-      />
     </Routes>
   )
 }

@@ -200,7 +200,7 @@ export default function PermissionList() {
         throw deleteError
       }
 
-      // Insere as novas permissões
+      // Depois, insere as novas permissões
       if (newPermissions.length > 0) {
         console.log('Inserindo novas permissões...')
         const { error: insertError } = await supabase
@@ -213,19 +213,22 @@ export default function PermissionList() {
         }
       }
 
-      console.log('Permissões salvas com sucesso!')
-      
-      // Recarrega as permissões no AuthContext
-      await reloadUserPermissions()
-      
+      // Recarrega as permissões do usuário atual
+      if (reloadUserPermissions) {
+        console.log('Recarregando permissões do usuário...')
+        await reloadUserPermissions()
+      }
+
+      console.log('Permissões salvas com sucesso')
       toast({
-        title: 'Permissões salvas com sucesso!',
+        title: 'Permissões salvas',
+        description: 'As permissões foram atualizadas com sucesso.',
         status: 'success',
         duration: 3000,
         isClosable: true,
       })
 
-      // Recarrega as permissões
+      // Recarrega a lista de permissões
       await fetchRolesAndPermissions()
     } catch (error) {
       console.error('Erro ao salvar permissões:', error)
@@ -252,32 +255,21 @@ export default function PermissionList() {
 
   if (error) {
     return (
-      <Card>
-        <CardBody>
-          <VStack spacing={4}>
-            <Heading size="md" color="red.500">Erro ao carregar permissões</Heading>
-            <Text>{error}</Text>
-            <Button onClick={fetchRolesAndPermissions} colorScheme="blue">
-              Tentar novamente
-            </Button>
-          </VStack>
-        </CardBody>
-      </Card>
+      <Box p={4}>
+        <Text color="red.500">Erro ao carregar permissões: {error}</Text>
+      </Box>
     )
   }
 
   return (
     <Card>
       <CardHeader>
-        <Flex alignItems="center" gap={4}>
-          <Box>
-            <Heading size="md">Permissões</Heading>
-            <Text color="gray.500">Gerencie as permissões de cada função</Text>
-          </Box>
+        <Flex align="center">
+          <Heading size="md">Permissões por Função</Heading>
           <Spacer />
           <Button
-            colorScheme="blue"
             leftIcon={<Icon as={MdSave} />}
+            colorScheme="blue"
             onClick={handleSavePermissions}
             isLoading={saving}
             loadingText="Salvando..."
@@ -286,46 +278,52 @@ export default function PermissionList() {
           </Button>
         </Flex>
       </CardHeader>
-      <CardBody overflowX="auto">
-        <Table>
-          <Thead>
-            <Tr>
-              <Th>Módulo/Recurso</Th>
-              {roles.map((role) => (
-                <Th key={role.id} textAlign="center">
-                  {role.name}
-                </Th>
-              ))}
-            </Tr>
-          </Thead>
-          <Tbody>
-            {Object.entries(systemPermissions).map(([module, { label, permissions }]) => (
-              <React.Fragment key={module}>
-                <Tr>
-                  <Td fontWeight="bold" colSpan={roles.length + 1} bg="gray.50">
-                    {label}
-                  </Td>
-                </Tr>
-                {Object.entries(permissions).map(([permission, description]) => (
-                  <Tr key={`${module}.${permission}`}>
-                    <Td pl={8}>{description}</Td>
-                    {roles.map((role) => (
-                      <Td key={role.id} textAlign="center">
-                        <Checkbox
-                          isChecked={
-                            rolePermissions[role.id]?.[`${module}.${permission}`] || false
-                          }
-                          onChange={() => handlePermissionChange(role.id, module, permission)}
-                          isDisabled={role.name === 'admin'} // Admin sempre tem todas as permissões
-                        />
-                      </Td>
-                    ))}
-                  </Tr>
+
+      <CardBody>
+        <Box overflowX="auto">
+          <Table>
+            <Thead>
+              <Tr>
+                <Th>Módulo/Permissão</Th>
+                {roles.map((role) => (
+                  <Th key={role.id} textAlign="center">
+                    {role.name}
+                  </Th>
                 ))}
-              </React.Fragment>
-            ))}
-          </Tbody>
-        </Table>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {Object.entries(systemPermissions).map(([module, { label, permissions }]) => (
+                <React.Fragment key={module}>
+                  {/* Cabeçalho do módulo */}
+                  <Tr>
+                    <Td colSpan={roles.length + 1}>
+                      <Text fontWeight="bold">{label}</Text>
+                    </Td>
+                  </Tr>
+                  {/* Permissões do módulo */}
+                  {Object.entries(permissions).map(([permission, description]) => (
+                    <Tr key={`${module}.${permission}`}>
+                      <Td pl={8}>{description}</Td>
+                      {roles.map((role) => (
+                        <Td key={role.id} textAlign="center">
+                          <Checkbox
+                            isChecked={
+                              role.name === 'admin' ||
+                              (rolePermissions[role.id]?.[`${module}.${permission}`] ?? false)
+                            }
+                            onChange={() => handlePermissionChange(role.id, module, permission)}
+                            isDisabled={role.name === 'admin'} // Admin sempre tem todas as permissões
+                          />
+                        </Td>
+                      ))}
+                    </Tr>
+                  ))}
+                </React.Fragment>
+              ))}
+            </Tbody>
+          </Table>
+        </Box>
       </CardBody>
     </Card>
   )
