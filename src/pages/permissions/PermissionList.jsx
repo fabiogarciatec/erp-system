@@ -1,3 +1,4 @@
+import React from 'react'
 import {
   Box,
   Button,
@@ -7,7 +8,6 @@ import {
   Checkbox,
   Flex,
   Heading,
-  HStack,
   Icon,
   Table,
   Tbody,
@@ -18,6 +18,8 @@ import {
   Tr,
   useToast,
   VStack,
+  Spacer,
+  Spinner,
 } from '@chakra-ui/react'
 import { useEffect, useState } from 'react'
 import { MdSave } from 'react-icons/md'
@@ -74,30 +76,45 @@ const systemPermissions = {
 
 export default function PermissionList() {
   const toast = useToast()
-  const { userProfile } = useAuth()
+  const { user } = useAuth()
   const [roles, setRoles] = useState([])
   const [rolePermissions, setRolePermissions] = useState({})
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
 
   // Busca as funções e permissões do banco
   const fetchRolesAndPermissions = async () => {
     try {
+      setError(null)
+      console.log('Buscando funções...')
+      
       // Busca todas as funções
       const { data: rolesData, error: rolesError } = await supabase
         .from('roles')
         .select('*')
         .order('name')
 
-      if (rolesError) throw rolesError
+      if (rolesError) {
+        console.error('Erro ao buscar funções:', rolesError)
+        throw rolesError
+      }
 
+      console.log('Funções encontradas:', rolesData)
       setRoles(rolesData)
 
       // Busca todas as permissões
+      console.log('Buscando permissões...')
       const { data: permissionsData, error: permissionsError } = await supabase
         .from('role_permissions')
         .select('*')
 
-      if (permissionsError) throw permissionsError
+      if (permissionsError) {
+        console.error('Erro ao buscar permissões:', permissionsError)
+        throw permissionsError
+      }
+
+      console.log('Permissões encontradas:', permissionsData)
 
       // Organiza as permissões por função
       const permissionsByRole = {}
@@ -108,83 +125,13 @@ export default function PermissionList() {
         permissionsByRole[permission.role_id][permission.permission_key] = true
       })
 
+      console.log('Permissões organizadas:', permissionsByRole)
       setRolePermissions(permissionsByRole)
     } catch (error) {
       console.error('Erro ao carregar funções e permissões:', error)
+      setError(error.message)
       toast({
         title: 'Erro ao carregar funções e permissões',
-        description: error.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-    }
-  }
-
-  useEffect(() => {
-    fetchRolesAndPermissions()
-  }, [])
-
-  // Atualiza uma permissão específica
-  const handlePermissionChange = (roleId, module, permission) => {
-    setRolePermissions((prev) => {
-      const newPermissions = { ...prev }
-      const permissionKey = `${module}.${permission}`
-
-      if (!newPermissions[roleId]) {
-        newPermissions[roleId] = {}
-      }
-
-      newPermissions[roleId][permissionKey] = !newPermissions[roleId][permissionKey]
-      return newPermissions
-    })
-  }
-
-  // Salva todas as permissões atualizadas
-  const handleSavePermissions = async () => {
-    setLoading(true)
-
-    try {
-      // Primeiro, remove todas as permissões existentes
-      const { error: deleteError } = await supabase
-        .from('role_permissions')
-        .delete()
-        .neq('role_id', 0) // Não deleta permissões do superadmin
-
-      if (deleteError) throw deleteError
-
-      // Prepara as novas permissões para inserção
-      const newPermissions = []
-      Object.entries(rolePermissions).forEach(([roleId, permissions]) => {
-        Object.entries(permissions).forEach(([permissionKey, hasPermission]) => {
-          if (hasPermission) {
-            newPermissions.push({
-              role_id: roleId,
-              permission_key: permissionKey,
-            })
-          }
-        })
-      })
-
-      // Insere as novas permissões
-      if (newPermissions.length > 0) {
-        const { error: insertError } = await supabase
-          .from('role_permissions')
-          .insert(newPermissions)
-
-        if (insertError) throw insertError
-      }
-
-      toast({
-        title: 'Permissões atualizadas com sucesso',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      })
-    } catch (error) {
-      console.error('Erro ao salvar permissões:', error)
-      toast({
-        title: 'Erro ao salvar permissões',
         description: error.message,
         status: 'error',
         duration: 5000,
@@ -195,61 +142,172 @@ export default function PermissionList() {
     }
   }
 
-  // Verifica se uma permissão está marcada
-  const isPermissionChecked = (roleId, module, permission) => {
-    const permissionKey = `${module}.${permission}`
-    return rolePermissions[roleId]?.[permissionKey] || false
+  useEffect(() => {
+    fetchRolesAndPermissions()
+  }, [])
+
+  // Atualiza uma permissão específica
+  const handlePermissionChange = (roleId, module, permission) => {
+    console.log('Alterando permissão:', { roleId, module, permission })
+    setRolePermissions((prev) => {
+      const newPermissions = { ...prev }
+      const permissionKey = `${module}.${permission}`
+
+      if (!newPermissions[roleId]) {
+        newPermissions[roleId] = {}
+      }
+
+      newPermissions[roleId][permissionKey] = !newPermissions[roleId][permissionKey]
+      console.log('Novas permissões:', newPermissions)
+      return newPermissions
+    })
+  }
+
+  // Salva todas as permissões atualizadas
+  const handleSavePermissions = async () => {
+    setSaving(true)
+    try {
+      setError(null)
+      console.log('Iniciando salvamento de permissões...')
+
+      // Prepara as novas permissões para inserção
+      const newPermissions = []
+      Object.entries(rolePermissions).forEach(([roleId, permissions]) => {
+        Object.entries(permissions).forEach(([permissionKey, hasPermission]) => {
+          if (hasPermission) {
+            newPermissions.push({
+              role_id: roleId,
+              permission_key: permissionKey
+            })
+          }
+        })
+      })
+
+      console.log('Permissões preparadas para salvamento:', newPermissions)
+
+      // Primeiro, remove todas as permissões existentes
+      console.log('Removendo permissões antigas...')
+      const { error: deleteError } = await supabase
+        .from('role_permissions')
+        .delete()
+        .neq('role_id', 1) // Não deleta permissões do admin
+
+      if (deleteError) {
+        console.error('Erro ao deletar permissões:', deleteError)
+        throw deleteError
+      }
+
+      // Insere as novas permissões
+      if (newPermissions.length > 0) {
+        console.log('Inserindo novas permissões...')
+        const { error: insertError } = await supabase
+          .from('role_permissions')
+          .insert(newPermissions)
+
+        if (insertError) {
+          console.error('Erro ao inserir permissões:', insertError)
+          throw insertError
+        }
+      }
+
+      console.log('Permissões salvas com sucesso!')
+      toast({
+        title: 'Permissões salvas com sucesso!',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      })
+
+      // Recarrega as permissões
+      await fetchRolesAndPermissions()
+    } catch (error) {
+      console.error('Erro ao salvar permissões:', error)
+      setError(error.message)
+      toast({
+        title: 'Erro ao salvar permissões',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <Flex justify="center" align="center" h="100vh">
+        <Spinner size="xl" color="blue.500" />
+      </Flex>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardBody>
+          <VStack spacing={4}>
+            <Heading size="md" color="red.500">Erro ao carregar permissões</Heading>
+            <Text>{error}</Text>
+            <Button onClick={fetchRolesAndPermissions} colorScheme="blue">
+              Tentar novamente
+            </Button>
+          </VStack>
+        </CardBody>
+      </Card>
+    )
   }
 
   return (
     <Card>
       <CardHeader>
-        <Flex align="center" gap={4}>
-          <Box flex="1">
+        <Flex alignItems="center" gap={4}>
+          <Box>
             <Heading size="md">Permissões</Heading>
-            <Text color="gray.600" fontSize="sm">
-              Gerencie as permissões de acesso por função
-            </Text>
+            <Text color="gray.500">Gerencie as permissões de cada função</Text>
           </Box>
+          <Spacer />
           <Button
-            leftIcon={<Icon as={MdSave} boxSize={5} />}
             colorScheme="blue"
+            leftIcon={<Icon as={MdSave} />}
             onClick={handleSavePermissions}
-            isLoading={loading}
+            isLoading={saving}
             loadingText="Salvando..."
           >
             Salvar Alterações
           </Button>
         </Flex>
       </CardHeader>
-
       <CardBody overflowX="auto">
-        <Table variant="simple">
+        <Table>
           <Thead>
             <Tr>
-              <Th>Módulo/Função</Th>
+              <Th>Módulo/Recurso</Th>
               {roles.map((role) => (
                 <Th key={role.id} textAlign="center">
-                  {role.display_name}
+                  {role.name}
                 </Th>
               ))}
             </Tr>
           </Thead>
           <Tbody>
             {Object.entries(systemPermissions).map(([module, { label, permissions }]) => (
-              <>
-                <Tr key={module} bg="gray.50">
-                  <Td fontWeight="bold" colSpan={roles.length + 1}>
+              <React.Fragment key={module}>
+                <Tr>
+                  <Td fontWeight="bold" colSpan={roles.length + 1} bg="gray.50">
                     {label}
                   </Td>
                 </Tr>
-                {Object.entries(permissions).map(([permission, permissionLabel]) => (
-                  <Tr key={`${module}-${permission}`}>
-                    <Td pl={8}>{permissionLabel}</Td>
+                {Object.entries(permissions).map(([permission, description]) => (
+                  <Tr key={`${module}.${permission}`}>
+                    <Td pl={8}>{description}</Td>
                     {roles.map((role) => (
-                      <Td key={`${role.id}-${module}-${permission}`} textAlign="center">
+                      <Td key={role.id} textAlign="center">
                         <Checkbox
-                          isChecked={isPermissionChecked(role.id, module, permission)}
+                          isChecked={
+                            rolePermissions[role.id]?.[`${module}.${permission}`] || false
+                          }
                           onChange={() => handlePermissionChange(role.id, module, permission)}
                           isDisabled={role.name === 'admin'} // Admin sempre tem todas as permissões
                         />
@@ -257,7 +315,7 @@ export default function PermissionList() {
                     ))}
                   </Tr>
                 ))}
-              </>
+              </React.Fragment>
             ))}
           </Tbody>
         </Table>
