@@ -147,10 +147,22 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        // Verifica se há uma sessão ativa
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.log('Nenhuma sessão ativa');
+          clearAuthState();
+          return;
+        }
+
+        // Se há sessão, tenta obter o usuário
         const currentUser = await getCurrentUser();
         if (currentUser) {
           setUser(currentUser);
           await loadUserProfile(currentUser.id, currentUser);
+        } else {
+          clearAuthState();
         }
       } catch (error) {
         console.error('Erro ao inicializar autenticação:', error);
@@ -162,13 +174,12 @@ export const AuthProvider = ({ children }) => {
 
     // Configura o listener de mudanças de autenticação
     const { unsubscribe } = onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN') {
-        const user = session?.user;
-        if (user) {
-          setUser(user);
-          await loadUserProfile(user.id, user);
-        }
-      } else if (event === 'SIGNED_OUT') {
+      console.log('Evento de autenticação:', event);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        setUser(session.user);
+        await loadUserProfile(session.user.id, session.user);
+      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
         clearAuthState();
       }
     });

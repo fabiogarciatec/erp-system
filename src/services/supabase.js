@@ -111,22 +111,41 @@ class ConnectionManager {
   }
 
   async refreshSession() {
-    if (!this.isOnline || this.reconnectAttempts >= this.maxAttempts) return;
+    if (!this.isOnline || this.reconnectAttempts >= this.maxAttempts) return null;
 
     try {
+      // Primeiro verifica se há uma sessão
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      
+      // Se não há sessão, não tenta atualizar
+      if (!currentSession) {
+        console.log('Nenhuma sessão ativa para atualizar');
+        return null;
+      }
+
       console.log('Atualizando sessão...');
       const { data, error } = await supabase.auth.refreshSession();
       
-      if (error) throw error;
+      if (error) {
+        // Ignora erro de sessão ausente no estado inicial
+        if (error.message === 'Auth session missing!' && this.reconnectAttempts === 0) {
+          console.log('Estado inicial: sem sessão ativa');
+          return null;
+        }
+        throw error;
+      }
       
       if (data?.session) {
         this.reconnectAttempts = 0;
         this.notifyListeners('refreshed');
         return data.session;
       }
+
+      return null;
     } catch (error) {
       console.error('Erro ao atualizar sessão:', error);
       this.handleConnectionError();
+      return null;
     }
   }
 
@@ -257,6 +276,7 @@ export const checkSession = async () => {
 
 // Função para registrar callbacks de mudança de estado
 export const onAuthStateChange = (callback) => {
+  let isInitialCheck = true;
   console.log('Configurando listener de autenticação...');
   
   // Adiciona listener para eventos de conexão
@@ -268,7 +288,16 @@ export const onAuthStateChange = (callback) => {
   });
 
   // Retorna a subscription do Supabase
-  return supabase.auth.onAuthStateChange((event, session) => {
+  return supabase.auth.onAuthStateChange(async (event, session) => {
+    // No estado inicial, só loga se houver uma sessão
+    if (isInitialCheck) {
+      isInitialCheck = false;
+      if (!session) {
+        console.log('Estado inicial: sem sessão');
+        return;
+      }
+    }
+
     console.log('Mudança de estado:', event, session?.user?.id);
     callback(event, session);
   });
