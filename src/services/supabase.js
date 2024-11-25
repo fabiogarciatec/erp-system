@@ -171,6 +171,28 @@ class ConnectionManager {
 // Instância global do gerenciador de conexão
 export const connectionManager = new ConnectionManager();
 
+// URL base da aplicação para redirecionamentos
+const siteUrl = import.meta.env.MODE === 'production'
+  ? 'https://erp-system-fabio.netlify.app'
+  : 'http://localhost:5173';
+
+// Função para enviar email de recuperação de senha
+export const sendPasswordResetEmail = async (email) => {
+  try {
+    console.log('Enviando email de recuperação para:', email);
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${siteUrl}/reset-password`,
+    });
+
+    if (error) throw error;
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error('Erro ao enviar email de recuperação:', error);
+    return { data: null, error };
+  }
+};
+
 // Funções de autenticação melhoradas
 export const signIn = async (email, password) => {
   try {
