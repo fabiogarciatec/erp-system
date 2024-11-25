@@ -123,22 +123,29 @@ class ConnectionManager {
         return null;
       }
 
-      console.log('Atualizando sessão...');
-      const { data, error } = await supabase.auth.refreshSession();
-      
-      if (error) {
-        // Ignora erro de sessão ausente no estado inicial
-        if (error.message === 'Auth session missing!' && this.reconnectAttempts === 0) {
-          console.log('Estado inicial: sem sessão ativa');
-          return null;
+      // Verifica se o token está expirado
+      const expiresAt = new Date(currentSession.expires_at * 1000);
+      if (expiresAt <= new Date()) {
+        console.log('Token expirado, tentando atualizar...');
+        const { data, error } = await supabase.auth.refreshSession();
+        
+        if (error) {
+          // Ignora erro de sessão ausente no estado inicial
+          if (error.message === 'Auth session missing!' && this.reconnectAttempts === 0) {
+            console.log('Estado inicial: sem sessão ativa');
+            return null;
+          }
+          throw error;
         }
-        throw error;
-      }
-      
-      if (data?.session) {
-        this.reconnectAttempts = 0;
-        this.notifyListeners('refreshed');
-        return data.session;
+        
+        if (data?.session) {
+          this.reconnectAttempts = 0;
+          this.notifyListeners('refreshed');
+          return data.session;
+        }
+      } else {
+        console.log('Token ainda válido');
+        return currentSession;
       }
 
       return null;

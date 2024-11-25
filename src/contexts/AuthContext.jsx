@@ -1,15 +1,19 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase, signIn, signOut, getCurrentUser, onAuthStateChange, connectionManager } from '../services/supabase';
 import { useToast } from '@chakra-ui/react';
 
 const AuthContext = createContext({});
+
+// Rotas públicas que não precisam de autenticação
+const PUBLIC_ROUTES = ['/login', '/signup', '/reset-password', '/forgot-password'];
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
 
   // Função para limpar o estado de autenticação
@@ -145,51 +149,84 @@ export const AuthProvider = ({ children }) => {
 
   // Inicializa o estado de autenticação
   useEffect(() => {
+    let mounted = true;
+
     const initAuth = async () => {
       try {
+        // Se estiver em uma rota pública, não bloqueia o carregamento
+        if (PUBLIC_ROUTES.includes(location.pathname)) {
+          setLoading(false);
+          return;
+        }
+
         // Verifica se há uma sessão ativa
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
           console.log('Nenhuma sessão ativa');
           clearAuthState();
+          navigate('/login');
           return;
         }
 
         // Se há sessão, tenta obter o usuário
         const currentUser = await getCurrentUser();
-        if (currentUser) {
+        if (currentUser && mounted) {
           setUser(currentUser);
           await loadUserProfile(currentUser.id, currentUser);
-        } else {
+          // Se estiver na página de login com uma sessão válida, redireciona para dashboard
+          if (location.pathname === '/login') {
+            navigate('/dashboard');
+          }
+        } else if (mounted) {
           clearAuthState();
+          if (!PUBLIC_ROUTES.includes(location.pathname)) {
+            navigate('/login');
+          }
         }
       } catch (error) {
         console.error('Erro ao inicializar autenticação:', error);
-        clearAuthState();
+        if (mounted) {
+          clearAuthState();
+          if (!PUBLIC_ROUTES.includes(location.pathname)) {
+            navigate('/login');
+          }
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     // Configura o listener de mudanças de autenticação
     const { unsubscribe } = onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      
       console.log('Evento de autenticação:', event);
       
       if (event === 'SIGNED_IN' && session?.user) {
         setUser(session.user);
         await loadUserProfile(session.user.id, session.user);
+        if (location.pathname === '/login') {
+          navigate('/dashboard');
+        }
       } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
         clearAuthState();
+        if (!PUBLIC_ROUTES.includes(location.pathname)) {
+          navigate('/login');
+        }
       }
     });
 
     initAuth();
+    
     return () => {
+      mounted = false;
       unsubscribe?.();
       connectionManager.cleanup();
     };
-  }, []);
+  }, [location.pathname]); // Adiciona pathname como dependência
 
   const value = {
     user,
