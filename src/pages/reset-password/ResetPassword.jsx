@@ -1,172 +1,255 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
-  Card,
-  CardBody,
-  CardHeader,
+  Container,
   FormControl,
   FormLabel,
-  Heading,
   Input,
-  Stack,
+  VStack,
+  Heading,
   useToast,
   Text,
   FormErrorMessage,
-} from '@chakra-ui/react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { supabase } from '../../services/supabase'
+  InputGroup,
+  InputRightElement,
+  IconButton,
+} from '@chakra-ui/react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
+import { supabase } from '../../services/supabase';
+import { useAuth } from '../../contexts/AuthContext';
 
-export default function ResetPassword() {
-  const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
-  const toast = useToast()
-  
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+const ResetPassword = () => {
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const toast = useToast();
+  const { handleSignIn } = useAuth();
 
-  // Validações aprimoradas de senha
-  const hasMinLength = password.length >= 8
-  const hasUpperCase = /[A-Z]/.test(password)
-  const hasLowerCase = /[a-z]/.test(password)
-  const hasNumber = /[0-9]/.test(password)
-  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
-  
-  const isPasswordValid = hasMinLength && hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar
-  const doPasswordsMatch = password === confirmPassword
-  const isFormValid = isPasswordValid && doPasswordsMatch && !loading
+  useEffect(() => {
+    const handleRecoveryToken = async () => {
+      // Pega o hash da URL completa
+      const fullUrl = window.location.href;
+      const hashIndex = fullUrl.indexOf('#');
+      const hash = hashIndex >= 0 ? fullUrl.slice(hashIndex) : '';
 
-  // Função para obter mensagens de erro de senha
-  const getPasswordErrors = () => {
-    const errors = []
-    if (!hasMinLength) errors.push('Mínimo de 8 caracteres')
-    if (!hasUpperCase) errors.push('Pelo menos uma letra maiúscula')
-    if (!hasLowerCase) errors.push('Pelo menos uma letra minúscula')
-    if (!hasNumber) errors.push('Pelo menos um número')
-    if (!hasSpecialChar) errors.push('Pelo menos um caractere especial')
-    return errors
-  }
+      console.log('URL completa:', fullUrl);
+      console.log('Hash encontrado:', hash);
 
-  const handleResetPassword = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    try {
-      // Obtém o token da URL
-      const token = searchParams.get('token')
-      
-      if (!token) {
-        throw new Error('Token de redefinição não encontrado')
+      // Verifica se é uma URL de recuperação de senha
+      if (!hash || !hash.includes('type=recovery')) {
+        console.log('Hash inválido ou não é recuperação de senha');
+        navigate('/login');
+        return;
       }
 
-      // Atualiza a senha usando o token
-      const { error } = await supabase.auth.updateUser({
-        password: password
-      })
+      try {
+        // Verifica se o token é válido
+        const { data, error } = await supabase.auth.verifyOtp({
+          type: 'recovery',
+          token_hash: hash,
+        });
 
-      if (error) throw error
+        if (error || !data?.user?.email) {
+          console.error('Erro ao verificar token:', error);
+          toast({
+            title: 'Link inválido ou expirado',
+            description: 'Por favor, solicite um novo link de redefinição de senha.',
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          });
+          navigate('/login');
+          return;
+        }
+
+        console.log('Email do usuário recuperado:', data.user.email);
+        setEmail(data.user.email);
+      } catch (error) {
+        console.error('Erro ao verificar token:', error);
+        navigate('/login');
+      }
+    };
+
+    handleRecoveryToken();
+  }, [navigate, toast, location]);
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!password) {
+      newErrors.password = 'Nova senha é obrigatória';
+    } else if (password.length < 6) {
+      newErrors.password = 'A senha deve ter pelo menos 6 caracteres';
+    }
+    
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Confirmação de senha é obrigatória';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'As senhas não coincidem';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    try {
+      setLoading(true);
+      
+      console.log('Iniciando atualização de senha para:', email);
+      
+      // Atualiza a senha
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: password
+      });
+
+      if (updateError) {
+        console.error('Erro ao atualizar senha:', updateError);
+        throw updateError;
+      }
+
+      console.log('Senha atualizada com sucesso');
+
+      // Faz login com a nova senha
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (signInError) {
+        console.error('Erro ao fazer login:', signInError);
+        throw signInError;
+      }
+
+      console.log('Login realizado com sucesso');
 
       toast({
-        title: 'Senha atualizada com sucesso!',
-        description: 'Você será redirecionado para o login.',
+        title: 'Senha atualizada',
+        description: 'Sua senha foi atualizada com sucesso.',
         status: 'success',
         duration: 5000,
         isClosable: true,
-      })
+      });
 
-      // Redireciona para o login após alguns segundos
+      // Aguarda um pouco para garantir que o estado foi atualizado
       setTimeout(() => {
-        navigate('/login')
-      }, 2000)
+        console.log('Redirecionando para o dashboard');
+        navigate('/', { replace: true });
+      }, 1500);
+
     } catch (error) {
-      console.error('Erro ao redefinir senha:', error)
-      setError(error.message)
+      console.error('Erro ao redefinir senha:', error);
       toast({
         title: 'Erro ao redefinir senha',
-        description: error.message,
+        description: error.message || 'Ocorreu um erro ao tentar redefinir sua senha. Por favor, tente novamente.',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <Box maxW="md" mx="auto" py={10}>
-      <Card>
-        <CardHeader>
-          <Heading size="lg" textAlign="center">
-            Redefinir Senha
-          </Heading>
-        </CardHeader>
+    <Box 
+      minH="100vh" 
+      display="flex" 
+      alignItems="center" 
+      justifyContent="center"
+      bg="gray.50"
+    >
+      <Container maxW="md">
+        <Box 
+          p={8} 
+          bg="white" 
+          borderRadius="lg" 
+          boxShadow="lg"
+          border="1px"
+          borderColor="gray.200"
+        >
+          <VStack spacing={6} as="form" onSubmit={handleSubmit}>
+            <Heading size="lg">Redefinir Senha</Heading>
+            <Text color="gray.600" fontSize="sm" textAlign="center">
+              Digite sua nova senha abaixo
+            </Text>
 
-        <CardBody>
-          <form onSubmit={handleResetPassword}>
-            <Stack spacing={4}>
-              <FormControl isInvalid={password && !isPasswordValid}>
-                <FormLabel>Nova Senha</FormLabel>
+            <FormControl isInvalid={errors.password}>
+              <FormLabel>Nova Senha</FormLabel>
+              <InputGroup>
                 <Input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Digite sua nova senha"
                 />
-                {password && !isPasswordValid && (
-                  <FormErrorMessage>
-                    <Stack spacing={1}>
-                      {getPasswordErrors().map((error, index) => (
-                        <Text key={index}>{error}</Text>
-                      ))}
-                    </Stack>
-                  </FormErrorMessage>
-                )}
-              </FormControl>
+                <InputRightElement>
+                  <IconButton
+                    aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
+                    icon={showPassword ? <FiEyeOff /> : <FiEye />}
+                    variant="ghost"
+                    onClick={() => setShowPassword(!showPassword)}
+                  />
+                </InputRightElement>
+              </InputGroup>
+              <FormErrorMessage>{errors.password}</FormErrorMessage>
+            </FormControl>
 
-              <FormControl isInvalid={confirmPassword && !doPasswordsMatch}>
-                <FormLabel>Confirme a Nova Senha</FormLabel>
+            <FormControl isInvalid={errors.confirmPassword}>
+              <FormLabel>Confirmar Nova Senha</FormLabel>
+              <InputGroup>
                 <Input
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Digite a senha novamente"
+                  placeholder="Confirme sua nova senha"
                 />
-                <FormErrorMessage>
-                  As senhas não conferem
-                </FormErrorMessage>
-              </FormControl>
+                <InputRightElement>
+                  <IconButton
+                    aria-label={showConfirmPassword ? 'Esconder senha' : 'Mostrar senha'}
+                    icon={showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                    variant="ghost"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  />
+                </InputRightElement>
+              </InputGroup>
+              <FormErrorMessage>{errors.confirmPassword}</FormErrorMessage>
+            </FormControl>
 
-              {error && (
-                <Text color="red.500" fontSize="sm">
-                  {error}
-                </Text>
-              )}
+            <Button
+              type="submit"
+              colorScheme="blue"
+              width="full"
+              isLoading={loading}
+              loadingText="Atualizando..."
+            >
+              Atualizar Senha
+            </Button>
 
-              <Button
-                type="submit"
-                colorScheme="blue"
-                isLoading={loading}
-                loadingText="Redefinindo..."
-                isDisabled={!isFormValid}
-              >
-                Redefinir Senha
-              </Button>
-
-              <Button
-                variant="ghost"
-                onClick={() => navigate('/login')}
-                isDisabled={loading}
-              >
-                Voltar para o Login
-              </Button>
-            </Stack>
-          </form>
-        </CardBody>
-      </Card>
+            <Button
+              variant="ghost"
+              width="full"
+              onClick={() => navigate('/login')}
+              isDisabled={loading}
+            >
+              Voltar para Login
+            </Button>
+          </VStack>
+        </Box>
+      </Container>
     </Box>
-  )
-}
+  );
+};
+
+export default ResetPassword;

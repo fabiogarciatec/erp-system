@@ -1,315 +1,249 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import { useToast } from '@chakra-ui/react'
-import { supabase, signIn, signOut, getCurrentUser, onAuthStateChange } from '../services/supabase'
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { supabase, signIn, signOut, getCurrentUser, onAuthStateChange, connectionManager } from '../services/supabase';
+import { useToast } from '@chakra-ui/react';
 
-const AuthContext = createContext(null)
+const AuthContext = createContext({});
 
-export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider')
-  }
-  return context
-}
+// Rotas públicas que não precisam de autenticação
+const PUBLIC_ROUTES = ['/login', '/signup', '/reset-password', '/forgot-password'];
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [userProfile, setUserProfile] = useState(null)
-  const [userRole, setUserRole] = useState(null)
-  const [userPermissions, setUserPermissions] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [initialized, setInitialized] = useState(false)
-  const toast = useToast()
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const toast = useToast();
 
-  // Carrega o perfil e permissões do usuário
+  // Função para limpar o estado de autenticação
+  const clearAuthState = () => {
+    setUser(null);
+    setUserProfile(null);
+    setLoading(false);
+  };
+
+  // Função para carregar o perfil do usuário
   const loadUserProfile = async (userId, userData) => {
     try {
-      console.log('Carregando perfil e permissões do usuário...')
-      
-      if (!userData || !userId) {
-        console.log('Dados do usuário não fornecidos para carregar perfil')
-        return
-      }
-      
-      // Primeiro, busca o perfil do usuário com a role
-      const { data: profile, error: profileError } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          roles:role_id (
-            name,
-            role_permissions (
-              permission_key
-            )
-          )
-        `)
+        .select('*')
         .eq('id', userId)
-        .single()
+        .single();
 
-      if (profileError) {
-        if (profileError.code === 'PGRST116') {
-          console.log('Perfil não encontrado, criando...')
-          
-          // Busca o ID da role 'user' (role padrão)
-          const { data: userRole, error: roleError } = await supabase
-            .from('roles')
-            .select('id')
-            .eq('name', 'user')
-            .single()
+      if (error) throw error;
 
-          if (roleError) {
-            console.error('Erro ao buscar role padrão:', roleError)
-            throw roleError
-          }
+      const profile = {
+        ...data,
+        email: userData.email,
+        role: data.role || 'user',
+      };
 
-          // Se o perfil não existe, cria um novo com a role padrão
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .upsert([
-              {
-                id: userId,
-                email: userData.email,
-                full_name: userData.user_metadata?.full_name || userData.email,
-                role_id: userRole.id,
-              }
-            ])
-            .select(`
-              *,
-              roles:role_id (
-                name,
-                role_permissions (
-                  permission_key
-                )
-              )
-            `)
-            .single()
-
-          if (createError) {
-            console.error('Erro ao criar perfil:', createError)
-            throw createError
-          }
-          
-          setUserProfile(newProfile)
-          setUserRole(newProfile.roles?.name || 'user')
-          setUserPermissions(newProfile.roles?.role_permissions?.map(p => p.permission_key) || [])
-          return
-        } else {
-          console.error('Erro ao carregar perfil:', profileError)
-          throw profileError
-        }
-      }
-
-      console.log('Perfil carregado:', profile)
-      setUserProfile(profile)
-      setUserRole(profile.roles?.name || 'user')
-      setUserPermissions(profile.roles?.role_permissions?.map(p => p.permission_key) || [])
+      setUserProfile(profile);
+      return profile;
     } catch (error) {
-      console.error('Erro ao carregar perfil do usuário:', error)
-      toast({
-        title: 'Erro ao carregar perfil',
-        description: error.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
+      console.error('Erro ao carregar perfil:', error);
+      return null;
     }
-  }
-
-  // Inicializa o estado da autenticação
-  useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        setLoading(true)
-        console.log('Inicializando autenticação...')
-
-        const currentUser = await getCurrentUser()
-        console.log('Usuário atual:', currentUser)
-
-        if (currentUser) {
-          setUser(currentUser)
-          await loadUserProfile(currentUser.id, currentUser)
-        } else {
-          setUser(null)
-          setUserProfile(null)
-          setUserRole(null)
-          setUserPermissions([])
-        }
-      } catch (error) {
-        console.error('Erro ao inicializar autenticação:', error)
-        setUser(null)
-        setUserProfile(null)
-        setUserRole(null)
-        setUserPermissions([])
-      } finally {
-        setLoading(false)
-        setInitialized(true)
-      }
-    }
-
-    initializeAuth()
-
-    // Configura o listener de mudanças na autenticação
-    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
-      console.log('Mudança no estado de autenticação:', event, session)
-
-      if (event === 'SIGNED_IN') {
-        setUser(session.user)
-        await loadUserProfile(session.user.id, session.user)
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null)
-        setUserProfile(null)
-        setUserRole(null)
-        setUserPermissions([])
-      }
-    })
-
-    return () => {
-      console.log('Limpando listener de autenticação')
-      subscription.unsubscribe()
-    }
-  }, [])
+  };
 
   // Função de login
-  const handleSignIn = async (email, password) => {
+  const login = async (email, password) => {
     try {
-      setLoading(true)
-      const { data, error } = await signIn(email, password)
+      setLoading(true);
+      const { data, error } = await signIn(email, password);
+      
+      if (error) throw error;
+      
+      const { user: userData } = data;
+      if (!userData) throw new Error('Usuário não encontrado');
 
-      if (error) throw error
-
-      const user = data.user
-      setUser(user)
-      await loadUserProfile(user.id, user)
+      setUser(userData);
+      const profile = await loadUserProfile(userData.id, userData);
+      
+      if (!profile) throw new Error('Perfil não encontrado');
 
       toast({
-        title: 'Login realizado com sucesso',
+        title: 'Login realizado com sucesso!',
         status: 'success',
         duration: 3000,
-        isClosable: true,
-      })
+      });
 
-      return { error: null }
+      navigate('/dashboard');
     } catch (error) {
-      console.error('Erro no login:', error)
-      setUser(null)
-      setUserProfile(null)
-      setUserRole(null)
-      setUserPermissions([])
-
+      console.error('Erro no login:', error);
       toast({
         title: 'Erro no login',
-        description: error.message,
+        description: error.message || 'Verifique suas credenciais',
         status: 'error',
         duration: 5000,
-        isClosable: true,
-      })
-
-      return { error }
+      });
+      clearAuthState();
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Função de logout
-  const handleSignOut = async () => {
+  const logout = async () => {
     try {
-      setLoading(true)
-      const { error } = await signOut()
-
-      if (error) throw error
-
-      setUser(null)
-      setUserProfile(null)
-      setUserRole(null)
-      setUserPermissions([])
-
+      setLoading(true);
+      await signOut();
+      clearAuthState();
+      navigate('/login');
+      
       toast({
-        title: 'Logout realizado com sucesso',
+        title: 'Logout realizado com sucesso!',
         status: 'success',
         duration: 3000,
-        isClosable: true,
-      })
-
-      return { error: null }
+      });
     } catch (error) {
-      console.error('Erro no logout:', error)
-
+      console.error('Erro no logout:', error);
       toast({
         title: 'Erro ao fazer logout',
         description: error.message,
         status: 'error',
         duration: 5000,
-        isClosable: true,
-      })
-
-      return { error }
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  // Função para recarregar as permissões do usuário
-  const reloadUserPermissions = async () => {
-    if (!user?.id) {
-      console.log('Nenhum usuário logado para recarregar permissões')
-      return
-    }
+  // Monitora mudanças no estado de conexão
+  useEffect(() => {
+    const handleConnectionChange = (event) => {
+      switch (event) {
+        case 'offline':
+          toast({
+            title: 'Conexão perdida',
+            description: 'Tentando reconectar...',
+            status: 'warning',
+            duration: null,
+            isClosable: true,
+          });
+          break;
+        case 'online':
+          toast({
+            title: 'Conexão restabelecida',
+            status: 'success',
+            duration: 3000,
+          });
+          break;
+        case 'max_attempts':
+          toast({
+            title: 'Erro de conexão',
+            description: 'Máximo de tentativas alcançado. Por favor, faça login novamente.',
+            status: 'error',
+            duration: 5000,
+          });
+          logout();
+          break;
+      }
+    };
+
+    connectionManager.addListener(handleConnectionChange);
+    return () => connectionManager.removeListener(handleConnectionChange);
+  }, []);
+
+  // Inicializa o estado de autenticação
+  useEffect(() => {
+    let mounted = true;
+
+    const initAuth = async () => {
+      try {
+        // Se estiver em uma rota pública, não bloqueia o carregamento
+        if (PUBLIC_ROUTES.includes(location.pathname)) {
+          setLoading(false);
+          return;
+        }
+
+        // Verifica se há uma sessão ativa
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.log('Nenhuma sessão ativa');
+          clearAuthState();
+          navigate('/login');
+          return;
+        }
+
+        // Se há sessão, tenta obter o usuário
+        const currentUser = await getCurrentUser();
+        if (currentUser && mounted) {
+          setUser(currentUser);
+          await loadUserProfile(currentUser.id, currentUser);
+          // Se estiver na página de login com uma sessão válida, redireciona para dashboard
+          if (location.pathname === '/login') {
+            navigate('/dashboard');
+          }
+        } else if (mounted) {
+          clearAuthState();
+          if (!PUBLIC_ROUTES.includes(location.pathname)) {
+            navigate('/login');
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao inicializar autenticação:', error);
+        if (mounted) {
+          clearAuthState();
+          if (!PUBLIC_ROUTES.includes(location.pathname)) {
+            navigate('/login');
+          }
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    // Configura o listener de mudanças de autenticação
+    const { unsubscribe } = onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      
+      console.log('Evento de autenticação:', event);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        setUser(session.user);
+        await loadUserProfile(session.user.id, session.user);
+        if (location.pathname === '/login') {
+          navigate('/dashboard');
+        }
+      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        clearAuthState();
+        if (!PUBLIC_ROUTES.includes(location.pathname)) {
+          navigate('/login');
+        }
+      }
+    });
+
+    initAuth();
     
-    try {
-      console.log('Recarregando permissões do usuário...')
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          roles:role_id (
-            name,
-            role_permissions (
-              permission_key
-            )
-          )
-        `)
-        .eq('id', user.id)
-        .single()
-
-      if (error) throw error
-
-      console.log('Perfil atualizado:', profile)
-      setUserProfile(profile)
-      setUserRole(profile.roles?.name || 'user')
-      setUserPermissions(profile.roles?.role_permissions?.map(p => p.permission_key) || [])
-
-      toast({
-        title: 'Permissões atualizadas',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      })
-    } catch (error) {
-      console.error('Erro ao recarregar permissões:', error)
-      toast({
-        title: 'Erro ao atualizar permissões',
-        description: error.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-      throw error
-    }
-  }
+    return () => {
+      mounted = false;
+      unsubscribe?.();
+      connectionManager.cleanup();
+    };
+  }, [location.pathname]); // Adiciona pathname como dependência
 
   const value = {
     user,
     userProfile,
-    userRole,
-    userPermissions,
     loading,
-    initialized,
-    signIn: handleSignIn,
-    signOut: handleSignOut,
-    reloadUserPermissions
+    login,
+    logout,
+    clearAuthState,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export default AuthProvider
+  return context;
+};
