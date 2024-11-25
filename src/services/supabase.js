@@ -89,12 +89,36 @@ export const signOut = async () => {
   }
 }
 
+// Função para forçar atualização do token
+export const refreshSession = async () => {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error || !session) {
+      console.error('Erro ao obter sessão:', error);
+      return null;
+    }
+
+    // Força a atualização do token
+    const { data, error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      console.error('Erro ao atualizar sessão:', refreshError);
+      return null;
+    }
+
+    return data.session;
+  } catch (error) {
+    console.error('Erro ao atualizar sessão:', error);
+    return null;
+  }
+};
+
 // Função para obter o usuário atual
 export const getCurrentUser = async () => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    // Primeiro tenta atualizar a sessão
+    const session = await refreshSession();
     if (!session) {
-      console.log('Nenhuma sessão ativa');
+      console.log('Não foi possível atualizar a sessão');
       return null;
     }
 
@@ -114,15 +138,15 @@ export const getCurrentUser = async () => {
 // Função para verificar se a sessão está ativa
 export const checkSession = async () => {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error) {
-      console.error('Erro ao verificar sessão:', error);
+    // Primeiro tenta atualizar a sessão
+    const session = await refreshSession();
+    if (!session) {
       return null;
     }
-    
+
     // Verifica se a sessão existe e não está expirada
-    if (!session || !session.access_token || !session.expires_at) {
-      console.log('Sessão inválida ou expirada');
+    if (!session.access_token || !session.expires_at) {
+      console.log('Sessão inválida');
       return null;
     }
 

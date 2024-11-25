@@ -143,7 +143,7 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       
-      // Primeiro verifica a sessão
+      // Primeiro verifica e atualiza a sessão
       const session = await checkSession();
       if (!session) {
         console.log('Sem sessão ativa, limpando estado...');
@@ -177,6 +177,9 @@ export const AuthProvider = ({ children }) => {
   // Monitora quando a aba volta a ter foco
   useEffect(() => {
     let timeoutId;
+    let reconnectAttempts = 0;
+    const maxAttempts = 3;
+    const baseDelay = 1000;
 
     const handleVisibilityChange = async () => {
       if (!document.hidden) {
@@ -188,10 +191,20 @@ export const AuthProvider = ({ children }) => {
         }
 
         // Aguarda um momento antes de tentar reconectar
-        timeoutId = setTimeout(() => {
-          console.log('Tentando reconectar...');
-          reconnect();
-        }, 1000);
+        // Usa backoff exponencial para as tentativas
+        const delay = baseDelay * Math.pow(2, reconnectAttempts);
+        
+        timeoutId = setTimeout(async () => {
+          console.log(`Tentativa ${reconnectAttempts + 1} de reconexão...`);
+          await reconnect();
+          
+          reconnectAttempts++;
+          if (reconnectAttempts >= maxAttempts) {
+            console.log('Máximo de tentativas alcançado');
+            clearAuthState();
+            navigate('/login');
+          }
+        }, delay);
       }
     };
 
