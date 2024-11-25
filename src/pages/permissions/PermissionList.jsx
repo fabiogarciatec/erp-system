@@ -76,7 +76,7 @@ const systemPermissions = {
 
 export default function PermissionList() {
   const toast = useToast()
-  const { user } = useAuth()
+  const { user, reloadUserPermissions } = useAuth()
   const [roles, setRoles] = useState([])
   const [rolePermissions, setRolePermissions] = useState({})
   const [loading, setLoading] = useState(true)
@@ -173,14 +173,17 @@ export default function PermissionList() {
       // Prepara as novas permissões para inserção
       const newPermissions = []
       Object.entries(rolePermissions).forEach(([roleId, permissions]) => {
-        Object.entries(permissions).forEach(([permissionKey, hasPermission]) => {
-          if (hasPermission) {
-            newPermissions.push({
-              role_id: roleId,
-              permission_key: permissionKey
-            })
-          }
-        })
+        // Pula o role_id 1 (admin)
+        if (roleId !== '1') {
+          Object.entries(permissions).forEach(([permissionKey, hasPermission]) => {
+            if (hasPermission) {
+              newPermissions.push({
+                role_id: roleId,
+                permission_key: permissionKey
+              })
+            }
+          })
+        }
       })
 
       console.log('Permissões preparadas para salvamento:', newPermissions)
@@ -211,6 +214,10 @@ export default function PermissionList() {
       }
 
       console.log('Permissões salvas com sucesso!')
+      
+      // Recarrega as permissões no AuthContext
+      await reloadUserPermissions()
+      
       toast({
         title: 'Permissões salvas com sucesso!',
         status: 'success',

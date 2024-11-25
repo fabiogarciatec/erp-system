@@ -31,17 +31,38 @@ export const AuthProvider = ({ children }) => {
         return
       }
       
-      // Primeiro, busca o perfil do usuário
+      // Primeiro, busca o perfil do usuário com a role
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          roles:role_id (
+            name,
+            role_permissions (
+              permission_key
+            )
+          )
+        `)
         .eq('id', userId)
         .single()
 
       if (profileError) {
         if (profileError.code === 'PGRST116') {
           console.log('Perfil não encontrado, criando...')
-          // Se o perfil não existe, cria um novo
+          
+          // Busca o ID da role 'user' (role padrão)
+          const { data: userRole, error: roleError } = await supabase
+            .from('roles')
+            .select('id')
+            .eq('name', 'user')
+            .single()
+
+          if (roleError) {
+            console.error('Erro ao buscar role padrão:', roleError)
+            throw roleError
+          }
+
+          // Se o perfil não existe, cria um novo com a role padrão
           const { data: newProfile, error: createError } = await supabase
             .from('profiles')
             .upsert([
@@ -49,9 +70,18 @@ export const AuthProvider = ({ children }) => {
                 id: userId,
                 email: userData.email,
                 full_name: userData.user_metadata?.full_name || userData.email,
+                role_id: userRole.id,
               }
             ])
-            .select()
+            .select(`
+              *,
+              roles:role_id (
+                name,
+                role_permissions (
+                  permission_key
+                )
+              )
+            `)
             .single()
 
           if (createError) {
@@ -60,8 +90,8 @@ export const AuthProvider = ({ children }) => {
           }
           
           setUserProfile(newProfile)
-          setUserRole(null)
-          setUserPermissions([])
+          setUserRole(newProfile.roles?.name || 'user')
+          setUserPermissions(newProfile.roles?.role_permissions?.map(p => p.permission_key) || [])
           return
         } else {
           console.error('Erro ao carregar perfil:', profileError)
@@ -70,44 +100,17 @@ export const AuthProvider = ({ children }) => {
       }
 
       setUserProfile(profile)
+      setUserRole(profile.roles?.name || 'user')
 
-      // Se tem role_id, busca as informações do role
-      if (profile.role_id) {
-        const { data: role, error: roleError } = await supabase
-          .from('roles')
-          .select(`
-            id,
-            name,
-            role_permissions (
-              permission_key
-            )
-          `)
-          .eq('id', profile.role_id)
-          .single()
-
-        if (roleError) {
-          console.error('Erro ao carregar role:', roleError)
-          setUserRole(null)
-          setUserPermissions([])
-        } else if (role) {
-          console.log('Role carregada:', role)
-          setUserRole(role.name)
-
-          // Se for admin, concede todas as permissões
-          if (role.name === 'admin') {
-            console.log('Usuário é admin, concedendo todas as permissões')
-            setUserPermissions(['*']) // Wildcard para acesso total
-            return
-          }
-
-          // Para outros roles, usa as permissões da role
-          const permissionKeys = role.role_permissions?.map(p => p.permission_key) || []
-          console.log('Permissões carregadas:', permissionKeys)
-          setUserPermissions(permissionKeys)
-        }
+      // Se for admin, define todas as permissões
+      if (profile.roles?.name === 'admin') {
+        console.log('Usuário é admin, concedendo todas as permissões')
+        setUserPermissions(['*']) // Wildcard para acesso total
       } else {
-        setUserRole(null)
-        setUserPermissions([])
+        // Para outros roles, usa as permissões específicas
+        const permissions = profile.roles?.role_permissions?.map(p => p.permission_key) || []
+        console.log('Permissões carregadas:', permissions)
+        setUserPermissions(permissions)
       }
     } catch (error) {
       console.error('Erro ao carregar perfil e permissões:', error)
@@ -238,6 +241,62 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Função de logout
+  const logout = async () => {
+    try {
+      setLoading(true)
+      const { error } = await signOut()
+      if (error) throw error
+      
+      // Limpar o estado do usuário
+      setUser(null)
+      setUserProfile(null)
+      setUserRole(null)
+      setUserPermissions([])
+    } catch (error) {
+      console.error('Erro no logout:', error)
+      toast({
+        title: 'Erro ao fazer logout',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Função para recarregar as permissões do usuário
+  const reloadUserPermissions = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          roles:role_id (
+            name,
+            role_permissions (
+              permission_key
+            )
+          )
+        `)
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      setUserProfile(profile);
+      setUserRole(profile.roles?.name || 'user');
+      setUserPermissions(profile.roles?.role_permissions?.map(p => p.permission_key) || []);
+    } catch (error) {
+      console.error('Erro ao recarregar permissões:', error);
+    }
+  };
+
   const value = {
     user,
     userProfile,
@@ -247,6 +306,8 @@ export const AuthProvider = ({ children }) => {
     initialized,
     signIn: handleSignIn,
     signOut: handleSignOut,
+    logout,
+    reloadUserPermissions
   }
 
   return (
@@ -254,4 +315,12 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   )
+}
+
+export const useLogout = () => {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useLogout deve ser usado dentro de um AuthProvider')
+  }
+  return context.logout
 }

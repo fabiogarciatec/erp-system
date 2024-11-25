@@ -37,10 +37,12 @@ import DataTable from '../../components/DataTable'
 import UserForm from './components/UserForm'
 import DeleteAlert from '../../components/DeleteAlert'
 import { formatPhone, cleanPhone } from '../../utils/formatters'
+import { usePermissions } from '../../hooks/usePermissions'
 
 export default function UserList() {
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { user, userProfile, setUserProfile } = useAuth()
+  const { user, userProfile } = useAuth()
+  const { canCreateUsers, canEditUsers, canDeleteUsers, hasPermission } = usePermissions()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -59,39 +61,10 @@ export default function UserList() {
   })
 
   useEffect(() => {
-    if (user) {
-      fetchUserProfile()
-    }
-  }, [user])
-
-  useEffect(() => {
-    if (userProfile) {
+    if (user && hasPermission('users.view')) {
       fetchUsers()
     }
-  }, [userProfile])
-
-  const fetchUserProfile = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*, companies:company_id(*)')
-        .eq('id', user.id)
-        .single()
-
-      if (error) throw error
-
-      setUserProfile(data)
-    } catch (error) {
-      console.error('Erro ao buscar perfil do usuário:', error)
-      toast({
-        title: 'Erro ao carregar perfil',
-        description: error.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-    }
-  }
+  }, [user, hasPermission])
 
   const fetchUsers = async () => {
     try {
@@ -99,12 +72,11 @@ export default function UserList() {
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
-        .eq('company_id', userProfile.company_id)
-        .order('full_name')
+        .order('full_name', { ascending: true })
 
       if (error) throw error
 
-      setUsers(data)
+      setUsers(data || [])
     } catch (error) {
       console.error('Erro ao buscar usuários:', error)
       toast({
@@ -181,30 +153,50 @@ export default function UserList() {
     {
       header: 'Ações',
       accessorKey: 'actions',
-      cell: ({ row }) => (
-        <HStack spacing={2}>
-          <Tooltip label="Editar usuário" placement="top">
-            <IconButton
-              icon={<Icon as={MdEdit} boxSize={5} />}
-              aria-label="Editar usuário"
-              size="sm"
-              colorScheme="blue"
-              variant="ghost"
-              onClick={() => handleEdit(row.original)}
-            />
-          </Tooltip>
-          <Tooltip label="Excluir usuário" placement="top">
-            <IconButton
-              icon={<Icon as={MdDelete} boxSize={5} />}
-              aria-label="Excluir usuário"
-              size="sm"
-              colorScheme="red"
-              variant="ghost"
-              onClick={() => handleDeleteClick(row.original)}
-            />
-          </Tooltip>
-        </HStack>
-      ),
+      cell: ({ row }) => {
+        return (
+          <HStack spacing={2}>
+            <Tooltip 
+              label={canEditUsers ? "Editar usuário" : "Sem permissão para editar"} 
+              placement="top"
+            >
+              <IconButton
+                icon={<Icon as={MdEdit} boxSize={5} />}
+                aria-label="Editar usuário"
+                size="sm"
+                colorScheme={canEditUsers ? "blue" : "gray"}
+                variant="ghost"
+                onClick={canEditUsers ? () => handleEdit(row.original) : undefined}
+                cursor={canEditUsers ? "pointer" : "not-allowed"}
+                opacity={canEditUsers ? 1 : 0.5}
+                _hover={{
+                  bg: canEditUsers ? "blue.50" : "transparent",
+                  opacity: canEditUsers ? 0.8 : 0.5
+                }}
+              />
+            </Tooltip>
+            <Tooltip 
+              label={canDeleteUsers ? "Excluir usuário" : "Sem permissão para excluir"} 
+              placement="top"
+            >
+              <IconButton
+                icon={<Icon as={MdDelete} boxSize={5} />}
+                aria-label="Excluir usuário"
+                size="sm"
+                colorScheme={canDeleteUsers ? "red" : "gray"}
+                variant="ghost"
+                onClick={canDeleteUsers ? () => handleDeleteClick(row.original) : undefined}
+                cursor={canDeleteUsers ? "pointer" : "not-allowed"}
+                opacity={canDeleteUsers ? 1 : 0.5}
+                _hover={{
+                  bg: canDeleteUsers ? "red.50" : "transparent",
+                  opacity: canDeleteUsers ? 0.8 : 0.5
+                }}
+              />
+            </Tooltip>
+          </HStack>
+        );
+      },
     },
   ]
 
@@ -245,53 +237,69 @@ export default function UserList() {
   }
 
   const handleDelete = async () => {
-    try {
-      setLoading(true)
+    if (!userToDelete?.id) {
+      toast({
+        title: 'Erro ao excluir usuário',
+        description: 'ID do usuário não encontrado',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
 
-      // Verifica se é o último admin da empresa
+    try {
+      setLoading(true);
+
+      // Verifica se é o último admin
       const { data: admins, error: adminsError } = await supabase
         .from('user_profiles')
-        .select('id')
-        .eq('company_id', userProfile.company_id)
-        .eq('role', 'admin')
+        .select('id, role')
+        .eq('role', 'admin');
 
-      if (adminsError) throw adminsError
+      if (adminsError) throw adminsError;
 
+      // Previne a exclusão se for o último admin
       if (userToDelete.role === 'admin' && admins.length === 1) {
-        throw new Error('Não é possível excluir o último administrador da empresa')
+        throw new Error('Não é possível excluir o último administrador do sistema');
+      }
+
+      // Previne auto-exclusão
+      if (userToDelete.id === user.id) {
+        throw new Error('Você não pode excluir sua própria conta');
       }
 
       // Remove o perfil do usuário
       const { error: deleteError } = await supabase
         .from('user_profiles')
         .delete()
-        .eq('id', userToDelete.id)
+        .eq('id', userToDelete.id);
 
-      if (deleteError) throw deleteError
+      if (deleteError) throw deleteError;
 
       toast({
         title: 'Usuário excluído',
         status: 'success',
         duration: 3000,
         isClosable: true,
-      })
+      });
 
-      setIsDeleteDialogOpen(false)
-      setUserToDelete(null)
-      fetchUsers()
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+      fetchUsers();
     } catch (error) {
-      console.error('Erro ao excluir usuário:', error)
+      console.error('Erro ao excluir usuário:', error);
       toast({
         title: 'Erro ao excluir usuário',
         description: error.message,
         status: 'error',
         duration: 5000,
         isClosable: true,
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -393,27 +401,39 @@ export default function UserList() {
               Gerencie os usuários da sua empresa
             </Text>
           </Box>
-          <HStack spacing={4}>
-            <InputGroup maxW="300px">
+          <Flex mb={4} alignItems="center" gap={4}>
+            <InputGroup maxW="800px">
               <InputLeftElement pointerEvents="none">
-                <Icon as={MdSearch} boxSize={5} color="gray.500" />
+                <Icon as={MdSearch} color="gray.300" />
               </InputLeftElement>
               <Input
                 placeholder="Buscar usuários..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                size="md"
               />
             </InputGroup>
-            <Button
-              leftIcon={<Icon as={MdAdd} boxSize={5} />}
-              colorScheme="blue"
-              onClick={handleNewUser}
-              size="md"
-              minW="180px"
+            <Tooltip 
+              label={canCreateUsers ? "Adicionar novo usuário" : "Sem permissão para adicionar usuários"} 
+              placement="top"
             >
-              Adicionar Usuário
-            </Button>
-          </HStack>
+              <Button
+                leftIcon={<Icon as={MdAdd} boxSize={5} />}
+                colorScheme={canCreateUsers ? "blue" : "gray"}
+                onClick={canCreateUsers ? handleNewUser : undefined}
+                cursor={canCreateUsers ? "pointer" : "not-allowed"}
+                opacity={canCreateUsers ? 1 : 0.5}
+                size="md"
+                minW="180px"
+                _hover={{
+                  bg: canCreateUsers ? "blue.600" : "gray.100",
+                  opacity: canCreateUsers ? 0.9 : 0.5
+                }}
+              >
+                Adicionar Usuário
+              </Button>
+            </Tooltip>
+          </Flex>
         </Flex>
       </CardHeader>
 

@@ -139,8 +139,12 @@ const MainLayout = () => {
   const { isOpen: isSidebarOpen, onToggle: onSidebarToggle } = useDisclosure({ defaultIsOpen: true })
 
   const handleLogout = async () => {
-    await logout()
-    navigate('/login')
+    try {
+      await logout()
+      navigate('/login')
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error)
+    }
   }
 
   const toggleMenu = (menuText) => {

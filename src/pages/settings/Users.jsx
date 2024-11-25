@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -33,91 +33,202 @@ import {
   MenuItem,
   InputGroup,
   InputLeftElement,
+  VStack,
 } from '@chakra-ui/react';
 import { FiEdit2, FiTrash2, FiMoreVertical, FiSearch, FiUserPlus } from 'react-icons/fi';
-
-// Mock data for users
-const initialUsers = [
-  {
-    id: 1,
-    name: 'João Silva',
-    email: 'joao.silva@example.com',
-    role: 'admin',
-    status: 'active',
-  },
-  {
-    id: 2,
-    name: 'Maria Santos',
-    email: 'maria.santos@example.com',
-    role: 'user',
-    status: 'active',
-  },
-  {
-    id: 3,
-    name: 'Pedro Oliveira',
-    email: 'pedro.oliveira@example.com',
-    role: 'manager',
-    status: 'inactive',
-  },
-];
+import { supabase } from '../../services/supabase';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Users = () => {
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+  const { user: currentUser } = useAuth();
   
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const hoverBg = useColorModeValue('gray.50', 'gray.700');
+
+  // Buscar usuários e roles
+  useEffect(() => {
+    fetchUsers();
+    fetchRoles();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      
+      // Primeiro busca todos os perfis
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (profilesError) throw profilesError;
+
+      // Depois busca as roles separadamente para evitar problemas com joins nulos
+      const { data: allRoles, error: rolesError } = await supabase
+        .from('roles')
+        .select('id, name, description');
+
+      if (rolesError) throw rolesError;
+
+      // Mapeia as roles para um objeto para fácil acesso
+      const rolesMap = allRoles.reduce((acc, role) => {
+        acc[role.id] = role;
+        return acc;
+      }, {});
+
+      // Combina os perfis com suas roles
+      const usersWithRoles = profiles.map(profile => ({
+        ...profile,
+        roles: profile.role_id ? rolesMap[profile.role_id] : null
+      }));
+
+      setUsers(usersWithRoles);
+    } catch (error) {
+      console.error('Erro ao buscar usuários:', error);
+      toast({
+        title: 'Erro ao carregar usuários',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('roles')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+
+      setRoles(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar roles:', error);
+      toast({
+        title: 'Erro ao carregar roles',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
 
   const handleEdit = (user) => {
     setSelectedUser(user);
     onOpen();
   };
 
-  const handleDelete = (userId) => {
-    if (window.confirm('Tem certeza que deseja excluir este usuário?')) {
-      setUsers(users.filter(user => user.id !== userId));
+  const handleDelete = async (userId) => {
+    if (!window.confirm('Tem certeza que deseja excluir este usuário?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (error) throw error;
+
       toast({
         title: 'Usuário excluído',
         status: 'success',
         duration: 3000,
         isClosable: true,
       });
+
+      fetchUsers();
+    } catch (error) {
+      console.error('Erro ao excluir usuário:', error);
+      toast({
+        title: 'Erro ao excluir usuário',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (selectedUser) {
-      setUsers(users.map(user => 
-        user.id === selectedUser.id ? selectedUser : user
-      ));
-    } else {
-      const newUser = {
-        ...selectedUser,
-        id: users.length + 1,
+    try {
+      // Validações antes de salvar
+      if (!selectedUser?.id) {
+        throw new Error('ID do usuário não encontrado');
+      }
+
+      const updates = {
+        full_name: selectedUser.full_name,
+        status: selectedUser.status
       };
-      setUsers([...users, newUser]);
+
+      // Só inclui role_id se ele for um UUID válido
+      if (selectedUser.role_id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedUser.role_id)) {
+        updates.role_id = selectedUser.role_id;
+      } else {
+        throw new Error('Role inválida selecionada');
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', selectedUser.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Usuário atualizado',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      onClose();
+      fetchUsers();
+    } catch (error) {
+      console.error('Erro ao salvar usuário:', error);
+      toast({
+        title: 'Erro ao salvar usuário',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
-    onClose();
-    toast({
-      title: selectedUser?.id ? 'Usuário atualizado' : 'Usuário criado',
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
   };
 
   const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase())
+    user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getStatusColor = (status) => {
-    return status === 'active' ? 'green' : 'red';
+    switch (status) {
+      case 'active':
+        return 'green';
+      case 'inactive':
+        return 'red';
+      case 'suspended':
+        return 'yellow';
+      default:
+        return 'gray';
+    }
   };
 
   return (
@@ -163,11 +274,11 @@ const Users = () => {
               <Tbody>
                 {filteredUsers.map((user) => (
                   <Tr key={user.id} _hover={{ bg: hoverBg }}>
-                    <Td>{user.name}</Td>
+                    <Td>{user.full_name}</Td>
                     <Td>{user.email}</Td>
                     <Td>
-                      <Badge colorScheme={user.role === 'admin' ? 'purple' : 'blue'}>
-                        {user.role}
+                      <Badge colorScheme={user.roles?.name === 'admin' ? 'purple' : 'blue'}>
+                        {user.roles?.name || 'Sem função'}
                       </Badge>
                     </Td>
                     <Td>
@@ -210,47 +321,47 @@ const Users = () => {
             </ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              <FormControl mb={4}>
-                <FormLabel>Nome</FormLabel>
-                <Input
-                  value={selectedUser?.name || ''}
-                  onChange={(e) => setSelectedUser({ ...selectedUser, name: e.target.value })}
-                  required
-                />
-              </FormControl>
-              <FormControl mb={4}>
-                <FormLabel>Email</FormLabel>
-                <Input
-                  type="email"
-                  value={selectedUser?.email || ''}
-                  onChange={(e) => setSelectedUser({ ...selectedUser, email: e.target.value })}
-                  required
-                />
-              </FormControl>
-              <FormControl mb={4}>
-                <FormLabel>Função</FormLabel>
-                <Select
-                  value={selectedUser?.role || ''}
-                  onChange={(e) => setSelectedUser({ ...selectedUser, role: e.target.value })}
-                  required
-                >
-                  <option value="admin">Administrador</option>
-                  <option value="manager">Gerente</option>
-                  <option value="user">Usuário</option>
-                </Select>
-              </FormControl>
-              <FormControl>
-                <FormLabel>Status</FormLabel>
-                <Select
-                  value={selectedUser?.status || ''}
-                  onChange={(e) => setSelectedUser({ ...selectedUser, status: e.target.value })}
-                  required
-                >
-                  <option value="active">Ativo</option>
-                  <option value="inactive">Inativo</option>
-                </Select>
-              </FormControl>
+              <VStack spacing={4}>
+                <FormControl>
+                  <FormLabel>Nome</FormLabel>
+                  <Input
+                    value={selectedUser?.full_name || ''}
+                    onChange={(e) => setSelectedUser({ ...selectedUser, full_name: e.target.value })}
+                    required
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Função</FormLabel>
+                  <Select
+                    value={selectedUser?.role_id || ''}
+                    onChange={(e) => setSelectedUser({ ...selectedUser, role_id: e.target.value })}
+                    required
+                  >
+                    <option value="">Selecione uma função</option>
+                    {roles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.name}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Status</FormLabel>
+                  <Select
+                    value={selectedUser?.status || 'active'}
+                    onChange={(e) => setSelectedUser({ ...selectedUser, status: e.target.value })}
+                    required
+                  >
+                    <option value="active">Ativo</option>
+                    <option value="inactive">Inativo</option>
+                    <option value="suspended">Suspenso</option>
+                  </Select>
+                </FormControl>
+              </VStack>
             </ModalBody>
+
             <ModalFooter>
               <Button variant="ghost" mr={3} onClick={onClose}>
                 Cancelar

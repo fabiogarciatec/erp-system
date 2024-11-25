@@ -9,6 +9,7 @@ import MainLayout from '../layouts/MainLayout'
 import Permissions from '../pages/permissions'
 import PlaceholderPage from '../components/PlaceholderPage'
 import { ProtectedRoute } from '../components/ProtectedRoute'
+import AcessoNegado from '../pages/acesso-negado/AcessoNegado'
 
 // Componente de loading
 const LoadingScreen = () => (
@@ -71,10 +72,7 @@ const AppRoutes = () => {
         path="/acesso-negado" 
         element={
           <AuthenticatedRoute>
-            <PlaceholderPage 
-              title="Acesso Negado" 
-              description="Você não tem permissão para acessar esta página."
-            />
+            <AcessoNegado />
           </AuthenticatedRoute>
         } 
       />
@@ -189,7 +187,7 @@ const AppRoutes = () => {
           <Route 
             path="permissoes" 
             element={
-              <ProtectedRoute requiredPermissions={['users.view', 'users.edit']}>
+              <ProtectedRoute adminOnly>
                 <Permissions />
               </ProtectedRoute>
             } 
