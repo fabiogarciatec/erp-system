@@ -8,6 +8,7 @@ import UserList from '../pages/users/UserList'
 import MainLayout from '../layouts/MainLayout'
 import Permissions from '../pages/permissions'
 import PlaceholderPage from '../components/PlaceholderPage'
+import { ProtectedRoute } from '../components/ProtectedRoute'
 
 // Componente de loading
 const LoadingScreen = () => (
@@ -22,8 +23,8 @@ const LoadingScreen = () => (
   </Center>
 )
 
-// Componente de rota protegida
-const ProtectedRoute = ({ children }) => {
+// Componente de rota autenticada
+const AuthenticatedRoute = ({ children }) => {
   const { user, loading, initialized } = useAuth()
 
   if (!initialized || loading) {
@@ -65,42 +66,149 @@ const AppRoutes = () => {
         } 
       />
       
+      {/* Rota de acesso negado */}
+      <Route 
+        path="/acesso-negado" 
+        element={
+          <AuthenticatedRoute>
+            <PlaceholderPage 
+              title="Acesso Negado" 
+              description="Você não tem permissão para acessar esta página."
+            />
+          </AuthenticatedRoute>
+        } 
+      />
+      
       {/* Rotas protegidas */}
-      <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+      <Route element={<AuthenticatedRoute><MainLayout /></AuthenticatedRoute>}>
         {/* Dashboard */}
         <Route path="/" element={<Dashboard />} />
         
         {/* Cadastros */}
         <Route path="/cadastros">
-          <Route path="clientes" element={<PlaceholderPage title="Lista de Clientes" />} />
-          <Route path="produtos" element={<PlaceholderPage title="Lista de Produtos" />} />
-          <Route path="servicos" element={<PlaceholderPage title="Lista de Serviços" />} />
+          <Route 
+            path="clientes" 
+            element={
+              <ProtectedRoute requiredPermissions={['companies.view']}>
+                <PlaceholderPage title="Lista de Clientes" />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="produtos" 
+            element={
+              <ProtectedRoute requiredPermissions={['products.view']}>
+                <PlaceholderPage title="Lista de Produtos" />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="servicos" 
+            element={
+              <ProtectedRoute requiredPermissions={['products.view']}>
+                <PlaceholderPage title="Lista de Serviços" />
+              </ProtectedRoute>
+            } 
+          />
         </Route>
         
         {/* Vendas */}
         <Route path="/vendas">
-          <Route path="produtos" element={<PlaceholderPage title="Vendas de Produtos" />} />
-          <Route path="ordem-servico" element={<PlaceholderPage title="Ordem de Serviço" />} />
-          <Route path="fretes" element={<PlaceholderPage title="Fretes" />} />
+          <Route 
+            path="produtos" 
+            element={
+              <ProtectedRoute requiredPermissions={['sales.view']}>
+                <PlaceholderPage title="Vendas de Produtos" />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="ordem-servico" 
+            element={
+              <ProtectedRoute requiredPermissions={['sales.view']}>
+                <PlaceholderPage title="Ordem de Serviço" />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="fretes" 
+            element={
+              <ProtectedRoute requiredPermissions={['sales.view']}>
+                <PlaceholderPage title="Fretes" />
+              </ProtectedRoute>
+            } 
+          />
         </Route>
         
         {/* Marketing */}
         <Route path="/marketing">
-          <Route path="campanhas" element={<PlaceholderPage title="Campanhas" />} />
-          <Route path="contatos" element={<PlaceholderPage title="Contatos" />} />
-          <Route path="disparos" element={<PlaceholderPage title="Disparos em Massa" />} />
+          <Route 
+            path="campanhas" 
+            element={
+              <ProtectedRoute requiredPermissions={['marketing.view']}>
+                <PlaceholderPage title="Campanhas" />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="contatos" 
+            element={
+              <ProtectedRoute requiredPermissions={['marketing.view']}>
+                <PlaceholderPage title="Contatos" />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="disparos" 
+            element={
+              <ProtectedRoute requiredPermissions={['marketing.view']}>
+                <PlaceholderPage title="Disparos em Massa" />
+              </ProtectedRoute>
+            } 
+          />
         </Route>
         
         {/* Configurações */}
         <Route path="/configuracoes">
-          <Route path="empresa" element={<PlaceholderPage title="Configurações da Empresa" />} />
-          <Route path="usuarios" element={<UserList />} />
-          <Route path="permissoes" element={<Permissions />} />
+          <Route 
+            path="empresa" 
+            element={
+              <ProtectedRoute requiredPermissions={['companies.view']}>
+                <PlaceholderPage title="Configurações da Empresa" />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="usuarios" 
+            element={
+              <ProtectedRoute requiredPermissions={['users.view']}>
+                <UserList />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="permissoes" 
+            element={
+              <ProtectedRoute requiredPermissions={['users.view', 'users.edit']}>
+                <Permissions />
+              </ProtectedRoute>
+            } 
+          />
         </Route>
       </Route>
       
-      {/* Redireciona qualquer outra rota para a home */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Rota para páginas não encontradas */}
+      <Route 
+        path="*" 
+        element={
+          <AuthenticatedRoute>
+            <PlaceholderPage 
+              title="Página não encontrada" 
+              description="A página que você está procurando não existe."
+            />
+          </AuthenticatedRoute>
+        } 
+      />
     </Routes>
   )
 }

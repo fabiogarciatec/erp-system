@@ -8,15 +8,23 @@ export const ProtectedRoute = ({
   requireAll = true 
 }) => {
   const location = useLocation();
-  const { checkAllPermissions, checkAnyPermission } = usePermissions();
+  const { checkAllPermissions, checkAnyPermission, checkRoutePermission } = usePermissions();
 
-  const hasAccess = requireAll 
-    ? checkAllPermissions(requiredPermissions)
-    : checkAnyPermission(requiredPermissions);
-
-  if (!hasAccess) {
-    // Redireciona para a página de acesso negado, mantendo a URL original
+  // Primeiro verifica se o usuário tem permissão para a rota atual
+  const hasRoutePermission = checkRoutePermission(location.pathname);
+  if (!hasRoutePermission) {
     return <Navigate to="/acesso-negado" state={{ from: location }} replace />;
+  }
+
+  // Depois verifica as permissões específicas do componente
+  if (requiredPermissions.length > 0) {
+    const hasComponentPermission = requireAll 
+      ? checkAllPermissions(requiredPermissions)
+      : checkAnyPermission(requiredPermissions);
+
+    if (!hasComponentPermission) {
+      return <Navigate to="/acesso-negado" state={{ from: location }} replace />;
+    }
   }
 
   return children;

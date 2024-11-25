@@ -29,7 +29,8 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const navigate = useNavigate()
-  const { login, loading } = useAuth()
+  const toast = useToast()
+  const { signIn, loading } = useAuth()
 
   const validateForm = () => {
     const newErrors = {}
@@ -53,10 +54,19 @@ const Login = () => {
     if (!validateForm()) return
 
     try {
-      await login(email, password)
+      const { error } = await signIn(email, password)
+      if (error) throw error
+      
       navigate('/', { replace: true })
     } catch (error) {
       console.error('Erro no login:', error)
+      toast({
+        title: 'Erro no login',
+        description: error.message || 'Ocorreu um erro ao tentar fazer login. Por favor, tente novamente.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
     }
   }
 
@@ -105,10 +115,10 @@ const Login = () => {
                 />
                 <InputRightElement>
                   <IconButton
+                    aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
                     icon={showPassword ? <FiEyeOff /> : <FiEye />}
                     variant="ghost"
                     onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
                   />
                 </InputRightElement>
               </InputGroup>
@@ -118,7 +128,6 @@ const Login = () => {
             <Button
               type="submit"
               colorScheme="blue"
-              size="lg"
               width="full"
               isLoading={loading}
               loadingText="Entrando..."
