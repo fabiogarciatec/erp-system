@@ -27,10 +27,27 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  // Validações
-  const isPasswordValid = password.length >= 6
+  // Validações aprimoradas de senha
+  const hasMinLength = password.length >= 8
+  const hasUpperCase = /[A-Z]/.test(password)
+  const hasLowerCase = /[a-z]/.test(password)
+  const hasNumber = /[0-9]/.test(password)
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+  
+  const isPasswordValid = hasMinLength && hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar
   const doPasswordsMatch = password === confirmPassword
   const isFormValid = isPasswordValid && doPasswordsMatch && !loading
+
+  // Função para obter mensagens de erro de senha
+  const getPasswordErrors = () => {
+    const errors = []
+    if (!hasMinLength) errors.push('Mínimo de 8 caracteres')
+    if (!hasUpperCase) errors.push('Pelo menos uma letra maiúscula')
+    if (!hasLowerCase) errors.push('Pelo menos uma letra minúscula')
+    if (!hasNumber) errors.push('Pelo menos um número')
+    if (!hasSpecialChar) errors.push('Pelo menos um caractere especial')
+    return errors
+  }
 
   const handleResetPassword = async (e) => {
     e.preventDefault()
@@ -99,9 +116,15 @@ export default function ResetPassword() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Digite sua nova senha"
                 />
-                <FormErrorMessage>
-                  A senha deve ter pelo menos 6 caracteres
-                </FormErrorMessage>
+                {password && !isPasswordValid && (
+                  <FormErrorMessage>
+                    <Stack spacing={1}>
+                      {getPasswordErrors().map((error, index) => (
+                        <Text key={index}>{error}</Text>
+                      ))}
+                    </Stack>
+                  </FormErrorMessage>
+                )}
               </FormControl>
 
               <FormControl isInvalid={confirmPassword && !doPasswordsMatch}>
