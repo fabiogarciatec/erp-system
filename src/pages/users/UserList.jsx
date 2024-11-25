@@ -30,7 +30,7 @@ import {
   Icon,
 } from '@chakra-ui/react'
 import { useEffect, useState } from 'react'
-import { MdAdd, MdSearch, MdEdit, MdDelete, MdMoreVert } from 'react-icons/md'
+import { MdAdd, MdSearch, MdEdit, MdDelete, MdLock } from 'react-icons/md'
 import { supabase } from '../../services/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import DataTable from '../../components/DataTable'
@@ -176,6 +176,25 @@ export default function UserList() {
               />
             </Tooltip>
             <Tooltip 
+              label={canEditUsers ? "Redefinir senha" : "Sem permissão para redefinir senha"} 
+              placement="top"
+            >
+              <IconButton
+                icon={<Icon as={MdLock} boxSize={5} />}
+                aria-label="Redefinir senha"
+                size="sm"
+                colorScheme={canEditUsers ? "purple" : "gray"}
+                variant="ghost"
+                onClick={canEditUsers ? () => handleResetPassword(row.original) : undefined}
+                cursor={canEditUsers ? "pointer" : "not-allowed"}
+                opacity={canEditUsers ? 1 : 0.5}
+                _hover={{
+                  bg: canEditUsers ? "purple.50" : "transparent",
+                  opacity: canEditUsers ? 0.8 : 0.5
+                }}
+              />
+            </Tooltip>
+            <Tooltip 
               label={canDeleteUsers ? "Excluir usuário" : "Sem permissão para excluir"} 
               placement="top"
             >
@@ -234,6 +253,33 @@ export default function UserList() {
   const handleDeleteClick = (user) => {
     setUserToDelete(user)
     setIsDeleteDialogOpen(true)
+  }
+
+  const handleResetPassword = async (user) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+      
+      if (error) throw error
+
+      toast({
+        title: 'Email enviado',
+        description: 'Um email para redefinição de senha foi enviado para o usuário.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      })
+    } catch (error) {
+      console.error('Erro ao enviar email de redefinição:', error)
+      toast({
+        title: 'Erro ao enviar email',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+    }
   }
 
   const handleDelete = async () => {

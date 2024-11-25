@@ -22,12 +22,14 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { FiEye, FiEyeOff } from 'react-icons/fi'
+import { supabase } from '../services/supabase'
 
 const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
   const navigate = useNavigate()
   const toast = useToast()
   const { signIn, loading } = useAuth()
@@ -67,6 +69,41 @@ const Login = () => {
         duration: 5000,
         isClosable: true,
       })
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      setErrors({ email: 'Digite seu email para redefinir a senha' })
+      return
+    }
+
+    try {
+      setIsResettingPassword(true)
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+      
+      if (error) throw error
+
+      toast({
+        title: 'Email enviado',
+        description: 'Verifique seu email para redefinir sua senha.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      })
+    } catch (error) {
+      console.error('Erro ao enviar email de redefinição:', error)
+      toast({
+        title: 'Erro ao enviar email',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+    } finally {
+      setIsResettingPassword(false)
     }
   }
 
@@ -133,6 +170,17 @@ const Login = () => {
               loadingText="Entrando..."
             >
               Entrar
+            </Button>
+
+            <Button
+              variant="ghost"
+              width="full"
+              onClick={handleResetPassword}
+              isLoading={isResettingPassword}
+              loadingText="Enviando email..."
+              isDisabled={loading}
+            >
+              Esqueci minha senha
             </Button>
           </VStack>
         </Box>
