@@ -102,10 +102,7 @@ export const getCurrentUser = async () => {
 }
 
 export const onAuthStateChange = (callback) => {
-  console.log('Configurando listener de mudança de estado de autenticação...')
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-    console.log('Mudança de estado de autenticação:', event, session)
-    callback(event, session)
-  })
-  return { unsubscribe: () => subscription.unsubscribe() }
+  return supabase.auth.onAuthStateChange(callback)
 }
+
+export default supabase

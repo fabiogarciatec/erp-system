@@ -99,86 +99,64 @@ export const AuthProvider = ({ children }) => {
         }
       }
 
+      console.log('Perfil carregado:', profile)
       setUserProfile(profile)
       setUserRole(profile.roles?.name || 'user')
-
-      // Se for admin, define todas as permissões
-      if (profile.roles?.name === 'admin') {
-        console.log('Usuário é admin, concedendo todas as permissões')
-        setUserPermissions(['*']) // Wildcard para acesso total
-      } else {
-        // Para outros roles, usa as permissões específicas
-        const permissions = profile.roles?.role_permissions?.map(p => p.permission_key) || []
-        console.log('Permissões carregadas:', permissions)
-        setUserPermissions(permissions)
-      }
+      setUserPermissions(profile.roles?.role_permissions?.map(p => p.permission_key) || [])
     } catch (error) {
-      console.error('Erro ao carregar perfil e permissões:', error)
+      console.error('Erro ao carregar perfil do usuário:', error)
       toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar seu perfil. Por favor, tente novamente mais tarde.',
+        title: 'Erro ao carregar perfil',
+        description: error.message,
         status: 'error',
         duration: 5000,
         isClosable: true,
       })
-      setUserProfile(null)
-      setUserRole(null)
-      setUserPermissions([])
     }
   }
 
-  // Efeito para carregar o usuário inicial
+  // Inicializa o estado da autenticação
   useEffect(() => {
-    let mounted = true
-
-    const loadUser = async () => {
+    const initializeAuth = async () => {
       try {
+        setLoading(true)
+        console.log('Inicializando autenticação...')
+
         const currentUser = await getCurrentUser()
-        
-        if (!mounted) return
+        console.log('Usuário atual:', currentUser)
 
-        if (!currentUser) {
-          console.log('Nenhum usuário autenticado')
+        if (currentUser) {
+          setUser(currentUser)
+          await loadUserProfile(currentUser.id, currentUser)
+        } else {
           setUser(null)
           setUserProfile(null)
           setUserRole(null)
           setUserPermissions([])
-          setInitialized(true)
-          setLoading(false)
-          return
         }
-
-        console.log('Usuário inicial carregado:', currentUser)
-        setUser(currentUser)
-        await loadUserProfile(currentUser.id, currentUser)
-        setInitialized(true)
-        setLoading(false)
       } catch (error) {
-        console.error('Erro ao carregar usuário inicial:', error)
-        if (mounted) {
-          setUser(null)
-          setUserProfile(null)
-          setUserRole(null)
-          setUserPermissions([])
-          setInitialized(true)
-          setLoading(false)
-        }
+        console.error('Erro ao inicializar autenticação:', error)
+        setUser(null)
+        setUserProfile(null)
+        setUserRole(null)
+        setUserPermissions([])
+      } finally {
+        setLoading(false)
+        setInitialized(true)
       }
     }
 
-    loadUser()
+    initializeAuth()
 
-    // Configurar listener de mudanças de autenticação
+    // Configura o listener de mudanças na autenticação
     const { unsubscribe } = onAuthStateChange(async (event, session) => {
-      console.log('Evento de autenticação:', event, session)
-      if (!mounted) return
+      console.log('Mudança no estado de autenticação:', event, session)
 
-      const newUser = session?.user ?? null
-      setUser(newUser)
-
-      if (newUser) {
-        await loadUserProfile(newUser.id, newUser)
-      } else {
+      if (event === 'SIGNED_IN') {
+        setUser(session.user)
+        await loadUserProfile(session.user.id, session.user)
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null)
         setUserProfile(null)
         setUserRole(null)
         setUserPermissions([])
@@ -186,75 +164,76 @@ export const AuthProvider = ({ children }) => {
     })
 
     return () => {
-      mounted = false
-      unsubscribe?.()
+      console.log('Limpando listener de autenticação')
+      unsubscribe()
     }
   }, [])
 
+  // Função de login
   const handleSignIn = async (email, password) => {
     try {
       setLoading(true)
       const { data, error } = await signIn(email, password)
+
       if (error) throw error
-      
-      // Após o login bem-sucedido, carrega o perfil e permissões
-      if (data?.user) {
-        await loadUserProfile(data.user.id, data.user)
-      }
-      
-      return { data, error: null }
-    } catch (error) {
-      console.error('Erro no login:', error)
+
+      const user = data.user
+      setUser(user)
+      await loadUserProfile(user.id, user)
+
       toast({
-        title: 'Erro no login',
-        description: error.message || 'Ocorreu um erro ao tentar fazer login. Por favor, tente novamente.',
-        status: 'error',
-        duration: 5000,
+        title: 'Login realizado com sucesso',
+        status: 'success',
+        duration: 3000,
         isClosable: true,
       })
-      return { data: null, error }
-    } finally {
-      setLoading(false)
-    }
-  }
 
-  const handleSignOut = async () => {
-    try {
-      setLoading(true)
-      const { error } = await signOut()
-      if (error) throw error
+      return { error: null }
+    } catch (error) {
+      console.error('Erro no login:', error)
       setUser(null)
       setUserProfile(null)
       setUserRole(null)
       setUserPermissions([])
-    } catch (error) {
-      console.error('Erro no logout:', error)
+
       toast({
-        title: 'Erro no logout',
+        title: 'Erro no login',
         description: error.message,
         status: 'error',
         duration: 5000,
         isClosable: true,
       })
+
+      return { error }
     } finally {
       setLoading(false)
     }
   }
 
   // Função de logout
-  const logout = async () => {
+  const handleSignOut = async () => {
     try {
       setLoading(true)
       const { error } = await signOut()
+
       if (error) throw error
-      
-      // Limpar o estado do usuário
+
       setUser(null)
       setUserProfile(null)
       setUserRole(null)
       setUserPermissions([])
+
+      toast({
+        title: 'Logout realizado com sucesso',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      })
+
+      return { error: null }
     } catch (error) {
       console.error('Erro no logout:', error)
+
       toast({
         title: 'Erro ao fazer logout',
         description: error.message,
@@ -262,40 +241,12 @@ export const AuthProvider = ({ children }) => {
         duration: 5000,
         isClosable: true,
       })
-      throw error
+
+      return { error }
     } finally {
       setLoading(false)
     }
   }
-
-  // Função para recarregar as permissões do usuário
-  const reloadUserPermissions = async () => {
-    if (!user?.id) return;
-    
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          roles:role_id (
-            name,
-            role_permissions (
-              permission_key
-            )
-          )
-        `)
-        .eq('id', user.id)
-        .single();
-
-      if (error) throw error;
-
-      setUserProfile(profile);
-      setUserRole(profile.roles?.name || 'user');
-      setUserPermissions(profile.roles?.role_permissions?.map(p => p.permission_key) || []);
-    } catch (error) {
-      console.error('Erro ao recarregar permissões:', error);
-    }
-  };
 
   const value = {
     user,
@@ -306,21 +257,9 @@ export const AuthProvider = ({ children }) => {
     initialized,
     signIn: handleSignIn,
     signOut: handleSignOut,
-    logout,
-    reloadUserPermissions
   }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-export const useLogout = () => {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useLogout deve ser usado dentro de um AuthProvider')
-  }
-  return context.logout
-}
+export default AuthProvider
