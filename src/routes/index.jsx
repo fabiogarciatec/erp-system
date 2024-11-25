@@ -95,7 +95,7 @@ const ResetPasswordRoute = ({ children }) => {
 
 const AppRoutes = () => {
   return (
-    <Routes>
+    <Routes future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       {/* Rota pública */}
       <Route 
         path="/login" 
