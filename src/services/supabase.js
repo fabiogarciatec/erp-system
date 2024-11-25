@@ -92,8 +92,18 @@ export const signOut = async () => {
 // Função para obter o usuário atual
 export const getCurrentUser = async () => {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.log('Nenhuma sessão ativa');
+      return null;
+    }
+
     const { data: { user }, error } = await supabase.auth.getUser();
-    if (error) throw error;
+    if (error) {
+      console.error('Erro ao obter usuário:', error);
+      return null;
+    }
+
     return user;
   } catch (error) {
     console.error('Erro ao obter usuário atual:', error);
@@ -105,7 +115,24 @@ export const getCurrentUser = async () => {
 export const checkSession = async () => {
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
-    if (error) throw error;
+    if (error) {
+      console.error('Erro ao verificar sessão:', error);
+      return null;
+    }
+    
+    // Verifica se a sessão existe e não está expirada
+    if (!session || !session.access_token || !session.expires_at) {
+      console.log('Sessão inválida ou expirada');
+      return null;
+    }
+
+    // Verifica se o token está expirado
+    const expiresAt = new Date(session.expires_at * 1000);
+    if (expiresAt <= new Date()) {
+      console.log('Sessão expirada');
+      return null;
+    }
+
     return session;
   } catch (error) {
     console.error('Erro ao verificar sessão:', error);

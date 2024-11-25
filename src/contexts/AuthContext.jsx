@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useToast } from '@chakra-ui/react'
-import { supabase, signIn, signOut, getCurrentUser, onAuthStateChange } from '../services/supabase'
+import { supabase, signIn, signOut, getCurrentUser, onAuthStateChange, checkSession } from '../services/supabase'
 import { useNavigate } from 'react-router-dom'
 
 const AuthContext = createContext(null)
@@ -129,19 +129,46 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Limpa o estado da autenticação
+  const clearAuthState = () => {
+    setUser(null);
+    setUserProfile(null);
+    setUserRole(null);
+    setUserPermissions([]);
+    setInitialized(false);
+  };
+
   // Função para reconectar e recarregar dados
   const reconnect = async () => {
     try {
       setLoading(true);
-      const currentUser = await getCurrentUser();
       
-      if (currentUser) {
-        await loadUserProfile(currentUser.id, currentUser);
+      // Primeiro verifica a sessão
+      const session = await checkSession();
+      if (!session) {
+        console.log('Sem sessão ativa, limpando estado...');
+        clearAuthState();
+        navigate('/login');
+        return;
       }
+
+      // Tenta obter o usuário atual
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        console.log('Usuário não encontrado, limpando estado...');
+        clearAuthState();
+        navigate('/login');
+        return;
+      }
+
+      // Atualiza o estado com os dados do usuário
+      setUser(currentUser);
+      await loadUserProfile(currentUser.id, currentUser);
+      
     } catch (error) {
       console.error('Erro ao reconectar:', error);
-      // Se houver erro na reconexão, faz logout
-      handleSignOut();
+      clearAuthState();
+      navigate('/login');
     } finally {
       setLoading(false);
     }
@@ -149,61 +176,59 @@ export const AuthProvider = ({ children }) => {
 
   // Monitora quando a aba volta a ter foco
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && user) {
-        console.log('Aba voltou a ter foco, reconectando...');
-        reconnect();
+    let timeoutId;
+
+    const handleVisibilityChange = async () => {
+      if (!document.hidden) {
+        console.log('Aba voltou a ter foco, aguardando para reconectar...');
+        
+        // Limpa o timeout anterior se existir
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+
+        // Aguarda um momento antes de tentar reconectar
+        timeoutId = setTimeout(() => {
+          console.log('Tentando reconectar...');
+          reconnect();
+        }, 1000);
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Tenta reconectar quando o componente monta
+    reconnect();
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
-  }, [user]);
+  }, []);
 
   // Monitora mudanças na sessão do Supabase
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.id);
       
-      if (event === 'SIGNED_IN') {
+      if (event === 'SIGNED_IN' && session?.user) {
         setUser(session.user);
         await loadUserProfile(session.user.id, session.user);
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setUserProfile(null);
-        setUserRole(null);
-        setUserPermissions([]);
-      } else if (event === 'TOKEN_REFRESHED') {
-        // Recarrega o perfil quando o token é atualizado
-        if (session?.user) {
-          await loadUserProfile(session.user.id, session.user);
-        }
+      } 
+      else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        clearAuthState();
+        navigate('/login');
+      }
+      else if (event === 'TOKEN_REFRESHED' && session?.user) {
+        setUser(session.user);
+        await loadUserProfile(session.user.id, session.user);
       }
       
       setInitialized(true);
       setLoading(false);
     });
-
-    // Carrega o usuário atual ao iniciar
-    const initializeAuth = async () => {
-      try {
-        const currentUser = await getCurrentUser();
-        
-        if (currentUser) {
-          setUser(currentUser);
-          await loadUserProfile(currentUser.id, currentUser);
-        }
-      } catch (error) {
-        console.error('Erro ao inicializar auth:', error);
-      } finally {
-        setInitialized(true);
-        setLoading(false);
-      }
-    };
-
-    initializeAuth();
 
     return () => {
       subscription.unsubscribe();
