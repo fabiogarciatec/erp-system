@@ -55,6 +55,23 @@ const PublicRoute = ({ children }) => {
   return children
 }
 
+// Componente especial para a rota de reset de senha
+const ResetPasswordRoute = ({ children }) => {
+  const { loading, initialized } = useAuth()
+  
+  if (!initialized || loading) {
+    return <LoadingScreen />
+  }
+
+  // Verifica se a URL tem o token de recuperação
+  const hasRecoveryToken = window.location.hash.includes('type=recovery')
+  if (!hasRecoveryToken) {
+    return <Navigate to="/login" replace />
+  }
+
+  return children
+}
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -68,13 +85,13 @@ const AppRoutes = () => {
         } 
       />
       
-      {/* Rota pública de redefinição de senha */}
+      {/* Rota de redefinição de senha */}
       <Route 
         path="/reset-password" 
         element={
-          <PublicRoute>
+          <ResetPasswordRoute>
             <ResetPassword />
-          </PublicRoute>
+          </ResetPasswordRoute>
         } 
       />
       
