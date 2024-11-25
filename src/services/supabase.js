@@ -3,130 +3,209 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-console.log('Environment Check:', {
-  mode: import.meta.env.MODE,
-  supabaseUrl: supabaseUrl ? 'Defined' : 'Undefined',
-  supabaseKey: supabaseAnonKey ? 'Defined' : 'Undefined'
-})
+// Configurações do cliente Supabase
+const STORAGE_KEY = 'app_session';
+const AUTO_REFRESH_INTERVAL = 4 * 60 * 1000; // 4 minutos
+const CONNECTION_CHECK_INTERVAL = 30 * 1000; // 30 segundos
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Erro: Variáveis de ambiente do Supabase não configuradas:', {
-    url: !!supabaseUrl,
-    key: !!supabaseAnonKey
-  })
-}
-
-// URL base da aplicação para redirecionamentos
-const siteUrl = import.meta.env.MODE === 'production' 
-  ? 'https://erp-system-fabio.netlify.app'  // URL do seu site no Netlify
-  : 'http://localhost:5173'
-
+// Cria o cliente Supabase com configurações otimizadas
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    flowType: 'pkce',
-    storage: window.localStorage,
-    storageKey: 'erp-auth-token',
-    debug: true // Ativando debug para todos os ambientes temporariamente
-  }
-})
+    storage: {
+      getItem: (key) => {
+        try {
+          const item = localStorage.getItem(key);
+          return item ? JSON.parse(item) : null;
+        } catch (error) {
+          console.error('Erro ao ler sessão:', error);
+          return null;
+        }
+      },
+      setItem: (key, value) => {
+        try {
+          localStorage.setItem(key, JSON.stringify(value));
+        } catch (error) {
+          console.error('Erro ao salvar sessão:', error);
+        }
+      },
+      removeItem: (key) => {
+        try {
+          localStorage.removeItem(key);
+        } catch (error) {
+          console.error('Erro ao remover sessão:', error);
+        }
+      },
+    },
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 2,
+    },
+  },
+});
 
-// Função para enviar email de recuperação de senha
-export const sendPasswordResetEmail = async (email) => {
-  console.log('Enviando email de recuperação para:', email)
-  try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${siteUrl}/reset-password`
-    })
+// Classe para gerenciar a conexão
+class ConnectionManager {
+  constructor() {
+    this.isOnline = navigator.onLine;
+    this.refreshTimer = null;
+    this.connectionTimer = null;
+    this.reconnectAttempts = 0;
+    this.maxAttempts = 5;
+    this.listeners = new Set();
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
+    // Monitora estado da conexão
+    window.addEventListener('online', () => this.handleOnline());
+    window.addEventListener('offline', () => this.handleOffline());
     
-    if (error) throw error
-    return { error: null }
-  } catch (error) {
-    console.error('Erro ao enviar email de recuperação:', error)
-    return { error }
+    // Monitora visibilidade da página
+    document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
+    
+    // Inicia timers
+    this.startRefreshTimer();
+    this.startConnectionTimer();
+  }
+
+  handleOnline() {
+    console.log('Conexão restabelecida');
+    this.isOnline = true;
+    this.reconnectAttempts = 0;
+    this.refreshSession();
+    this.notifyListeners('online');
+  }
+
+  handleOffline() {
+    console.log('Conexão perdida');
+    this.isOnline = false;
+    this.notifyListeners('offline');
+  }
+
+  handleVisibilityChange() {
+    if (!document.hidden) {
+      console.log('Página visível, verificando conexão...');
+      this.checkConnection();
+    }
+  }
+
+  async checkConnection() {
+    if (!this.isOnline) return;
+
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
+
+      if (!session) {
+        console.log('Sessão expirada, tentando reconectar...');
+        await this.refreshSession();
+      }
+    } catch (error) {
+      console.error('Erro ao verificar conexão:', error);
+      this.handleConnectionError();
+    }
+  }
+
+  async refreshSession() {
+    if (!this.isOnline || this.reconnectAttempts >= this.maxAttempts) return;
+
+    try {
+      console.log('Atualizando sessão...');
+      const { data, error } = await supabase.auth.refreshSession();
+      
+      if (error) throw error;
+      
+      if (data?.session) {
+        this.reconnectAttempts = 0;
+        this.notifyListeners('refreshed');
+        return data.session;
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar sessão:', error);
+      this.handleConnectionError();
+    }
+  }
+
+  handleConnectionError() {
+    this.reconnectAttempts++;
+    if (this.reconnectAttempts >= this.maxAttempts) {
+      this.notifyListeners('max_attempts');
+    }
+  }
+
+  startRefreshTimer() {
+    if (this.refreshTimer) clearInterval(this.refreshTimer);
+    this.refreshTimer = setInterval(() => this.refreshSession(), AUTO_REFRESH_INTERVAL);
+  }
+
+  startConnectionTimer() {
+    if (this.connectionTimer) clearInterval(this.connectionTimer);
+    this.connectionTimer = setInterval(() => this.checkConnection(), CONNECTION_CHECK_INTERVAL);
+  }
+
+  addListener(callback) {
+    this.listeners.add(callback);
+  }
+
+  removeListener(callback) {
+    this.listeners.delete(callback);
+  }
+
+  notifyListeners(event) {
+    this.listeners.forEach(callback => callback(event));
+  }
+
+  cleanup() {
+    if (this.refreshTimer) clearInterval(this.refreshTimer);
+    if (this.connectionTimer) clearInterval(this.connectionTimer);
+    window.removeEventListener('online', this.handleOnline);
+    window.removeEventListener('offline', this.handleOffline);
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
   }
 }
 
+// Instância global do gerenciador de conexão
+export const connectionManager = new ConnectionManager();
+
+// Funções de autenticação melhoradas
 export const signIn = async (email, password) => {
-  console.log('Tentando fazer login com email:', email)
-  
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
-    })
+    });
 
-    if (error) {
-      console.error('Erro no signIn:', error)
-      throw error
-    }
-
-    console.log('Login bem sucedido:', data)
-    return { data, error: null }
+    if (error) throw error;
+    return { data };
   } catch (error) {
-    console.error('Erro ao fazer login:', error)
-    return { data: null, error }
-  }
-}
-
-export const signOut = async () => {
-  try {
-    console.log('Tentando fazer logout...')
-    const { error } = await supabase.auth.signOut()
-
-    if (error) {
-      console.error('Erro no signOut:', error)
-      throw error
-    }
-
-    console.log('Logout bem sucedido')
-    return { error: null }
-  } catch (error) {
-    console.error('Erro ao fazer logout:', error)
-    return { error }
-  }
-}
-
-// Função para forçar atualização do token
-export const refreshSession = async () => {
-  try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error || !session) {
-      console.error('Erro ao obter sessão:', error);
-      return null;
-    }
-
-    // Força a atualização do token
-    const { data, error: refreshError } = await supabase.auth.refreshSession();
-    if (refreshError) {
-      console.error('Erro ao atualizar sessão:', refreshError);
-      return null;
-    }
-
-    return data.session;
-  } catch (error) {
-    console.error('Erro ao atualizar sessão:', error);
-    return null;
+    console.error('Erro ao fazer login:', error);
+    return { error };
   }
 };
 
-// Função para obter o usuário atual
+export const signOut = async () => {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    connectionManager.cleanup();
+    return { data: true };
+  } catch (error) {
+    console.error('Erro ao fazer logout:', error);
+    return { error };
+  }
+};
+
 export const getCurrentUser = async () => {
   try {
-    // Primeiro tenta atualizar a sessão
-    const session = await refreshSession();
-    if (!session) {
-      console.log('Não foi possível atualizar a sessão');
-      return null;
-    }
+    const session = await connectionManager.refreshSession();
+    if (!session) return null;
 
     const { data: { user }, error } = await supabase.auth.getUser();
-    if (error) {
-      console.error('Erro ao obter usuário:', error);
-      return null;
-    }
+    if (error) throw error;
 
     return user;
   } catch (error) {
@@ -135,20 +214,10 @@ export const getCurrentUser = async () => {
   }
 };
 
-// Função para verificar se a sessão está ativa
 export const checkSession = async () => {
   try {
-    // Primeiro tenta atualizar a sessão
-    const session = await refreshSession();
-    if (!session) {
-      return null;
-    }
-
-    // Verifica se a sessão existe e não está expirada
-    if (!session.access_token || !session.expires_at) {
-      console.log('Sessão inválida');
-      return null;
-    }
+    const session = await connectionManager.refreshSession();
+    if (!session) return null;
 
     // Verifica se o token está expirado
     const expiresAt = new Date(session.expires_at * 1000);
@@ -164,11 +233,21 @@ export const checkSession = async () => {
   }
 };
 
+// Função para registrar callbacks de mudança de estado
 export const onAuthStateChange = (callback) => {
-  console.log('Configurando listener de mudança de estado de autenticação...')
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-    console.log('Mudança de estado de autenticação:', event, session)
-    callback(event, session)
-  })
-  return { unsubscribe: () => subscription.unsubscribe() }
-}
+  console.log('Configurando listener de autenticação...');
+  
+  // Adiciona listener para eventos de conexão
+  connectionManager.addListener((event) => {
+    if (event === 'max_attempts') {
+      // Força logout após máximo de tentativas
+      signOut();
+    }
+  });
+
+  // Retorna a subscription do Supabase
+  return supabase.auth.onAuthStateChange((event, session) => {
+    console.log('Mudança de estado:', event, session?.user?.id);
+    callback(event, session);
+  });
+};
