@@ -43,6 +43,7 @@ const ResetPassword = () => {
       console.log('URL completa:', fullUrl);
       console.log('Hash encontrado:', hash);
 
+      // Verifica se é uma URL de recuperação de senha
       if (!hash || !hash.includes('type=recovery')) {
         console.log('Hash inválido ou não é recuperação de senha');
         navigate('/login');
@@ -50,11 +51,14 @@ const ResetPassword = () => {
       }
 
       try {
-        // Tenta obter o usuário atual usando o token da URL
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error || !user?.email) {
-          console.error('Erro ao obter usuário:', error);
+        // Verifica se o token é válido
+        const { data, error } = await supabase.auth.verifyOtp({
+          type: 'recovery',
+          token_hash: hash,
+        });
+
+        if (error || !data?.user?.email) {
+          console.error('Erro ao verificar token:', error);
           toast({
             title: 'Link inválido ou expirado',
             description: 'Por favor, solicite um novo link de redefinição de senha.',
@@ -66,10 +70,10 @@ const ResetPassword = () => {
           return;
         }
 
-        console.log('Email do usuário recuperado:', user.email);
-        setEmail(user.email);
+        console.log('Email do usuário recuperado:', data.user.email);
+        setEmail(data.user.email);
       } catch (error) {
-        console.error('Erro ao verificar usuário:', error);
+        console.error('Erro ao verificar token:', error);
         navigate('/login');
       }
     };

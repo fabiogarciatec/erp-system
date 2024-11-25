@@ -109,11 +109,7 @@ const AppRoutes = () => {
       {/* Rota de redefinição de senha */}
       <Route 
         path="/reset-password" 
-        element={
-          <ResetPasswordRoute>
-            <ResetPassword />
-          </ResetPasswordRoute>
-        } 
+        element={<ResetPassword />} 
       />
       
       {/* Rota de acesso negado */}

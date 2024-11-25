@@ -38,6 +38,7 @@ import UserForm from './components/UserForm'
 import DeleteAlert from '../../components/DeleteAlert'
 import { formatPhone, cleanPhone } from '../../utils/formatters'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useNavigate } from 'react-router-dom'
 
 export default function UserList() {
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -50,6 +51,7 @@ export default function UserList() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState(null)
   const toast = useToast()
+  const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
     email: '',
@@ -259,28 +261,28 @@ export default function UserList() {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
         redirectTo: `${window.location.origin}/reset-password`,
-      })
+      });
       
-      if (error) throw error
+      if (error) throw error;
 
       toast({
         title: 'Email enviado',
-        description: 'Um email para redefinição de senha foi enviado para o usuário.',
+        description: 'Um link para redefinição de senha foi enviado para o email do usuário.',
         status: 'success',
         duration: 5000,
         isClosable: true,
-      })
+      });
     } catch (error) {
-      console.error('Erro ao enviar email de redefinição:', error)
+      console.error('Erro ao enviar email de redefinição:', error);
       toast({
         title: 'Erro ao enviar email',
         description: error.message,
         status: 'error',
         duration: 5000,
         isClosable: true,
-      })
+      });
     }
-  }
+  };
 
   const handleDelete = async () => {
     if (!userToDelete?.id) {
