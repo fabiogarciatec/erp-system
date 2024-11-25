@@ -129,65 +129,86 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Função para reconectar e recarregar dados
+  const reconnect = async () => {
+    try {
+      setLoading(true);
+      const currentUser = await getCurrentUser();
+      
+      if (currentUser) {
+        await loadUserProfile(currentUser.id, currentUser);
+      }
+    } catch (error) {
+      console.error('Erro ao reconectar:', error);
+      // Se houver erro na reconexão, faz logout
+      handleSignOut();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Monitora quando a aba volta a ter foco
   useEffect(() => {
-    let mounted = true
-    let unsubscribe
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user) {
+        console.log('Aba voltou a ter foco, reconectando...');
+        reconnect();
+      }
+    };
 
-    const initialize = async () => {
-      try {
-        // Verifica se há um token de redefinição de senha na URL
-        const hash = window.location.hash;
-        if (hash && hash.includes('type=recovery')) {
-          setLoading(false);
-          setInitialized(true);
-          return;
-        }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user]);
 
-        const { data: { session } } = await supabase.auth.getSession()
-        
-        if (mounted) {
-          if (session?.user) {
-            await loadUserProfile(session.user.id, session.user)
-            setUser(session.user)
-          } else {
-            setUser(null)
-            setUserRole(null)
-            setUserPermissions([])
-          }
-          setLoading(false)
-          setInitialized(true)
-        }
-
-        // Subscribe to auth changes
-        unsubscribe = supabase.auth.onAuthStateChange(async (event, session) => {
-          console.log('Auth state changed:', event, session)
-          if (mounted) {
-            if (session?.user) {
-              setUser(session.user)
-              await loadUserProfile(session.user.id, session.user)
-            } else {
-              setUser(null)
-              setUserRole(null)
-              setUserPermissions([])
-            }
-          }
-        })
-      } catch (error) {
-        console.error('Erro ao inicializar auth:', error)
-        if (mounted) {
-          setLoading(false)
-          setInitialized(true)
+  // Monitora mudanças na sessão do Supabase
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
+      
+      if (event === 'SIGNED_IN') {
+        setUser(session.user);
+        await loadUserProfile(session.user.id, session.user);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setUserProfile(null);
+        setUserRole(null);
+        setUserPermissions([]);
+      } else if (event === 'TOKEN_REFRESHED') {
+        // Recarrega o perfil quando o token é atualizado
+        if (session?.user) {
+          await loadUserProfile(session.user.id, session.user);
         }
       }
-    }
+      
+      setInitialized(true);
+      setLoading(false);
+    });
 
-    initialize()
+    // Carrega o usuário atual ao iniciar
+    const initializeAuth = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        
+        if (currentUser) {
+          setUser(currentUser);
+          await loadUserProfile(currentUser.id, currentUser);
+        }
+      } catch (error) {
+        console.error('Erro ao inicializar auth:', error);
+      } finally {
+        setInitialized(true);
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
 
     return () => {
-      mounted = false
-      unsubscribe?.()
-    }
-  }, [])
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const handleSignIn = async (email, password) => {
     try {

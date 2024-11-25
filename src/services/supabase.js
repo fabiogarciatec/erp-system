@@ -89,37 +89,29 @@ export const signOut = async () => {
   }
 }
 
+// Função para obter o usuário atual
 export const getCurrentUser = async () => {
   try {
-    const { data: session } = await supabase.auth.getSession()
-    
-    if (!session?.session) {
-      console.log('Nenhuma sessão encontrada')
-      return null
-    }
-
-    const { data: { user }, error } = await supabase.auth.getUser()
-
-    if (error) {
-      if (error.name === 'AuthSessionMissingError') {
-        console.log('Sessão não encontrada')
-        return null
-      }
-      console.error('Erro ao obter usuário atual:', error)
-      throw error
-    }
-
-    console.log('Usuário atual:', user)
-    return user
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return user;
   } catch (error) {
-    if (error.name === 'AuthSessionMissingError') {
-      console.log('Sessão não encontrada')
-      return null
-    }
-    console.error('Erro ao obter usuário atual:', error)
-    return null
+    console.error('Erro ao obter usuário atual:', error);
+    return null;
   }
-}
+};
+
+// Função para verificar se a sessão está ativa
+export const checkSession = async () => {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    return session;
+  } catch (error) {
+    console.error('Erro ao verificar sessão:', error);
+    return null;
+  }
+};
 
 export const onAuthStateChange = (callback) => {
   console.log('Configurando listener de mudança de estado de autenticação...')
