@@ -16,18 +16,23 @@ if (!supabaseUrl || !supabaseAnonKey) {
   })
 }
 
-export const supabase = createClient(
-  supabaseUrl,
-  supabaseAnonKey,
-  {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-      storage: window.localStorage
-    }
+// URL base da aplicação para redirecionamentos
+const siteUrl = import.meta.env.MODE === 'production' 
+  ? 'https://erp-system-fabio.netlify.app'  // URL do seu site no Netlify
+  : 'http://localhost:5173'
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    flowType: 'pkce',
+    redirectTo: `${siteUrl}/reset-password`,
+    storage: window.localStorage,
+    storageKey: 'erp-auth-token',
+    debug: import.meta.env.DEV
   }
-)
+})
 
 export const signIn = async (email, password) => {
   console.log('Tentando fazer login com email:', email)
