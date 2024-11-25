@@ -174,7 +174,7 @@ const MainLayout = () => {
 
       {/* Sidebar */}
       <Box
-        w={{ base: 'full', md: isSidebarOpen ? '280px' : '0' }}
+        w={{ base: 'full', md: '280px' }}
         bg="white"
         borderRight="1px"
         borderColor="gray.200"
@@ -184,6 +184,7 @@ const MainLayout = () => {
         transform={{ base: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)', md: 'none' }}
         transition="all 0.3s"
         overflowY="auto"
+        display={{ base: isSidebarOpen ? 'block' : 'none', md: 'block' }}
       >
         <VStack spacing={6} align="stretch" p={4} h="full">
           {/* Logo */}
@@ -234,10 +235,8 @@ const MainLayout = () => {
         bg="gray.50"
         p={4}
         overflowY="auto"
-        ml={{ base: 0, md: isSidebarOpen ? '280px' : '0' }}
-        transition="margin-left 0.3s"
-        w={{ base: '100%', md: `calc(100% - ${isSidebarOpen ? '280px' : '0px'})` }}
-        position="relative"
+        transition="all 0.3s"
+        w={{ base: '100%', md: 'calc(100% - 280px)' }}
       >
         <Box 
           w="full"
