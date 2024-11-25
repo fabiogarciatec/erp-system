@@ -27,12 +27,27 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-    redirectTo: `${siteUrl}/reset-password`,
     storage: window.localStorage,
     storageKey: 'erp-auth-token',
-    debug: import.meta.env.DEV
+    debug: true // Ativando debug para todos os ambientes temporariamente
   }
 })
+
+// Função para enviar email de recuperação de senha
+export const sendPasswordResetEmail = async (email) => {
+  console.log('Enviando email de recuperação para:', email)
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${siteUrl}/reset-password`
+    })
+    
+    if (error) throw error
+    return { error: null }
+  } catch (error) {
+    console.error('Erro ao enviar email de recuperação:', error)
+    return { error }
+  }
+}
 
 export const signIn = async (email, password) => {
   console.log('Tentando fazer login com email:', email)

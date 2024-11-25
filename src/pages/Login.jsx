@@ -29,10 +29,10 @@ const Login = () => {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
-  const [isResettingPassword, setIsResettingPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const toast = useToast()
-  const { signIn, loading } = useAuth()
+  const { signIn, sendPasswordResetEmail } = useAuth()
 
   const validateForm = () => {
     const newErrors = {}
@@ -72,40 +72,44 @@ const Login = () => {
     }
   }
 
-  const handleResetPassword = async () => {
+  const handleForgotPassword = async () => {
     if (!email) {
-      setErrors({ email: 'Digite seu email para redefinir a senha' })
-      return
+      toast({
+        title: 'Email necessário',
+        description: 'Por favor, digite seu email para recuperar a senha.',
+        status: 'warning',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
     }
 
     try {
-      setIsResettingPassword(true)
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      })
+      setLoading(true);
+      const { error } = await sendPasswordResetEmail(email);
       
-      if (error) throw error
+      if (error) throw error;
 
       toast({
         title: 'Email enviado',
-        description: 'Verifique seu email para redefinir sua senha.',
+        description: 'Se o email estiver cadastrado, você receberá um link para redefinir sua senha.',
         status: 'success',
         duration: 5000,
         isClosable: true,
-      })
+      });
     } catch (error) {
-      console.error('Erro ao enviar email de redefinição:', error)
+      console.error('Erro ao solicitar redefinição de senha:', error);
       toast({
         title: 'Erro ao enviar email',
-        description: error.message,
+        description: error.message || 'Ocorreu um erro ao tentar enviar o email de recuperação.',
         status: 'error',
         duration: 5000,
         isClosable: true,
-      })
+      });
     } finally {
-      setIsResettingPassword(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Box 
@@ -175,10 +179,9 @@ const Login = () => {
             <Button
               variant="ghost"
               width="full"
-              onClick={handleResetPassword}
-              isLoading={isResettingPassword}
+              onClick={handleForgotPassword}
+              isLoading={loading}
               loadingText="Enviando email..."
-              isDisabled={loading}
             >
               Esqueci minha senha
             </Button>

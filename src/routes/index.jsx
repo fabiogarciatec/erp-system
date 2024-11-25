@@ -1,5 +1,5 @@
-import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Center, Spinner } from '@chakra-ui/react'
 import Login from '../pages/Login'
@@ -57,18 +57,39 @@ const PublicRoute = ({ children }) => {
 
 // Componente especial para a rota de reset de senha
 const ResetPasswordRoute = ({ children }) => {
-  const { loading, initialized } = useAuth()
+  const { user, loading, initialized } = useAuth()
+  const location = useLocation()
   
+  useEffect(() => {
+    console.log('ResetPasswordRoute - Estado:', {
+      loading,
+      initialized,
+      hasUser: !!user,
+      pathname: location.pathname,
+      hash: location.hash,
+      fullUrl: window.location.href
+    })
+  }, [loading, initialized, user, location])
+
   if (!initialized || loading) {
+    console.log('ResetPasswordRoute - Carregando...')
     return <LoadingScreen />
   }
 
   // Verifica se a URL tem o token de recuperação
   const hasRecoveryToken = window.location.hash.includes('type=recovery')
+  console.log('ResetPasswordRoute - Token de recuperação:', {
+    hasRecoveryToken,
+    hash: window.location.hash
+  })
+
   if (!hasRecoveryToken) {
+    console.log('ResetPasswordRoute - Sem token, redirecionando para login')
     return <Navigate to="/login" replace />
   }
 
+  // Se tem token de recuperação, mostra a página mesmo se estiver autenticado
+  console.log('ResetPasswordRoute - Token válido, mostrando página de reset')
   return children
 }
 
