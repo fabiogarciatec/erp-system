@@ -9,20 +9,15 @@ import {
   VStack,
   Heading,
   useToast,
-  Text,
   FormErrorMessage,
   InputGroup,
   InputRightElement,
   IconButton,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription,
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
 import { FiEye, FiEyeOff } from 'react-icons/fi'
-import { supabase } from '../services/supabase'
+import { useAuth } from '../contexts/AuthContext'
+import { sendPasswordResetEmail } from '../services/supabase'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -32,19 +27,15 @@ const Login = () => {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const toast = useToast()
-  const { signIn, sendPasswordResetEmail } = useAuth()
+  const { signIn } = useAuth()
 
   const validateForm = () => {
     const newErrors = {}
     if (!email) {
       newErrors.email = 'Email é obrigatório'
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email inválido'
     }
     if (!password) {
       newErrors.password = 'Senha é obrigatória'
-    } else if (password.length < 6) {
-      newErrors.password = 'Senha deve ter pelo menos 6 caracteres'
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -52,14 +43,11 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
     if (!validateForm()) return
 
     try {
       const { error } = await signIn(email, password)
       if (error) throw error
-      
-      navigate('/', { replace: true })
     } catch (error) {
       console.error('Erro no login:', error)
       toast({
@@ -130,9 +118,6 @@ const Login = () => {
         >
           <VStack spacing={6} as="form" onSubmit={handleSubmit}>
             <Heading size="lg">Login</Heading>
-            <Text color="gray.600" fontSize="sm">
-              Entre com suas credenciais para acessar o sistema
-            </Text>
 
             <FormControl isInvalid={errors.email}>
               <FormLabel>Email</FormLabel>
@@ -140,7 +125,7 @@ const Login = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu.email@exemplo.com"
+                placeholder="Digite seu email"
               />
               <FormErrorMessage>{errors.email}</FormErrorMessage>
             </FormControl>
@@ -152,7 +137,7 @@ const Login = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Sua senha"
+                  placeholder="Digite sua senha"
                 />
                 <InputRightElement>
                   <IconButton
