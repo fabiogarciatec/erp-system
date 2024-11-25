@@ -15,25 +15,25 @@ const StatCard = ({ title, value, icon, helpText }) => (
 
 const Dashboard = () => {
   return (
-    <Box>
+    <Box w="full">
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
         <StatCard
           title="Clientes"
-          value="120"
+          value="150"
           icon={MdPeople}
           helpText="Total de clientes ativos"
         />
         <StatCard
           title="Vendas"
-          value="R$ 45.678"
+          value="28"
           icon={MdShoppingCart}
           helpText="Vendas este mês"
         />
         <StatCard
-          title="Faturamento"
-          value="R$ 123.456"
+          title="Receita"
+          value="R$ 45.850"
           icon={MdAttachMoney}
-          helpText="Faturamento total"
+          helpText="Receita mensal"
         />
       </SimpleGrid>
     </Box>
