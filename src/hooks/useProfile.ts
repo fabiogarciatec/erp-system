@@ -3,6 +3,7 @@ import { useToast } from '@chakra-ui/react';
 import { supabase } from '../services/supabase';
 
 export interface ProfileData {
+  id: string;
   full_name: string;
   email: string;
   position: string;
