@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Gera o código do commit com data e hora
+COMMIT_CODE=$(date +"%Y%m%d_%H%M%S")
+
+# Lê a mensagem original do commit
+COMMIT_MSG=$(cat "$1")
+
+# Adiciona o código no início da mensagem
+echo "[COMMIT-$COMMIT_CODE] $COMMIT_MSG" > "$1"
