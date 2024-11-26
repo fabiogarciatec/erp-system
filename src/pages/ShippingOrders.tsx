@@ -9,8 +9,11 @@ import {
   Td,
   Badge,
   HStack,
+  Input,
+  InputGroup,
+  InputRightElement,
 } from '@chakra-ui/react';
-import { FiPlus } from 'react-icons/fi';
+import { FiSearch, FiPlus } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 
 export function ShippingOrders() {

@@ -72,7 +72,7 @@ export function Backup() {
     });
   };
 
-  const handleDelete = (backupId: number) => {
+  const handleDelete = () => {
     toast({
       title: 'Backup excluído',
       description: 'O backup foi excluído com sucesso.',
@@ -156,7 +156,7 @@ export function Backup() {
                         size="sm"
                         colorScheme="red"
                         variant="ghost"
-                        onClick={() => handleDelete(backup.id)}
+                        onClick={handleDelete}
                       />
                     </HStack>
                   </Td>

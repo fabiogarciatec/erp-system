@@ -1,16 +1,23 @@
 import {
   Box,
   Button,
+  Input,
   Table,
-  Thead,
   Tbody,
-  Tr,
-  Th,
   Td,
+  Th,
+  Thead,
+  Tr,
   Badge,
   HStack,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  IconButton,
+  useDisclosure,
 } from '@chakra-ui/react';
-import { FiPlus } from 'react-icons/fi';
+import { FiMoreVertical, FiPlus } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 
 export function ServiceOrders() {
