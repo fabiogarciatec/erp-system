@@ -13,24 +13,42 @@ function App() {
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route
-              path="/dashboard"
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/customers"
-              element={
-                <PrivateRoute>
-                  <Customers />
-                </PrivateRoute>
-              }
-            />
-            <Route path="/" element={<Navigate to="/dashboard" />} />
-            <Route path="*" element={<Navigate to="/dashboard" />} />
+            <Route path="/" element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            } />
+            <Route path="/dashboard" element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            } />
+            <Route path="/customers" element={
+              <PrivateRoute>
+                <Customers />
+              </PrivateRoute>
+            } />
+            <Route path="/products" element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            } />
+            <Route path="/sales" element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            } />
+            <Route path="/reports" element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            } />
+            <Route path="/settings" element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            } />
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

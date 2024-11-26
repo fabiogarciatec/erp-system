@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   Modal,
   ModalOverlay,
@@ -10,84 +11,107 @@ import {
   FormControl,
   FormLabel,
   Input,
-  useToast,
+  Select,
   VStack,
-  Switch,
-} from '@chakra-ui/react'
-import { useState, useEffect } from 'react'
-import { createCustomer, updateCustomer } from '../services/customers'
-import { Customer } from '../types/customer'
+} from '@chakra-ui/react';
+import { supabase } from '../services/supabase';
 
 interface CustomerModalProps {
-  isOpen: boolean
-  onClose: () => void
-  customer?: Customer
-  onSuccess: () => void
+  isOpen: boolean;
+  onClose: () => void;
+  customer?: any;
+  onSuccess: () => void;
 }
 
 export function CustomerModal({ isOpen, onClose, customer, onSuccess }: CustomerModalProps) {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [isActive, setIsActive] = useState(true)
-  const [isLoading, setIsLoading] = useState(false)
-  const toast = useToast()
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [status, setStatus] = useState('active');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (customer) {
-      setName(customer.name)
-      setEmail(customer.email || '')
-      setPhone(customer.phone || '')
-      setIsActive(customer.status === 'active')
+      setName(customer.name || '');
+      setEmail(customer.email || '');
+      // Formata o telefone ao carregar os dados do cliente
+      setPhone(formatPhoneInput(customer.phone || ''));
+      setStatus(customer.status || 'active');
     } else {
-      setName('')
-      setEmail('')
-      setPhone('')
-      setIsActive(true)
+      setName('');
+      setEmail('');
+      setPhone('');
+      setStatus('active');
     }
-  }, [customer])
+  }, [customer]);
+
+  const formatPhoneInput = (value: string) => {
+    // Remove todos os caracteres não numéricos
+    const cleaned = value.replace(/\D/g, '');
+    
+    // Se não houver números, retorna vazio
+    if (!cleaned) return '';
+    
+    let formatted = cleaned;
+    
+    if (cleaned.length >= 2) {
+      formatted = `(${cleaned.slice(0, 2)}`;
+      if (cleaned.length >= 7) {
+        formatted += `) ${cleaned.slice(2, 7)}`;
+        if (cleaned.length >= 11) {
+          formatted += `-${cleaned.slice(7, 11)}`;
+        } else {
+          formatted += `-${cleaned.slice(7)}`;
+        }
+      } else {
+        formatted += `) ${cleaned.slice(2)}`;
+      }
+    }
+    
+    return formatted;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneInput(e.target.value);
+    setPhone(formatted);
+  };
 
   const handleSubmit = async () => {
     try {
-      setIsLoading(true)
-
-      const customerData: Omit<Customer, 'id' | 'created_at'> = {
+      setIsLoading(true);
+      const phoneNumbers = phone.replace(/\D/g, '');
+      
+      const customerData = {
         name,
         email,
-        phone,
-        status: isActive ? 'active' : 'inactive',
-        last_purchase: null
-      }
+        phone: phoneNumbers,
+        status,
+        updated_at: new Date(),
+      };
 
       if (customer?.id) {
-        await updateCustomer(customer.id, customerData)
-        toast({
-          title: 'Cliente atualizado com sucesso!',
-          status: 'success',
-          duration: 3000,
-        })
+        const { error } = await supabase
+          .from('customers')
+          .update(customerData)
+          .eq('id', customer.id);
+
+        if (error) throw error;
       } else {
-        await createCustomer(customerData)
-        toast({
-          title: 'Cliente criado com sucesso!',
-          status: 'success',
-          duration: 3000,
-        })
+        const { error } = await supabase
+          .from('customers')
+          .insert([{ ...customerData, created_at: new Date() }]);
+
+        if (error) throw error;
       }
 
-      onSuccess()
-      onClose()
+      onSuccess();
+      onClose();
     } catch (error) {
-      toast({
-        title: 'Erro ao salvar cliente',
-        description: 'Tente novamente mais tarde',
-        status: 'error',
-        duration: 3000,
-      })
+      console.error('Error saving customer:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -97,24 +121,38 @@ export function CustomerModal({ isOpen, onClose, customer, onSuccess }: Customer
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4}>
-            <FormControl isRequired>
+            <FormControl>
               <FormLabel>Nome</FormLabel>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Nome do cliente"
+              />
             </FormControl>
-
             <FormControl>
               <FormLabel>Email</FormLabel>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email do cliente"
+              />
             </FormControl>
-
             <FormControl>
               <FormLabel>Telefone</FormLabel>
-              <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <Input
+                value={phone}
+                onChange={handlePhoneChange}
+                placeholder="(XX) XXXXX-XXXX"
+                maxLength={15}
+              />
             </FormControl>
-
-            <FormControl display="flex" alignItems="center">
-              <FormLabel mb="0">Cliente Ativo</FormLabel>
-              <Switch isChecked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
+            <FormControl>
+              <FormLabel>Status</FormLabel>
+              <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+                <option value="active">Ativo</option>
+                <option value="inactive">Inativo</option>
+              </Select>
             </FormControl>
           </VStack>
         </ModalBody>
@@ -123,11 +161,15 @@ export function CustomerModal({ isOpen, onClose, customer, onSuccess }: Customer
           <Button variant="ghost" mr={3} onClick={onClose}>
             Cancelar
           </Button>
-          <Button colorScheme="blue" onClick={handleSubmit} isLoading={isLoading}>
+          <Button
+            colorScheme="blue"
+            onClick={handleSubmit}
+            isLoading={isLoading}
+          >
             Salvar
           </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
-  )
+  );
 }
