@@ -1,101 +1,81 @@
-import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Button,
   Table,
   Thead,
   Tbody,
   Tr,
   Th,
   Td,
-  Badge,
+  Button,
   Input,
   InputGroup,
   InputRightElement,
-  useToast,
-  Flex,
-  Heading,
 } from '@chakra-ui/react';
 import { FiSearch, FiPlus } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
-import { supabase } from '../services/supabase';
 import { PageHeader } from '../components/PageHeader';
 
+interface ShippingOrder {
+  id: string;
+  order_number: string;
+  customer: string;
+  status: string;
+  created_at: string;
+  delivery_date: string;
+}
+
 export function ShippingOrders() {
-  const [orders, setOrders] = useState<ShippingOrder[]>([]);
-  const toast = useToast();
-
-  useEffect(() => {
-  }, []);
-
   return (
     <Box w="full" p={8}>
-      <Box w="full">
-        <PageHeader
-          title="Pedidos de Frete"
-          subtitle="Gerencie seus pedidos de frete"
-          breadcrumbs={[
-            { label: 'Dashboard', href: '/' },
-            { label: 'Vendas', href: '/sales' },
-            { label: 'Fretes', href: '/sales/shipping' }
-          ]}
-        />
+      <PageHeader
+        title="Ordens de Frete"
+        subtitle="Gerencie suas ordens de frete"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/' },
+          { label: 'Expedição', href: '/shipping' },
+          { label: 'Ordens de Frete', href: '/shipping/orders' }
+        ]}
+      />
 
-        <Box bg="white" rounded="lg" shadow="sm" overflow="hidden">
-          <Box p={4} borderBottomWidth="1px" display="flex" justifyContent="space-between">
-            <InputGroup maxW="300px">
-              <Input
-                placeholder="Buscar pedido de frete..."
-              />
-              <InputRightElement>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  aria-label="Search"
-                >
-                  <FiSearch />
-                </Button>
-              </InputRightElement>
-            </InputGroup>
-            <Button 
-              colorScheme="blue" 
-              leftIcon={<FiPlus />}
-            >
-              Novo Pedido
-            </Button>
-          </Box>
-
-          <Box overflowX="auto">
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Pedido</Th>
-                  <Th>Cliente</Th>
-                  <Th>Origem</Th>
-                  <Th>Destino</Th>
-                  <Th>Data Entrega</Th>
-                  <Th>Status</Th>
-                  <Th>Valor</Th>
-                  <Th>Ações</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                <Tr>
-                  <Td>PF001</Td>
-                  <Td>Cliente Exemplo</Td>
-                  <Td>São Paulo, SP</Td>
-                  <Td>Rio de Janeiro, RJ</Td>
-                  <Td>05/01/2024</Td>
-                  <Td>
-                    <Badge colorScheme="blue">Em Rota</Badge>
-                  </Td>
-                  <Td>R$ 350,00</Td>
-                  <Td>-</Td>
-                </Tr>
-              </Tbody>
-            </Table>
-          </Box>
+      <Box bg="white" rounded="lg" shadow="sm" p={6}>
+        <Box mb={4} display="flex" justifyContent="space-between">
+          <InputGroup maxW="300px">
+            <Input placeholder="Buscar ordem..." />
+            <InputRightElement>
+              <FiSearch />
+            </InputRightElement>
+          </InputGroup>
+          <Button leftIcon={<FiPlus />} colorScheme="blue">
+            Nova Ordem
+          </Button>
         </Box>
+
+        <Table variant="simple">
+          <Thead>
+            <Tr>
+              <Th>Número</Th>
+              <Th>Cliente</Th>
+              <Th>Status</Th>
+              <Th>Data de Criação</Th>
+              <Th>Data de Entrega</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            <Tr>
+              <Td>ORD001</Td>
+              <Td>Cliente A</Td>
+              <Td>Em Processamento</Td>
+              <Td>2024-01-15</Td>
+              <Td>2024-01-20</Td>
+            </Tr>
+            <Tr>
+              <Td>ORD002</Td>
+              <Td>Cliente B</Td>
+              <Td>Em Trânsito</Td>
+              <Td>2024-01-14</Td>
+              <Td>2024-01-19</Td>
+            </Tr>
+          </Tbody>
+        </Table>
       </Box>
     </Box>
   );

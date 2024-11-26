@@ -11,7 +11,6 @@ import {
   MenuItem,
   MenuDivider,
   IconButton,
-  Image,
 } from '@chakra-ui/react';
 import { FiChevronDown, FiSettings, FiLogOut } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';

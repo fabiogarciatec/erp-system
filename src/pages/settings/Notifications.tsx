@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Box,
   VStack,
@@ -12,7 +11,7 @@ import {
 } from '@chakra-ui/react';
 import { PageHeader } from '../../components/PageHeader';
 
-export function Notifications() {
+export default function Notifications() {
   const toast = useToast();
 
   const handleSave = () => {

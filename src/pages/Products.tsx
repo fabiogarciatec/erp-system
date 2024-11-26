@@ -10,75 +10,65 @@ import {
   Input,
   InputGroup,
   InputRightElement,
-  useDisclosure,
-  useToast,
 } from '@chakra-ui/react';
 import { FiSearch, FiPlus } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 
 export function Products() {
-  const toast = useToast();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
   return (
     <Box w="full" p={8}>
       <PageHeader
         title="Produtos"
-        subtitle="Gerencie seus produtos"
+        subtitle="Gerencie seu catálogo de produtos"
         breadcrumbs={[
           { label: 'Dashboard', href: '/' },
           { label: 'Produtos', href: '/products' }
         ]}
       />
 
-      <Box bg="white" rounded="lg" shadow="sm" overflow="hidden">
-        <Box p={4} borderBottomWidth="1px" display="flex" justifyContent="space-between">
+      <Box bg="white" rounded="lg" shadow="sm" p={6}>
+        <Box mb={4} display="flex" justifyContent="space-between">
           <InputGroup maxW="300px">
-            <Input
-              placeholder="Buscar produto..."
-            />
+            <Input placeholder="Buscar produto..." />
             <InputRightElement>
-              <Button
-                size="sm"
-                variant="ghost"
-                aria-label="Search"
-              >
-                <FiSearch />
-              </Button>
+              <FiSearch />
             </InputRightElement>
           </InputGroup>
-          <Button 
-            colorScheme="blue" 
-            leftIcon={<FiPlus />}
-          >
+          <Button leftIcon={<FiPlus />} colorScheme="blue">
             Novo Produto
           </Button>
         </Box>
 
-        <Box overflowX="auto">
-          <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>Nome</Th>
-                <Th>Código</Th>
-                <Th>Categoria</Th>
-                <Th>Preço</Th>
-                <Th>Estoque</Th>
-                <Th>Ações</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              <Tr>
-                <Td>Produto Exemplo</Td>
-                <Td>PRD001</Td>
-                <Td>Categoria</Td>
-                <Td>R$ 99,90</Td>
-                <Td>50</Td>
-                <Td>-</Td>
-              </Tr>
-            </Tbody>
-          </Table>
-        </Box>
+        <Table variant="simple">
+          <Thead>
+            <Tr>
+              <Th>Código</Th>
+              <Th>Nome</Th>
+              <Th>Categoria</Th>
+              <Th>Estoque</Th>
+              <Th>Preço</Th>
+              <Th>Status</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            <Tr>
+              <Td>PROD001</Td>
+              <Td>Produto A</Td>
+              <Td>Categoria 1</Td>
+              <Td>50</Td>
+              <Td>R$ 99,90</Td>
+              <Td>Ativo</Td>
+            </Tr>
+            <Tr>
+              <Td>PROD002</Td>
+              <Td>Produto B</Td>
+              <Td>Categoria 2</Td>
+              <Td>30</Td>
+              <Td>R$ 149,90</Td>
+              <Td>Ativo</Td>
+            </Tr>
+          </Tbody>
+        </Table>
       </Box>
     </Box>
   );

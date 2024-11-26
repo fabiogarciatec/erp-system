@@ -13,8 +13,13 @@ import {
   useDisclosure,
   useToast,
   Badge,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  IconButton,
 } from '@chakra-ui/react';
-import { FiSearch, FiPlus } from 'react-icons/fi';
+import { FiSearch, FiPlus, FiMoreVertical, FiEdit2, FiTrash2, FiEye } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { PageHeader } from '../components/PageHeader';
 
@@ -25,12 +30,12 @@ export function ServiceOrders() {
   return (
     <Box w="full" p={8}>
       <PageHeader
-        title="Ordem de Serviços"
+        title="Ordens de Serviço"
         subtitle="Gerencie suas ordens de serviço"
         breadcrumbs={[
           { label: 'Dashboard', href: '/' },
           { label: 'Vendas', href: '/sales' },
-          { label: 'Ordem de Serviços', href: '/sales/services' }
+          { label: 'Ordens de Serviço', href: '/sales/service-orders' }
         ]}
       />
 
@@ -53,6 +58,7 @@ export function ServiceOrders() {
           <Button 
             colorScheme="blue" 
             leftIcon={<FiPlus />}
+            onClick={onOpen}
           >
             Nova O.S.
           </Button>
@@ -68,7 +74,8 @@ export function ServiceOrders() {
                 <Th>Data Abertura</Th>
                 <Th>Previsão</Th>
                 <Th>Status</Th>
-                <Th>Ações</Th>
+                <Th>Valor</Th>
+                <Th width="50px">Ações</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -81,7 +88,77 @@ export function ServiceOrders() {
                 <Td>
                   <Badge colorScheme="yellow">Em Andamento</Badge>
                 </Td>
-                <Td>-</Td>
+                <Td>R$ 150,00</Td>
+                <Td>
+                  <Menu>
+                    <MenuButton
+                      as={IconButton}
+                      icon={<FiMoreVertical />}
+                      variant="ghost"
+                      size="sm"
+                      aria-label="Ações"
+                    />
+                    <MenuList>
+                      <MenuItem icon={<FiEye />}>Visualizar</MenuItem>
+                      <MenuItem icon={<FiEdit2 />}>Editar</MenuItem>
+                      <MenuItem icon={<FiTrash2 />} color="red.500">Excluir</MenuItem>
+                    </MenuList>
+                  </Menu>
+                </Td>
+              </Tr>
+              <Tr>
+                <Td>OS002</Td>
+                <Td>João Silva</Td>
+                <Td>Instalação</Td>
+                <Td>02/01/2024</Td>
+                <Td>05/01/2024</Td>
+                <Td>
+                  <Badge colorScheme="green">Concluído</Badge>
+                </Td>
+                <Td>R$ 280,00</Td>
+                <Td>
+                  <Menu>
+                    <MenuButton
+                      as={IconButton}
+                      icon={<FiMoreVertical />}
+                      variant="ghost"
+                      size="sm"
+                      aria-label="Ações"
+                    />
+                    <MenuList>
+                      <MenuItem icon={<FiEye />}>Visualizar</MenuItem>
+                      <MenuItem icon={<FiEdit2 />}>Editar</MenuItem>
+                      <MenuItem icon={<FiTrash2 />} color="red.500">Excluir</MenuItem>
+                    </MenuList>
+                  </Menu>
+                </Td>
+              </Tr>
+              <Tr>
+                <Td>OS003</Td>
+                <Td>Maria Oliveira</Td>
+                <Td>Reparo</Td>
+                <Td>03/01/2024</Td>
+                <Td>04/01/2024</Td>
+                <Td>
+                  <Badge colorScheme="red">Atrasado</Badge>
+                </Td>
+                <Td>R$ 200,00</Td>
+                <Td>
+                  <Menu>
+                    <MenuButton
+                      as={IconButton}
+                      icon={<FiMoreVertical />}
+                      variant="ghost"
+                      size="sm"
+                      aria-label="Ações"
+                    />
+                    <MenuList>
+                      <MenuItem icon={<FiEye />}>Visualizar</MenuItem>
+                      <MenuItem icon={<FiEdit2 />}>Editar</MenuItem>
+                      <MenuItem icon={<FiTrash2 />} color="red.500">Excluir</MenuItem>
+                    </MenuList>
+                  </Menu>
+                </Td>
               </Tr>
             </Tbody>
           </Table>

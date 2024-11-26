@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import {
   Box,
   VStack,
@@ -8,7 +9,6 @@ import {
   Avatar,
   Center,
   IconButton,
-  FormErrorMessage,
   Spinner,
   useDisclosure,
   Modal,
@@ -19,11 +19,10 @@ import {
   ModalCloseButton,
 } from '@chakra-ui/react';
 import { FiCamera } from 'react-icons/fi';
-import { useEffect, useRef, useState } from 'react';
 import { PageHeader } from '../../components/PageHeader';
 import { useProfile, ProfileData } from '../../hooks/useProfile';
 
-export function Profile() {
+export default function Profile() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
@@ -72,7 +71,7 @@ export function Profile() {
     const file = e.target.files?.[0];
     if (file) {
       await uploadAvatar(file);
-      onClose(); // Fecha o modal após o upload
+      onClose();
     }
   };
 
@@ -106,8 +105,8 @@ export function Profile() {
                 src={profile?.avatar_url}
               />
               <IconButton
-                aria-label="Change photo"
                 icon={<FiCamera />}
+                aria-label="Change photo"
                 size="sm"
                 colorScheme="blue"
                 rounded="full"

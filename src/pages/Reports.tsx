@@ -16,7 +16,6 @@ import {
   FiTruck,
   FiTool,
   FiBarChart,
-  FiPieChart,
   FiTrendingUp,
 } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';

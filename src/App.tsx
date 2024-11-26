@@ -10,9 +10,9 @@ import { SalesProducts } from './pages/SalesProducts';
 import { ServiceOrders } from './pages/ServiceOrders';
 import { ShippingOrders } from './pages/ShippingOrders';
 import { Reports } from './pages/Reports';
-import { Profile } from './pages/settings/Profile';
+import Profile from './pages/settings/Profile';
 import { Security } from './pages/settings/Security';
-import { Notifications } from './pages/settings/Notifications';
+import Notifications from './pages/settings/Notifications';
 import { Backup } from './pages/settings/Backup';
 import Company from './pages/settings/Company';
 import { AuthProvider } from './contexts/AuthContext';
@@ -59,7 +59,7 @@ function App() {
                 <SalesProducts />
               </PrivateRoute>
             } />
-            <Route path="/sales/services" element={
+            <Route path="/sales/service-orders" element={
               <PrivateRoute>
                 <ServiceOrders />
               </PrivateRoute>
