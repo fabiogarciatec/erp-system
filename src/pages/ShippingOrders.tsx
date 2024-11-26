@@ -7,8 +7,6 @@ import {
   Tr,
   Th,
   Td,
-  Badge,
-  HStack,
   Input,
   InputGroup,
   InputRightElement,

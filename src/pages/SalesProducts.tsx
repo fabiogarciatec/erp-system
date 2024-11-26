@@ -8,7 +8,6 @@ import {
   Th,
   Td,
   Badge,
-  HStack,
 } from '@chakra-ui/react';
 import { FiPlus } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
