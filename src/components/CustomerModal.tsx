@@ -10,144 +10,111 @@ import {
   FormControl,
   FormLabel,
   Input,
-  VStack,
-  Select,
   useToast,
-} from '@chakra-ui/react';
-import { useState, useEffect } from 'react';
-import { Customer, createCustomer, updateCustomer } from '../services/customers';
+  VStack,
+  Switch,
+} from '@chakra-ui/react'
+import { useState, useEffect } from 'react'
+import { createCustomer, updateCustomer } from '../services/customers'
+import { Customer } from '../types/customer'
 
 interface CustomerModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  customer?: Customer;
-  onSuccess: () => void;
+  isOpen: boolean
+  onClose: () => void
+  customer?: Customer
+  onSuccess: () => void
 }
 
 export function CustomerModal({ isOpen, onClose, customer, onSuccess }: CustomerModalProps) {
-  const toast = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [formData, setFormData] = useState<Omit<Customer, 'id' | 'created_at'>>({
-    name: '',
-    email: '',
-    phone: '',
-    status: 'active',
-    last_purchase: null,
-  });
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [isActive, setIsActive] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
+  const toast = useToast()
 
   useEffect(() => {
     if (customer) {
-      setFormData({
-        name: customer.name,
-        email: customer.email,
-        phone: customer.phone,
-        status: customer.status,
-        last_purchase: customer.last_purchase,
-      });
+      setName(customer.name)
+      setEmail(customer.email || '')
+      setPhone(customer.phone || '')
+      setIsActive(customer.status === 'active')
     } else {
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        status: 'active',
-        last_purchase: null,
-      });
+      setName('')
+      setEmail('')
+      setPhone('')
+      setIsActive(true)
     }
-  }, [customer]);
+  }, [customer])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
+  const handleSubmit = async () => {
     try {
-      if (customer?.id) {
-        await updateCustomer(customer.id, formData);
-      } else {
-        await createCustomer(formData);
+      setIsLoading(true)
+
+      const customerData: Omit<Customer, 'id' | 'created_at'> = {
+        name,
+        email,
+        phone,
+        status: isActive ? 'active' : 'inactive',
+        last_purchase: null
       }
-      
+
+      if (customer?.id) {
+        await updateCustomer(customer.id, customerData)
+        toast({
+          title: 'Cliente atualizado com sucesso!',
+          status: 'success',
+          duration: 3000,
+        })
+      } else {
+        await createCustomer(customerData)
+        toast({
+          title: 'Cliente criado com sucesso!',
+          status: 'success',
+          duration: 3000,
+        })
+      }
+
+      onSuccess()
+      onClose()
+    } catch (error) {
       toast({
-        title: customer ? 'Cliente atualizado!' : 'Cliente cadastrado!',
-        status: 'success',
-        duration: 2000,
-        isClosable: true,
-      });
-      onSuccess();
-      onClose();
-    } catch (error: any) {
-      toast({
-        title: 'Erro ao salvar',
-        description: error.message,
+        title: 'Erro ao salvar cliente',
+        description: 'Tente novamente mais tarde',
         status: 'error',
         duration: 3000,
-        isClosable: true,
-      });
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false)
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md">
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
-      <ModalContent as="form" onSubmit={handleSubmit}>
-        <ModalHeader>
-          {customer ? 'Editar Cliente' : 'Novo Cliente'}
-        </ModalHeader>
+      <ModalContent>
+        <ModalHeader>{customer ? 'Editar Cliente' : 'Novo Cliente'}</ModalHeader>
         <ModalCloseButton />
-        
         <ModalBody>
           <VStack spacing={4}>
             <FormControl isRequired>
               <FormLabel>Nome</FormLabel>
-              <Input
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Nome completo"
-              />
-            </FormControl>
-
-            <FormControl isRequired>
-              <FormLabel>Email</FormLabel>
-              <Input
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="email@exemplo.com"
-              />
-            </FormControl>
-
-            <FormControl isRequired>
-              <FormLabel>Telefone</FormLabel>
-              <Input
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="(00) 00000-0000"
-              />
+              <Input value={name} onChange={(e) => setName(e.target.value)} />
             </FormControl>
 
             <FormControl>
-              <FormLabel>Status</FormLabel>
-              <Select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-              >
-                <option value="active">Ativo</option>
-                <option value="inactive">Inativo</option>
-              </Select>
+              <FormLabel>Email</FormLabel>
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Telefone</FormLabel>
+              <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+            </FormControl>
+
+            <FormControl display="flex" alignItems="center">
+              <FormLabel mb="0">Cliente Ativo</FormLabel>
+              <Switch isChecked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
             </FormControl>
           </VStack>
         </ModalBody>
@@ -156,15 +123,11 @@ export function CustomerModal({ isOpen, onClose, customer, onSuccess }: Customer
           <Button variant="ghost" mr={3} onClick={onClose}>
             Cancelar
           </Button>
-          <Button
-            colorScheme="blue"
-            type="submit"
-            isLoading={isSubmitting}
-          >
-            {customer ? 'Atualizar' : 'Cadastrar'}
+          <Button colorScheme="blue" onClick={handleSubmit} isLoading={isLoading}>
+            Salvar
           </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
-  );
+  )
 }

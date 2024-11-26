@@ -22,7 +22,7 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
 } from '@chakra-ui/react';
-import { FiEdit2, FiTrash2, FiPlus, FiSearch } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiSearch } from 'react-icons/fi';
 import { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { CustomerModal } from '../components/CustomerModal';
@@ -39,17 +39,16 @@ export function Customers() {
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   const loadCustomers = async () => {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
       const data = await getCustomers();
       setCustomers(data);
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao carregar clientes',
-        description: error.message,
+        description: 'Tente novamente mais tarde',
         status: 'error',
         duration: 3000,
-        isClosable: true,
       });
     } finally {
       setIsLoading(false);
@@ -60,7 +59,7 @@ export function Customers() {
     loadCustomers();
   }, []);
 
-  const handleEdit = (customer: Customer) => {
+  const handleEditOrCreateCustomer = (customer?: Customer) => {
     setSelectedCustomer(customer);
     onOpen();
   };
@@ -69,27 +68,20 @@ export function Customers() {
     try {
       await deleteCustomer(id);
       toast({
-        title: 'Cliente excluído com sucesso',
+        title: 'Cliente excluído com sucesso!',
         status: 'success',
-        duration: 2000,
-        isClosable: true,
+        duration: 3000,
       });
       loadCustomers();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao excluir cliente',
-        description: error.message,
+        description: 'Tente novamente mais tarde',
         status: 'error',
         duration: 3000,
-        isClosable: true,
       });
     }
     setDeleteId(null);
-  };
-
-  const handleNewCustomer = () => {
-    setSelectedCustomer(undefined);
-    onOpen();
   };
 
   const handleSearch = async () => {
@@ -98,17 +90,16 @@ export function Customers() {
       return;
     }
 
-    setIsLoading(true);
     try {
-      const data = await searchCustomers(searchQuery);
-      setCustomers(data);
-    } catch (error: any) {
+      setIsLoading(true);
+      const results = await searchCustomers(searchQuery);
+      setCustomers(results);
+    } catch (error) {
       toast({
-        title: 'Erro ao buscar clientes',
-        description: error.message,
+        title: 'Erro ao pesquisar clientes',
+        description: 'Tente novamente mais tarde',
         status: 'error',
         duration: 3000,
-        isClosable: true,
       });
     } finally {
       setIsLoading(false);
@@ -123,32 +114,28 @@ export function Customers() {
           <Button
             leftIcon={<FiPlus />}
             colorScheme="blue"
-            onClick={handleNewCustomer}
+            onClick={() => handleEditOrCreateCustomer()}
           >
             Novo Cliente
           </Button>
         </Flex>
 
-        {/* Barra de busca */}
-        <Flex mb={6}>
+        <Box mb={8}>
           <Input
-            placeholder="Buscar clientes..."
-            mr={4}
-            maxW="400px"
+            placeholder="Pesquisar clientes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
           />
           <IconButton
-            aria-label="Buscar clientes"
+            aria-label="Pesquisar clientes"
             icon={<FiSearch />}
             colorScheme="blue"
             onClick={handleSearch}
             isLoading={isLoading}
           />
-        </Flex>
+        </Box>
 
-        {/* Tabela de clientes */}
         <Box overflowX="auto">
           <Table variant="simple">
             <Thead>
@@ -157,7 +144,6 @@ export function Customers() {
                 <Th>Email</Th>
                 <Th>Telefone</Th>
                 <Th>Status</Th>
-                <Th>Última Compra</Th>
                 <Th>Ações</Th>
               </Tr>
             </Thead>
@@ -175,24 +161,19 @@ export function Customers() {
                     </Badge>
                   </Td>
                   <Td>
-                    {customer.last_purchase
-                      ? new Date(customer.last_purchase).toLocaleDateString()
-                      : '-'}
-                  </Td>
-                  <Td>
                     <IconButton
                       aria-label="Editar cliente"
                       icon={<FiEdit2 />}
                       size="sm"
                       mr={2}
-                      onClick={() => handleEdit(customer)}
+                      onClick={() => handleEditOrCreateCustomer(customer)}
                     />
                     <IconButton
                       aria-label="Excluir cliente"
                       icon={<FiTrash2 />}
                       size="sm"
                       colorScheme="red"
-                      onClick={() => setDeleteId(customer.id)}
+                      onClick={() => setDeleteId(customer.id || null)}
                     />
                   </Td>
                 </Tr>
@@ -201,7 +182,6 @@ export function Customers() {
           </Table>
         </Box>
 
-        {/* Modal de cadastro/edição */}
         <CustomerModal
           isOpen={isOpen}
           onClose={onClose}
@@ -209,7 +189,6 @@ export function Customers() {
           onSuccess={loadCustomers}
         />
 
-        {/* Dialog de confirmação de exclusão */}
         <AlertDialog
           isOpen={!!deleteId}
           leastDestructiveRef={cancelRef}
@@ -217,14 +196,10 @@ export function Customers() {
         >
           <AlertDialogOverlay>
             <AlertDialogContent>
-              <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                Excluir Cliente
-              </AlertDialogHeader>
-
+              <AlertDialogHeader>Excluir Cliente</AlertDialogHeader>
               <AlertDialogBody>
-                Tem certeza? Esta ação não poderá ser desfeita.
+                Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.
               </AlertDialogBody>
-
               <AlertDialogFooter>
                 <Button ref={cancelRef} onClick={() => setDeleteId(null)}>
                   Cancelar
