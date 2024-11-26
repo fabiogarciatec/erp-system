@@ -128,24 +128,41 @@ export function Sidebar({ onClose, ...rest }: SidebarProps) {
       borderRightColor={useColorModeValue('gray.200', 'gray.700')}
       w={{ base: 'full', md: 60 }}
       pos="fixed"
-      h="full"
+      h="100vh"
+      maxH="100vh"
+      overflowY="auto"
+      display="flex"
+      flexDirection="column"
+      css={{
+        '&::-webkit-scrollbar': {
+          width: '4px',
+        },
+        '&::-webkit-scrollbar-track': {
+          width: '6px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: useColorModeValue('gray.300', 'gray.600'),
+          borderRadius: '24px',
+        },
+      }}
       {...rest}
     >
-      <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
+      <Flex h="12" alignItems="center" mx="8" justifyContent="space-between" flexShrink={0}>
         <Text fontSize="2xl" fontFamily="monospace" fontWeight="bold">
-          ERP System
         </Text>
       </Flex>
-      {NAV_ITEMS.map((item) => (
-        <SidebarNavItem
-          key={item.label}
-          icon={item.icon}
-          href={item.href}
-          subItems={item.subItems}
-        >
-          {item.label}
-        </SidebarNavItem>
-      ))}
+      <Box flex="1" overflowY="auto" pb="100px">
+        {NAV_ITEMS.map((item) => (
+          <SidebarNavItem
+            key={item.label}
+            icon={item.icon}
+            href={item.href}
+            subItems={item.subItems}
+          >
+            {item.label}
+          </SidebarNavItem>
+        ))}
+      </Box>
     </Box>
   );
 }
