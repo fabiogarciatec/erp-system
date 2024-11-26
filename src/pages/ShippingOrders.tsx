@@ -10,18 +10,10 @@ import {
   Input,
   InputGroup,
   InputRightElement,
+  Text
 } from '@chakra-ui/react';
 import { FiSearch, FiPlus } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
-
-interface ShippingOrder {
-  id: string;
-  order_number: string;
-  customer: string;
-  status: string;
-  created_at: string;
-  delivery_date: string;
-}
 
 export function ShippingOrders() {
   return (

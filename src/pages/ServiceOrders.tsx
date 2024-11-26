@@ -1,31 +1,30 @@
 import {
   Box,
   Button,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
+  Container,
+  Flex,
+  Heading,
   Input,
-  InputGroup,
-  InputRightElement,
-  useDisclosure,
-  useToast,
+  Table,
+  Tbody,
+  Td,
+  Text,
+  Th,
+  Thead,
+  Tr,
   Badge,
   Menu,
   MenuButton,
   MenuList,
   MenuItem,
   IconButton,
+  useDisclosure,
 } from '@chakra-ui/react';
-import { FiSearch, FiPlus, FiMoreVertical, FiEdit2, FiTrash2, FiEye } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import { FiMoreVertical, FiPlus } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 
 export function ServiceOrders() {
-  const toast = useToast();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { onOpen } = useDisclosure();
 
   return (
     <Box w="full" p={8}>
@@ -41,20 +40,9 @@ export function ServiceOrders() {
 
       <Box bg="white" rounded="lg" shadow="sm" overflow="hidden">
         <Box p={4} borderBottomWidth="1px" display="flex" justifyContent="space-between">
-          <InputGroup maxW="300px">
-            <Input
-              placeholder="Buscar ordem de serviço..."
-            />
-            <InputRightElement>
-              <Button
-                size="sm"
-                variant="ghost"
-                aria-label="Search"
-              >
-                <FiSearch />
-              </Button>
-            </InputRightElement>
-          </InputGroup>
+          <Input
+            placeholder="Buscar ordem de serviço..."
+          />
           <Button 
             colorScheme="blue" 
             leftIcon={<FiPlus />}
@@ -99,9 +87,9 @@ export function ServiceOrders() {
                       aria-label="Ações"
                     />
                     <MenuList>
-                      <MenuItem icon={<FiEye />}>Visualizar</MenuItem>
-                      <MenuItem icon={<FiEdit2 />}>Editar</MenuItem>
-                      <MenuItem icon={<FiTrash2 />} color="red.500">Excluir</MenuItem>
+                      <MenuItem icon={<FiMoreVertical />}>Visualizar</MenuItem>
+                      <MenuItem icon={<FiMoreVertical />}>Editar</MenuItem>
+                      <MenuItem icon={<FiMoreVertical />} color="red.500">Excluir</MenuItem>
                     </MenuList>
                   </Menu>
                 </Td>
@@ -126,9 +114,9 @@ export function ServiceOrders() {
                       aria-label="Ações"
                     />
                     <MenuList>
-                      <MenuItem icon={<FiEye />}>Visualizar</MenuItem>
-                      <MenuItem icon={<FiEdit2 />}>Editar</MenuItem>
-                      <MenuItem icon={<FiTrash2 />} color="red.500">Excluir</MenuItem>
+                      <MenuItem icon={<FiMoreVertical />}>Visualizar</MenuItem>
+                      <MenuItem icon={<FiMoreVertical />}>Editar</MenuItem>
+                      <MenuItem icon={<FiMoreVertical />} color="red.500">Excluir</MenuItem>
                     </MenuList>
                   </Menu>
                 </Td>
@@ -153,9 +141,9 @@ export function ServiceOrders() {
                       aria-label="Ações"
                     />
                     <MenuList>
-                      <MenuItem icon={<FiEye />}>Visualizar</MenuItem>
-                      <MenuItem icon={<FiEdit2 />}>Editar</MenuItem>
-                      <MenuItem icon={<FiTrash2 />} color="red.500">Excluir</MenuItem>
+                      <MenuItem icon={<FiMoreVertical />}>Visualizar</MenuItem>
+                      <MenuItem icon={<FiMoreVertical />}>Editar</MenuItem>
+                      <MenuItem icon={<FiMoreVertical />} color="red.500">Excluir</MenuItem>
                     </MenuList>
                   </Menu>
                 </Td>

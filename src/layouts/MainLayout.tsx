@@ -7,8 +7,11 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   return (
-    <Box minH="100vh">
-      <Sidebar />
+    <Box minH="100vh" bg={bgColor}>
+      <Sidebar
+        onClose={() => {}}
+        display={{ base: 'none', md: 'block' }}
+      />
       <Box ml="64" p={8}>
         {children}
       </Box>

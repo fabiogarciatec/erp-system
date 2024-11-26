@@ -10,7 +10,10 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <Box minH="100vh" bg="gray.50">
-      <Sidebar />
+      <Sidebar
+        onClose={() => {}}
+        display={{ base: 'none', md: 'block' }}
+      />
       <TopBar />
       {/* Conteúdo principal com margem para Sidebar e TopBar */}
       <Box

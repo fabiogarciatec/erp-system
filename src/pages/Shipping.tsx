@@ -10,17 +10,12 @@ import {
   Input,
   InputGroup,
   InputRightElement,
-  useDisclosure,
-  useToast,
-  Badge,
+  IconButton,
 } from '@chakra-ui/react';
-import { FiSearch, FiPlus } from 'react-icons/fi';
+import { FiMoreVertical, FiPlus } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 
 export function Shipping() {
-  const toast = useToast();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
   return (
     <Box w="full" p={8}>
       <Box w="full">
@@ -40,13 +35,12 @@ export function Shipping() {
                 placeholder="Buscar frete..."
               />
               <InputRightElement>
-                <Button
+                <IconButton
                   size="sm"
                   variant="ghost"
                   aria-label="Search"
-                >
-                  <FiSearch />
-                </Button>
+                  icon={<FiMoreVertical />}
+                />
               </InputRightElement>
             </InputGroup>
             <Button 
@@ -75,7 +69,9 @@ export function Shipping() {
                   <Td>São Paulo, SP</Td>
                   <Td>Rio de Janeiro, RJ</Td>
                   <Td>
-                    <Badge colorScheme="green">Em Trânsito</Badge>
+                    <Box>
+                      Em Trânsito
+                    </Box>
                   </Td>
                   <Td>R$ 250,00</Td>
                   <Td>-</Td>

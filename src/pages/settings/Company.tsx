@@ -24,6 +24,17 @@ interface CompanyData {
   email: string;
 }
 
+interface ProfileData {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+}
+
 export default function Company() {
   const toast = useToast();
   const { profile } = useProfile();

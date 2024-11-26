@@ -10,18 +10,17 @@ import {
   Input,
   InputGroup,
   InputRightElement,
-  useDisclosure,
-  useToast,
   Badge,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  IconButton,
 } from '@chakra-ui/react';
-import { FiSearch, FiPlus } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import { FiMoreVertical, FiPlus } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 
 export function SalesProducts() {
-  const toast = useToast();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
   return (
     <Box w="full" p={8}>
       <PageHeader
@@ -46,7 +45,7 @@ export function SalesProducts() {
                 variant="ghost"
                 aria-label="Search"
               >
-                <FiSearch />
+                <FiMoreVertical />
               </Button>
             </InputRightElement>
           </InputGroup>

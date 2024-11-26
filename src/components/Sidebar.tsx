@@ -7,17 +7,12 @@ import {
 } from '@chakra-ui/react';
 import {
   FiHome,
-  FiBox,
   FiTruck,
   FiSettings,
-  FiClipboard,
-  FiTool,
   FiShoppingBag,
   FiBarChart2,
-  FiUsers,
   FiDatabase,
 } from 'react-icons/fi';
-import { IconType } from 'react-icons';
 import { SidebarNavItem } from './SidebarNavItem';
 
 interface SidebarProps extends BoxProps {
