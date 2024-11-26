@@ -7,17 +7,10 @@ import {
   Tr,
   Th,
   Td,
-  Input,
-  InputGroup,
-  InputRightElement,
   Badge,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  IconButton,
+  HStack,
 } from '@chakra-ui/react';
-import { FiMoreVertical, FiPlus } from 'react-icons/fi';
+import { FiPlus } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 
 export function SalesProducts() {
@@ -35,20 +28,6 @@ export function SalesProducts() {
 
       <Box bg="white" rounded="lg" shadow="sm" overflow="hidden">
         <Box p={4} borderBottomWidth="1px" display="flex" justifyContent="space-between">
-          <InputGroup maxW="300px">
-            <Input
-              placeholder="Buscar venda..."
-            />
-            <InputRightElement>
-              <Button
-                size="sm"
-                variant="ghost"
-                aria-label="Search"
-              >
-                <FiMoreVertical />
-              </Button>
-            </InputRightElement>
-          </InputGroup>
           <Button 
             colorScheme="blue" 
             leftIcon={<FiPlus />}

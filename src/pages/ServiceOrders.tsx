@@ -1,26 +1,16 @@
 import {
   Box,
   Button,
-  Container,
-  Flex,
-  Heading,
-  Input,
   Table,
-  Tbody,
-  Td,
-  Text,
-  Th,
   Thead,
+  Tbody,
   Tr,
+  Th,
+  Td,
   Badge,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  IconButton,
-  useDisclosure,
+  HStack,
 } from '@chakra-ui/react';
-import { FiMoreVertical, FiPlus } from 'react-icons/fi';
+import { FiPlus } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 
 export function ServiceOrders() {

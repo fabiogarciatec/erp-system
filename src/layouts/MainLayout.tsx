@@ -1,4 +1,4 @@
-import { Box } from '@chakra-ui/react';
+import { Box, useColorModeValue } from '@chakra-ui/react';
 import { Sidebar } from '../components/Sidebar';
 
 interface MainLayoutProps {
@@ -6,6 +6,8 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const bgColor = useColorModeValue('gray.50', 'gray.900');
+  
   return (
     <Box minH="100vh" bg={bgColor}>
       <Sidebar

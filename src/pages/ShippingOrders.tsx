@@ -1,18 +1,16 @@
 import {
   Box,
+  Button,
   Table,
   Thead,
   Tbody,
   Tr,
   Th,
   Td,
-  Button,
-  Input,
-  InputGroup,
-  InputRightElement,
-  Text
+  Badge,
+  HStack,
 } from '@chakra-ui/react';
-import { FiSearch, FiPlus } from 'react-icons/fi';
+import { FiPlus } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 
 export function ShippingOrders() {
