@@ -3,11 +3,8 @@ import {
   Flex,
   Text,
   BoxProps,
-  Stack,
   Icon,
-  useColorMode,
   VStack,
-  HStack,
   IconButton,
   useColorModeValue,
   CloseButton,
@@ -94,7 +91,6 @@ interface SidebarProps extends BoxProps {
 }
 
 const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
-  const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const bg = useColorModeValue('white', 'gray.900');
