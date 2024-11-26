@@ -1,66 +1,85 @@
 import {
   Box,
-  VStack,
-  Icon,
-  Text,
-  Link,
   Flex,
-  useColorModeValue,
+  Text,
   BoxProps,
+  Stack,
+  Icon,
+  useColorMode,
+  VStack,
+  HStack,
+  IconButton,
+  useColorModeValue,
   CloseButton,
+  Drawer,
+  DrawerContent,
+  useDisclosure
 } from '@chakra-ui/react';
+import { IconType } from 'react-icons';
 import {
   FiHome,
   FiUsers,
   FiBox,
   FiDollarSign,
-  FiBarChart2,
-  FiSettings,
   FiLogOut,
+  FiMenu
 } from 'react-icons/fi';
-import { IconType } from 'react-icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { signOut } from '../services/supabase';
+import { supabase } from '../services/supabase';
 
-interface NavItemProps {
+interface LinkItemProps {
+  name: string;
   icon: IconType;
-  children: string;
-  onClick?: () => void;
+  path: string;
 }
 
-const NavItem = ({ icon, children, onClick }: NavItemProps) => {
+const LinkItems: Array<LinkItemProps> = [
+  { name: 'Dashboard', icon: FiHome, path: '/' },
+  { name: 'Clientes', icon: FiUsers, path: '/customers' },
+  { name: 'Produtos', icon: FiBox, path: '/products' },
+  { name: 'Vendas', icon: FiDollarSign, path: '/sales' },
+];
+
+interface NavItemProps extends BoxProps {
+  icon: IconType;
+  children: string;
+  path: string;
+  isActive?: boolean;
+}
+
+const NavItem = ({ icon, children, path, isActive, ...rest }: NavItemProps) => {
+  const activeColor = useColorModeValue('blue.500', 'blue.200');
+  const hoverBg = useColorModeValue('blue.50', 'blue.700');
+  const navigate = useNavigate();
+
   return (
     <Box
-      as="a"
-      href="#"
+      as="button"
+      onClick={() => navigate(path)}
       style={{ textDecoration: 'none' }}
       _focus={{ boxShadow: 'none' }}
-      onClick={(e) => {
-        e.preventDefault();
-        onClick?.();
-      }}
+      w="full"
     >
       <Flex
         align="center"
-        p="4"
+        p="3"
         mx="4"
         borderRadius="lg"
         role="group"
         cursor="pointer"
-        transition="all 0.3s"
+        color={isActive ? activeColor : undefined}
+        bg={isActive ? hoverBg : undefined}
         _hover={{
-          bg: 'blue.500',
-          color: 'white',
+          bg: hoverBg,
+          color: activeColor,
         }}
+        {...rest}
       >
         {icon && (
           <Icon
             mr="4"
             fontSize="16"
-            _groupHover={{
-              color: 'white',
-            }}
             as={icon}
           />
         )}
@@ -71,75 +90,100 @@ const NavItem = ({ icon, children, onClick }: NavItemProps) => {
 };
 
 interface SidebarProps extends BoxProps {
-  onClose: () => void;
+  onClose?: () => void;
 }
 
-export function SidebarContent({ onClose, ...rest }: SidebarProps) {
+const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
+  const { user } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
-  const { signOut: authSignOut } = useAuth();
+  const bg = useColorModeValue('white', 'gray.900');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   const handleLogout = async () => {
     try {
-      await signOut();
-      authSignOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       navigate('/login');
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
+      console.error('Error logging out:', error);
     }
   };
 
   return (
     <Box
-      bg="gray.800"
-      w="240px"
+      bg={bg}
+      borderRight="1px"
+      borderRightColor={borderColor}
+      w={{ base: 'full', md: 60 }}
       pos="fixed"
-      top="0"
-      left="0"
-      h="100%"
-      overflowY="auto"
-      color="white"
-      css={{
-        '&::-webkit-scrollbar': {
-          width: '4px',
-        },
-        '&::-webkit-scrollbar-track': {
-          width: '6px',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: 'gray.600',
-          borderRadius: '24px',
-        },
-      }}
+      h="full"
       {...rest}
     >
-      <Flex h="16" alignItems="center" mx="4" justifyContent="space-between" borderBottom="1px" borderColor="gray.700">
-        <Text fontSize="2xl" fontWeight="bold" color="white">
+      <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
+        <Text fontSize="2xl" fontWeight="bold">
           ERP FATEC
         </Text>
-        <CloseButton display={{ base: 'flex', md: 'none' }} onClick={onClose} color="white" />
+        <CloseButton display={{ base: 'flex', md: 'none' }} onClick={onClose} />
       </Flex>
-      <Box>
-        <NavItem icon={FiHome} onClick={() => navigate('/')}>
-          Dashboard
-        </NavItem>
-        <NavItem icon={FiUsers} onClick={() => navigate('/customers')}>
-          Clientes
-        </NavItem>
-        <NavItem icon={FiBox} onClick={() => navigate('/products')}>
-          Produtos
-        </NavItem>
-        <NavItem icon={FiDollarSign} onClick={() => navigate('/sales')}>
-          Vendas
-        </NavItem>
-        <NavItem icon={FiBarChart2} onClick={() => navigate('/reports')}>
-          Relatórios
-        </NavItem>
-        <NavItem icon={FiSettings} onClick={() => navigate('/settings')}>
-          Configurações
-        </NavItem>
-        <NavItem icon={FiLogOut} onClick={handleLogout}>
-          Sair
-        </NavItem>
+      <VStack spacing={1} align="stretch" py={2}>
+        {LinkItems.map((link) => (
+          <NavItem
+            key={link.name}
+            icon={link.icon}
+            path={link.path}
+            isActive={location.pathname === link.path}
+          >
+            {link.name}
+          </NavItem>
+        ))}
+        <Box pt={4}>
+          <NavItem
+            icon={FiLogOut}
+            path=""
+            onClick={handleLogout}
+            color="red.500"
+            _hover={{
+              color: 'red.400',
+            }}
+          >
+            Sair
+          </NavItem>
+        </Box>
+      </VStack>
+    </Box>
+  );
+};
+
+export function Sidebar({ ...rest }: SidebarProps) {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  return (
+    <Box>
+      <SidebarContent display={{ base: 'none', md: 'block' }} {...rest} />
+      <Drawer
+        isOpen={isOpen}
+        placement="left"
+        onClose={onClose}
+        returnFocusOnClose={false}
+        onOverlayClick={onClose}
+        size="full"
+      >
+        <DrawerContent>
+          <SidebarContent onClose={onClose} />
+        </DrawerContent>
+      </Drawer>
+      
+      {/* Mobile nav */}
+      <Box display={{ base: 'flex', md: 'none' }} position="fixed" top={4} left={4} zIndex={20}>
+        <IconButton
+          aria-label="Open menu"
+          fontSize="20px"
+          color={useColorModeValue('gray.800', 'inherit')}
+          variant="ghost"
+          icon={<FiMenu />}
+          onClick={onOpen}
+        />
       </Box>
     </Box>
   );

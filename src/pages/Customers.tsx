@@ -1,20 +1,20 @@
+import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
-  Container,
-  Flex,
-  Heading,
-  Input,
   Table,
   Thead,
   Tbody,
   Tr,
   Th,
   Td,
-  IconButton,
-  useToast,
-  useDisclosure,
   Badge,
+  Flex,
+  Input,
+  InputGroup,
+  InputRightElement,
+  useDisclosure,
+  useToast,
   AlertDialog,
   AlertDialogBody,
   AlertDialogFooter,
@@ -22,85 +22,59 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
 } from '@chakra-ui/react';
-import { FiPlus, FiEdit2, FiTrash2, FiSearch } from 'react-icons/fi';
-import { useState, useEffect, useRef } from 'react';
-import DashboardLayout from '../components/DashboardLayout';
-import { PageHeader } from '../components/PageHeader';
+import { FiSearch, FiEdit2, FiTrash2, FiPlus } from 'react-icons/fi';
+import { supabase } from '../services/supabase';
 import { CustomerModal } from '../components/CustomerModal';
-import { Customer, getCustomers, deleteCustomer, searchCustomers } from '../services/customers';
+import { PageHeader } from '../components/PageHeader';
+import DashboardLayout from '../components/DashboardLayout';
+import { useRef } from 'react';
+
+interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: 'active' | 'inactive';
+}
 
 export function Customers() {
-  const toast = useToast();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | undefined>();
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+  } = useDisclosure();
+  const toast = useToast();
   const cancelRef = useRef<HTMLButtonElement>(null);
 
-  const loadCustomers = async () => {
-    try {
-      setIsLoading(true);
-      const data = await getCustomers();
-      setCustomers(data);
-    } catch (error) {
-      toast({
-        title: 'Erro ao carregar clientes',
-        description: 'Tente novamente mais tarde',
-        status: 'error',
-        duration: 3000,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadCustomers();
+    fetchCustomers();
   }, []);
 
-  const handleEditOrCreateCustomer = (customer?: Customer) => {
-    setSelectedCustomer(customer);
-    onOpen();
-  };
-
-  const handleDelete = async (id: number) => {
-    try {
-      await deleteCustomer(id);
-      toast({
-        title: 'Cliente excluído com sucesso!',
-        status: 'success',
-        duration: 3000,
-      });
-      loadCustomers();
-    } catch (error) {
-      toast({
-        title: 'Erro ao excluir cliente',
-        description: 'Tente novamente mais tarde',
-        status: 'error',
-        duration: 3000,
-      });
-    }
-    setDeleteId(null);
-  };
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      loadCustomers();
-      return;
-    }
-
+  const fetchCustomers = async () => {
     try {
       setIsLoading(true);
-      const results = await searchCustomers(searchQuery);
-      setCustomers(results);
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+
+      setCustomers(data || []);
     } catch (error) {
+      console.error('Error fetching customers:', error);
       toast({
-        title: 'Erro ao pesquisar clientes',
-        description: 'Tente novamente mais tarde',
+        title: 'Erro ao carregar clientes',
+        description: 'Não foi possível carregar a lista de clientes.',
         status: 'error',
         duration: 3000,
+        isClosable: true,
       });
     } finally {
       setIsLoading(false);
@@ -116,130 +90,211 @@ export function Customers() {
     return phone;
   };
 
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+      fetchCustomers();
+      return;
+    }
+
+    const filtered = customers.filter(
+      (customer) =>
+        customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.phone.includes(searchTerm)
+    );
+    setCustomers(filtered);
+  };
+
+  const handleEdit = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    onOpen();
+  };
+
+  const confirmDelete = (id: string) => {
+    setCustomerToDelete(id);
+    onDeleteOpen();
+  };
+
+  const handleDelete = async () => {
+    if (!customerToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', customerToDelete);
+
+      if (error) throw error;
+
+      setCustomers(customers.filter(customer => customer.id !== customerToDelete));
+      toast({
+        title: 'Cliente excluído',
+        description: 'O cliente foi excluído com sucesso.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error deleting customer:', error);
+      toast({
+        title: 'Erro ao excluir',
+        description: 'Não foi possível excluir o cliente.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setCustomerToDelete(null);
+      onDeleteClose();
+    }
+  };
+
+  const handleNewCustomer = () => {
+    setSelectedCustomer(null);
+    onOpen();
+  };
+
+  const handleSuccess = () => {
+    fetchCustomers();
+    toast({
+      title: 'Sucesso!',
+      description: selectedCustomer 
+        ? 'Cliente atualizado com sucesso.' 
+        : 'Cliente criado com sucesso.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
   return (
     <DashboardLayout>
-      <Container maxW="full" p={2}>
-        <Box w="full" p={2}>
-          <PageHeader
-            title="Clientes"
-            subtitle="Gerencie seus clientes"
-            breadcrumbs={[
-              { label: 'Dashboard', href: '/' },
-              { label: 'Clientes', href: '/customers' }
-            ]}
-          />
+      <Box w="full">
+        <PageHeader
+          title="Clientes"
+          subtitle="Gerencie seus clientes"
+          breadcrumbs={[
+            { label: 'Dashboard', href: '/' },
+            { label: 'Clientes', href: '/customers' }
+          ]}
+        />
 
-          <Box bg="white" p={3} borderRadius="lg" shadow="sm">
-            <Box mb={3}>
-              <Button
-                leftIcon={<FiPlus />}
-                colorScheme="blue"
-                onClick={() => handleEditOrCreateCustomer()}
-              >
-                Novo Cliente
-              </Button>
-            </Box>
-
-            <Flex mb={4} gap={2}>
+        <Box bg="white" rounded="lg" shadow="sm" overflow="hidden">
+          <Flex p={4} gap={4} borderBottomWidth="1px">
+            <InputGroup maxW="300px">
               <Input
-                flex="1"
-                maxW="400px"
-                placeholder="Pesquisar clientes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar cliente..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
-              <IconButton
-                aria-label="Pesquisar clientes"
-                icon={<FiSearch />}
-                colorScheme="blue"
-                onClick={handleSearch}
-                isLoading={isLoading}
-              />
-            </Flex>
-
-            <Box overflowX="auto">
-              <Table variant="simple">
-                <Thead>
-                  <Tr>
-                    <Th>Nome</Th>
-                    <Th>Email</Th>
-                    <Th>Telefone</Th>
-                    <Th>Status</Th>
-                    <Th>Ações</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {customers.map((customer) => (
-                    <Tr key={customer.id}>
-                      <Td>{customer.name}</Td>
-                      <Td>{customer.email}</Td>
-                      <Td>{formatPhoneNumber(customer.phone)}</Td>
-                      <Td>
-                        <Badge
-                          colorScheme={customer.status === 'active' ? 'green' : 'red'}
-                        >
-                          {customer.status === 'active' ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                      </Td>
-                      <Td>
-                        <IconButton
-                          aria-label="Editar cliente"
-                          icon={<FiEdit2 />}
-                          size="sm"
-                          mr={2}
-                          onClick={() => handleEditOrCreateCustomer(customer)}
-                        />
-                        <IconButton
-                          aria-label="Excluir cliente"
-                          icon={<FiTrash2 />}
-                          size="sm"
-                          colorScheme="red"
-                          onClick={() => setDeleteId(customer.id || null)}
-                        />
-                      </Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-            </Box>
-
-            <CustomerModal
-              isOpen={isOpen}
-              onClose={onClose}
-              customer={selectedCustomer}
-              onSuccess={loadCustomers}
-            />
-
-            <AlertDialog
-              isOpen={!!deleteId}
-              leastDestructiveRef={cancelRef}
-              onClose={() => setDeleteId(null)}
+              <InputRightElement>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleSearch}
+                  aria-label="Search"
+                >
+                  <FiSearch />
+                </Button>
+              </InputRightElement>
+            </InputGroup>
+            <Button 
+              colorScheme="blue" 
+              leftIcon={<FiPlus />} 
+              onClick={handleNewCustomer}
+              isLoading={isLoading}
             >
-              <AlertDialogOverlay>
-                <AlertDialogContent>
-                  <AlertDialogHeader>Excluir Cliente</AlertDialogHeader>
-                  <AlertDialogBody>
-                    Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.
-                  </AlertDialogBody>
-                  <AlertDialogFooter>
-                    <Button ref={cancelRef} onClick={() => setDeleteId(null)}>
-                      Cancelar
-                    </Button>
-                    <Button
-                      colorScheme="red"
-                      onClick={() => deleteId && handleDelete(deleteId)}
-                      ml={3}
-                    >
-                      Excluir
-                    </Button>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialogOverlay>
-            </AlertDialog>
+              Novo Cliente
+            </Button>
+          </Flex>
+
+          <Box overflowX="auto">
+            <Table variant="simple">
+              <Thead>
+                <Tr>
+                  <Th>Nome</Th>
+                  <Th>Email</Th>
+                  <Th>Telefone</Th>
+                  <Th>Status</Th>
+                  <Th>Ações</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {customers.map((customer) => (
+                  <Tr key={customer.id}>
+                    <Td>{customer.name}</Td>
+                    <Td>{customer.email}</Td>
+                    <Td>{formatPhoneNumber(customer.phone)}</Td>
+                    <Td>
+                      <Badge
+                        colorScheme={customer.status === 'active' ? 'green' : 'red'}
+                      >
+                        {customer.status === 'active' ? 'Ativo' : 'Inativo'}
+                      </Badge>
+                    </Td>
+                    <Td>
+                      <Flex gap={2}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEdit(customer)}
+                          title="Editar cliente"
+                        >
+                          <FiEdit2 />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          colorScheme="red"
+                          onClick={() => confirmDelete(customer.id)}
+                          title="Excluir cliente"
+                        >
+                          <FiTrash2 />
+                        </Button>
+                      </Flex>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
           </Box>
         </Box>
-      </Container>
+
+        <CustomerModal
+          isOpen={isOpen}
+          onClose={onClose}
+          customer={selectedCustomer}
+          onSuccess={handleSuccess}
+        />
+
+        <AlertDialog
+          isOpen={isDeleteOpen}
+          leastDestructiveRef={cancelRef}
+          onClose={onDeleteClose}
+        >
+          <AlertDialogOverlay>
+            <AlertDialogContent>
+              <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                Excluir Cliente
+              </AlertDialogHeader>
+
+              <AlertDialogBody>
+                Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.
+              </AlertDialogBody>
+
+              <AlertDialogFooter>
+                <Button ref={cancelRef} onClick={onDeleteClose}>
+                  Cancelar
+                </Button>
+                <Button colorScheme="red" onClick={handleDelete} ml={3}>
+                  Excluir
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialogOverlay>
+        </AlertDialog>
+      </Box>
     </DashboardLayout>
   );
 }

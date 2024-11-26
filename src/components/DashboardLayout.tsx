@@ -1,83 +1,29 @@
-import { ReactNode } from 'react'
-import {
-  Box,
-  Drawer,
-  DrawerContent,
-  useDisclosure,
-  BoxProps,
-  useColorModeValue,
-  Text,
-  Flex,
-  IconButton,
-} from '@chakra-ui/react'
-import { FiMenu } from 'react-icons/fi'
-import { SidebarContent } from './Sidebar'
-import { useAuth } from '../contexts/AuthContext'
+import { Box, Container, Flex } from '@chakra-ui/react';
+import { Sidebar } from './Sidebar';
+import { ReactNode } from 'react';
 
-interface DashboardLayoutProps extends BoxProps {
-  children: ReactNode
+interface DashboardLayoutProps {
+  children: ReactNode;
 }
 
-export default function DashboardLayout({ children, ...rest }: DashboardLayoutProps) {
-  const { isOpen, onOpen, onClose } = useDisclosure()
-  const { user } = useAuth()
-
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <Box minH="100vh" display="flex" {...rest}>
-      <SidebarContent
-        onClose={() => onClose}
-        display={{ base: 'none', md: 'block' }}
-      />
-      <Drawer
-        isOpen={isOpen}
-        placement="left"
-        onClose={onClose}
-        returnFocusOnClose={false}
-        onOverlayClick={onClose}
-        size="full"
-      >
-        <DrawerContent>
-          <SidebarContent onClose={onClose} />
-        </DrawerContent>
-      </Drawer>
-      
-      <Box 
+    <Flex minH="100vh">
+      <Sidebar />
+      <Box
         flex="1"
         ml={{ base: 0, md: "240px" }}
-        bg="gray.50"
-        w="full"
+        transition=".3s ease"
       >
-        <Flex
-          py={1}
-          alignItems="center"
-          justifyContent={{ base: 'space-between', md: 'flex-end' }}
-          borderBottomWidth="1px"
-          bg="white"
-          px={2}
-          w="full"
+        <Box
+          as="main"
+          minH="100vh"
+          bg="gray.50"
+          p={{ base: 4, md: 8 }}
         >
-          <IconButton
-            display={{ base: 'flex', md: 'none' }}
-            onClick={onOpen}
-            variant="outline"
-            aria-label="open menu"
-            icon={<FiMenu />}
-          />
-          <Text
-            display={{ base: 'flex', md: 'none' }}
-            fontSize="2xl"
-            fontWeight="bold"
-          >
-            ERP FATEC
-          </Text>
-          <Text color="gray.600" fontSize="sm">
-            {user?.email}
-          </Text>
-        </Flex>
-        <Box p={2}>
           {children}
         </Box>
       </Box>
-    </Box>
-  )
+    </Flex>
+  );
 }
