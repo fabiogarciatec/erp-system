@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Box,
   Flex,
@@ -10,7 +11,9 @@ import {
   CloseButton,
   Drawer,
   DrawerContent,
-  useDisclosure
+  useDisclosure,
+  Collapse,
+  Stack
 } from '@chakra-ui/react';
 import { IconType } from 'react-icons';
 import {
@@ -19,44 +22,105 @@ import {
   FiBox,
   FiDollarSign,
   FiLogOut,
-  FiMenu
+  FiMenu,
+  FiChevronDown,
+  FiChevronRight,
+  FiTruck,
+  FiTool,
+  FiShoppingCart,
+  FiFileText,
+  FiBarChart2,
+  FiSettings,
+  FiUser,
+  FiLock,
+  FiMail,
+  FiDatabase
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 
 interface LinkItemProps {
   name: string;
-  icon: IconType;
-  path: string;
+  icon?: IconType;
+  path?: string;
+  children?: Array<{
+    name: string;
+    path: string;
+    icon?: IconType;
+  }>;
+}
+
+interface NavItemProps extends BoxProps {
+  icon?: IconType;
+  children: React.ReactNode;
+  path?: string;
+  isActive?: boolean;
+  hasSubmenu?: boolean;
+}
+
+interface SidebarProps extends BoxProps {
+  onClose?: () => void;
 }
 
 const LinkItems: Array<LinkItemProps> = [
-  { name: 'Dashboard', icon: FiHome, path: '/' },
-  { name: 'Clientes', icon: FiUsers, path: '/customers' },
-  { name: 'Produtos', icon: FiBox, path: '/products' },
-  { name: 'Vendas', icon: FiDollarSign, path: '/sales' },
+  { 
+    name: 'Dashboard', 
+    icon: FiHome, 
+    path: '/' 
+  },
+  { 
+    name: 'Cadastros',
+    icon: FiBox,
+    children: [
+      { name: 'Clientes', icon: FiUsers, path: '/customers' },
+      { name: 'Produtos', icon: FiBox, path: '/products' },
+      { name: 'Serviços', icon: FiTool, path: '/services' },
+      { name: 'Fretes', icon: FiTruck, path: '/shipping' }
+    ]
+  },
+  {
+    name: 'Vendas',
+    icon: FiShoppingCart,
+    children: [
+      { name: 'Produtos', icon: FiBox, path: '/sales/products' },
+      { name: 'Ordem de Serviços', icon: FiFileText, path: '/sales/services' },
+      { name: 'Fretes', icon: FiTruck, path: '/sales/shipping' }
+    ]
+  },
+  {
+    name: 'Relatórios',
+    icon: FiBarChart2,
+    path: '/reports'
+  },
+  {
+    name: 'Configurações',
+    icon: FiSettings,
+    children: [
+      { name: 'Perfil', icon: FiUser, path: '/settings/profile' },
+      { name: 'Empresa', icon: FiDatabase, path: '/settings/company' },
+      { name: 'Segurança', icon: FiLock, path: '/settings/security' },
+      { name: 'Notificações', icon: FiMail, path: '/settings/notifications' },
+      { name: 'Backup', icon: FiDatabase, path: '/settings/backup' }
+    ]
+  }
 ];
 
-interface NavItemProps extends BoxProps {
-  icon: IconType;
-  children: string;
-  path: string;
-  isActive?: boolean;
-}
-
-const NavItem = ({ icon, children, path, isActive, ...rest }: NavItemProps) => {
+const NavItem = ({ icon, children, path, isActive, hasSubmenu, ...rest }: NavItemProps) => {
+  const navigate = useNavigate();
   const activeColor = useColorModeValue('blue.500', 'blue.200');
   const hoverBg = useColorModeValue('blue.50', 'blue.700');
-  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleClick = () => {
+    if (path) {
+      navigate(path);
+    } else if (hasSubmenu) {
+      setIsOpen(!isOpen);
+    }
+  };
 
   return (
-    <Box
-      as="button"
-      onClick={() => navigate(path)}
-      style={{ textDecoration: 'none' }}
-      _focus={{ boxShadow: 'none' }}
-      w="full"
-    >
+    <Box w="full">
       <Flex
         align="center"
         p="3"
@@ -70,6 +134,7 @@ const NavItem = ({ icon, children, path, isActive, ...rest }: NavItemProps) => {
           bg: hoverBg,
           color: activeColor,
         }}
+        onClick={handleClick}
         {...rest}
       >
         {icon && (
@@ -79,15 +144,24 @@ const NavItem = ({ icon, children, path, isActive, ...rest }: NavItemProps) => {
             as={icon}
           />
         )}
-        {children}
+        <Text flex="1">{children}</Text>
+        {hasSubmenu && (
+          <Icon
+            as={isOpen ? FiChevronDown : FiChevronRight}
+            transition="all .25s ease-in-out"
+          />
+        )}
       </Flex>
+      {hasSubmenu && (
+        <Collapse in={isOpen} animateOpacity>
+          <Stack pl={6} mt={1} spacing={1}>
+            {rest.submenu}
+          </Stack>
+        </Collapse>
+      )}
     </Box>
   );
 };
-
-interface SidebarProps extends BoxProps {
-  onClose?: () => void;
-}
 
 const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
   const location = useLocation();
@@ -105,6 +179,41 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
     }
   };
 
+  const renderNavItem = (item: LinkItemProps) => {
+    if (item.children) {
+      return (
+        <NavItem
+          key={item.name}
+          icon={item.icon}
+          hasSubmenu
+          submenu={item.children.map((child) => (
+            <NavItem
+              key={child.name}
+              icon={child.icon}
+              path={child.path}
+              isActive={location.pathname === child.path}
+            >
+              {child.name}
+            </NavItem>
+          ))}
+        >
+          {item.name}
+        </NavItem>
+      );
+    }
+
+    return (
+      <NavItem
+        key={item.name}
+        icon={item.icon}
+        path={item.path}
+        isActive={location.pathname === item.path}
+      >
+        {item.name}
+      </NavItem>
+    );
+  };
+
   return (
     <Box
       bg={bg}
@@ -115,37 +224,24 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
       h="full"
       {...rest}
     >
-      <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
-        <Text fontSize="2xl" fontWeight="bold">
-          ERP FATEC
-        </Text>
-        <CloseButton display={{ base: 'flex', md: 'none' }} onClick={onClose} />
-      </Flex>
-      <VStack spacing={1} align="stretch" py={2}>
-        {LinkItems.map((link) => (
-          <NavItem
-            key={link.name}
-            icon={link.icon}
-            path={link.path}
-            isActive={location.pathname === link.path}
-          >
-            {link.name}
-          </NavItem>
-        ))}
-        <Box pt={4}>
-          <NavItem
-            icon={FiLogOut}
-            path=""
-            onClick={handleLogout}
-            color="red.500"
-            _hover={{
-              color: 'red.400',
-            }}
-          >
-            Sair
-          </NavItem>
-        </Box>
-      </VStack>
+      <Box pt="20">
+        <VStack spacing={1} align="stretch" py={2}>
+          {LinkItems.map((item) => renderNavItem(item))}
+          <Box pt={4}>
+            <NavItem
+              icon={FiLogOut}
+              path=""
+              onClick={handleLogout}
+              color="red.500"
+              _hover={{
+                color: 'red.400',
+              }}
+            >
+              Sair
+            </NavItem>
+          </Box>
+        </VStack>
+      </Box>
     </Box>
   );
 };
@@ -170,7 +266,19 @@ export function Sidebar({ ...rest }: SidebarProps) {
       </Drawer>
       
       {/* Mobile nav */}
-      <Box display={{ base: 'flex', md: 'none' }} position="fixed" top={4} left={4} zIndex={20}>
+      <Box 
+        display={{ base: 'flex', md: 'none' }} 
+        position="fixed" 
+        top={0}
+        left={0}
+        p={4}
+        w="full"
+        bg={useColorModeValue('white', 'gray.800')}
+        borderBottomWidth="1px"
+        borderBottomColor={useColorModeValue('gray.200', 'gray.700')}
+        zIndex={9}
+        alignItems="center"
+      >
         <IconButton
           aria-label="Open menu"
           fontSize="20px"

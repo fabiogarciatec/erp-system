@@ -1,6 +1,7 @@
-import { Box, Flex } from '@chakra-ui/react';
-import { Sidebar } from './Sidebar';
+import { Box } from '@chakra-ui/react';
 import { ReactNode } from 'react';
+import { Sidebar } from './Sidebar';
+import { TopBar } from './TopBar';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -8,22 +9,19 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <Flex minH="100vh">
+    <Box minH="100vh" bg="gray.50">
       <Sidebar />
+      <TopBar />
+      {/* Conteúdo principal com margem para Sidebar e TopBar */}
       <Box
-        flex="1"
-        ml={{ base: 0, md: "240px" }}
-        transition=".3s ease"
+        ml={{ base: 0, md: 60 }}
+        mt="16"
+        p="4"
+        position="relative"
+        zIndex={1}
       >
-        <Box
-          as="main"
-          minH="100vh"
-          bg="gray.50"
-          p={{ base: 4, md: 8 }}
-        >
-          {children}
-        </Box>
+        {children}
       </Box>
-    </Flex>
+    </Box>
   );
 }

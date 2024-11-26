@@ -11,5 +11,13 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    strictPort: true,
+    hmr: {
+      overlay: false
+    },
   },
+  optimizeDeps: {
+    force: true
+  },
+  clearScreen: false
 })

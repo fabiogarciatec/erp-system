@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Spinner, Center } from '@chakra-ui/react';
+import DashboardLayout from './DashboardLayout';
 
 interface PrivateRouteProps {
   children: JSX.Element;
@@ -21,5 +22,5 @@ export function PrivateRoute({ children }: PrivateRouteProps) {
     return <Navigate to="/login" />;
   }
 
-  return children;
+  return <DashboardLayout>{children}</DashboardLayout>;
 }

@@ -3,6 +3,18 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Customers } from './pages/Customers';
+import { Products } from './pages/Products';
+import { Services } from './pages/Services';
+import { Shipping } from './pages/Shipping';
+import { SalesProducts } from './pages/SalesProducts';
+import { ServiceOrders } from './pages/ServiceOrders';
+import { ShippingOrders } from './pages/ShippingOrders';
+import { Reports } from './pages/Reports';
+import { Profile } from './pages/settings/Profile';
+import { Security } from './pages/settings/Security';
+import { Notifications } from './pages/settings/Notifications';
+import { Backup } from './pages/settings/Backup';
+import Company from './pages/settings/Company';
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './components/PrivateRoute';
 
@@ -12,7 +24,6 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/login" element={<Login />} />
             <Route path="/" element={
               <PrivateRoute>
                 <Dashboard />
@@ -30,24 +41,65 @@ function App() {
             } />
             <Route path="/products" element={
               <PrivateRoute>
-                <Dashboard />
+                <Products />
               </PrivateRoute>
             } />
-            <Route path="/sales" element={
+            <Route path="/services" element={
               <PrivateRoute>
-                <Dashboard />
+                <Services />
+              </PrivateRoute>
+            } />
+            <Route path="/shipping" element={
+              <PrivateRoute>
+                <Shipping />
+              </PrivateRoute>
+            } />
+            <Route path="/sales/products" element={
+              <PrivateRoute>
+                <SalesProducts />
+              </PrivateRoute>
+            } />
+            <Route path="/sales/services" element={
+              <PrivateRoute>
+                <ServiceOrders />
+              </PrivateRoute>
+            } />
+            <Route path="/sales/shipping" element={
+              <PrivateRoute>
+                <ShippingOrders />
               </PrivateRoute>
             } />
             <Route path="/reports" element={
               <PrivateRoute>
-                <Dashboard />
+                <Reports />
               </PrivateRoute>
             } />
-            <Route path="/settings" element={
+            <Route path="/settings/profile" element={
               <PrivateRoute>
-                <Dashboard />
+                <Profile />
               </PrivateRoute>
             } />
+            <Route path="/settings/company" element={
+              <PrivateRoute>
+                <Company />
+              </PrivateRoute>
+            } />
+            <Route path="/settings/security" element={
+              <PrivateRoute>
+                <Security />
+              </PrivateRoute>
+            } />
+            <Route path="/settings/notifications" element={
+              <PrivateRoute>
+                <Notifications />
+              </PrivateRoute>
+            } />
+            <Route path="/settings/backup" element={
+              <PrivateRoute>
+                <Backup />
+              </PrivateRoute>
+            } />
+            <Route path="/login" element={<Login />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </AuthProvider>

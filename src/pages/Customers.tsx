@@ -26,7 +26,6 @@ import { FiSearch, FiEdit2, FiTrash2, FiPlus } from 'react-icons/fi';
 import { supabase } from '../services/supabase';
 import { CustomerModal } from '../components/CustomerModal';
 import { PageHeader } from '../components/PageHeader';
-import DashboardLayout from '../components/DashboardLayout';
 import { useRef } from 'react';
 
 interface Customer {
@@ -49,8 +48,8 @@ export function Customers() {
     onOpen: onDeleteOpen,
     onClose: onDeleteClose,
   } = useDisclosure();
-  const toast = useToast();
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const toast = useToast();
 
   useEffect(() => {
     fetchCustomers();
@@ -58,7 +57,6 @@ export function Customers() {
 
   const fetchCustomers = async () => {
     try {
-      setIsLoading(true);
       const { data, error } = await supabase
         .from('customers')
         .select('*')
@@ -73,36 +71,19 @@ export function Customers() {
         title: 'Erro ao carregar clientes',
         description: 'Não foi possível carregar a lista de clientes.',
         status: 'error',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const formatPhoneNumber = (phone: string) => {
-    const cleaned = phone.replace(/\D/g, '');
-    const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/);
-    if (match) {
-      return `(${match[1]}) ${match[2]}-${match[3]}`;
-    }
-    return phone;
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
   };
 
-  const handleSearch = () => {
-    if (!searchTerm.trim()) {
-      fetchCustomers();
-      return;
-    }
-
-    const filtered = customers.filter(
-      (customer) =>
-        customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.phone.includes(searchTerm)
-    );
-    setCustomers(filtered);
+  const handleNewCustomer = () => {
+    setSelectedCustomer(null);
+    onOpen();
   };
 
   const handleEdit = (customer: Customer) => {
@@ -110,14 +91,15 @@ export function Customers() {
     onOpen();
   };
 
-  const confirmDelete = (id: string) => {
-    setCustomerToDelete(id);
+  const confirmDelete = (customerId: string) => {
+    setCustomerToDelete(customerId);
     onDeleteOpen();
   };
 
   const handleDelete = async () => {
     if (!customerToDelete) return;
 
+    setIsLoading(true);
     try {
       const { error } = await supabase
         .from('customers')
@@ -126,175 +108,169 @@ export function Customers() {
 
       if (error) throw error;
 
-      setCustomers(customers.filter(customer => customer.id !== customerToDelete));
       toast({
         title: 'Cliente excluído',
         description: 'O cliente foi excluído com sucesso.',
         status: 'success',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
+
+      fetchCustomers();
     } catch (error) {
       console.error('Error deleting customer:', error);
       toast({
-        title: 'Erro ao excluir',
+        title: 'Erro ao excluir cliente',
         description: 'Não foi possível excluir o cliente.',
         status: 'error',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
     } finally {
-      setCustomerToDelete(null);
+      setIsLoading(false);
       onDeleteClose();
+      setCustomerToDelete(null);
     }
   };
 
-  const handleNewCustomer = () => {
-    setSelectedCustomer(null);
-    onOpen();
+  const handleSuccess = () => {
+    onClose();
+    fetchCustomers();
   };
 
-  const handleSuccess = () => {
-    fetchCustomers();
-    toast({
-      title: 'Sucesso!',
-      description: selectedCustomer 
-        ? 'Cliente atualizado com sucesso.' 
-        : 'Cliente criado com sucesso.',
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
+  const formatPhoneNumber = (phone: string) => {
+    if (!phone) return '';
+    const cleaned = phone.replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{2})(\d{4,5})(\d{4})$/);
+    if (match) {
+      return `(${match[1]}) ${match[2]}-${match[3]}`;
+    }
+    return phone;
   };
+
+  const filteredCustomers = customers.filter((customer) =>
+    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <DashboardLayout>
-      <Box w="full">
-        <PageHeader
-          title="Clientes"
-          subtitle="Gerencie seus clientes"
-          breadcrumbs={[
-            { label: 'Dashboard', href: '/' },
-            { label: 'Clientes', href: '/customers' }
-          ]}
-        />
+    <Box>
+      <PageHeader
+        title="Clientes"
+        subtitle="Gerencie seus clientes"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/' },
+          { label: 'Clientes', href: '/customers' },
+        ]}
+      />
 
-        <Box bg="white" rounded="lg" shadow="sm" overflow="hidden">
-          <Flex p={4} gap={4} borderBottomWidth="1px">
-            <InputGroup maxW="300px">
-              <Input
-                placeholder="Buscar cliente..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              />
-              <InputRightElement>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleSearch}
-                  aria-label="Search"
-                >
-                  <FiSearch />
-                </Button>
-              </InputRightElement>
-            </InputGroup>
-            <Button 
-              colorScheme="blue" 
-              leftIcon={<FiPlus />} 
-              onClick={handleNewCustomer}
-              isLoading={isLoading}
-            >
-              Novo Cliente
-            </Button>
-          </Flex>
+      <Box bg="white" p={4} rounded="md" shadow="sm">
+        <Flex mb={4} gap={4} justify="space-between">
+          <InputGroup maxW="300px">
+            <Input
+              placeholder="Buscar clientes..."
+              value={searchTerm}
+              onChange={handleSearch}
+            />
+            <InputRightElement>
+              <FiSearch />
+            </InputRightElement>
+          </InputGroup>
+          <Button 
+            colorScheme="blue" 
+            leftIcon={<FiPlus />} 
+            onClick={handleNewCustomer}
+            isLoading={isLoading}
+          >
+            Novo Cliente
+          </Button>
+        </Flex>
 
-          <Box overflowX="auto">
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Nome</Th>
-                  <Th>Email</Th>
-                  <Th>Telefone</Th>
-                  <Th>Status</Th>
-                  <Th>Ações</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {customers.map((customer) => (
-                  <Tr key={customer.id}>
-                    <Td>{customer.name}</Td>
-                    <Td>{customer.email}</Td>
-                    <Td>{formatPhoneNumber(customer.phone)}</Td>
-                    <Td>
-                      <Badge
-                        colorScheme={customer.status === 'active' ? 'green' : 'red'}
+        <Box overflowX="auto">
+          <Table variant="simple">
+            <Thead>
+              <Tr>
+                <Th>Nome</Th>
+                <Th>Email</Th>
+                <Th>Telefone</Th>
+                <Th>Status</Th>
+                <Th>Ações</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {filteredCustomers.map((customer) => (
+                <Tr key={customer.id}>
+                  <Td>{customer.name}</Td>
+                  <Td>{customer.email}</Td>
+                  <Td>{formatPhoneNumber(customer.phone)}</Td>
+                  <Td>
+                    <Badge
+                      colorScheme={customer.status === 'active' ? 'green' : 'red'}
+                    >
+                      {customer.status === 'active' ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                  </Td>
+                  <Td>
+                    <Flex gap={2}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleEdit(customer)}
+                        title="Editar cliente"
                       >
-                        {customer.status === 'active' ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </Td>
-                    <Td>
-                      <Flex gap={2}>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEdit(customer)}
-                          title="Editar cliente"
-                        >
-                          <FiEdit2 />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          colorScheme="red"
-                          onClick={() => confirmDelete(customer.id)}
-                          title="Excluir cliente"
-                        >
-                          <FiTrash2 />
-                        </Button>
-                      </Flex>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </Box>
+                        <FiEdit2 />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        colorScheme="red"
+                        onClick={() => confirmDelete(customer.id)}
+                        title="Excluir cliente"
+                      >
+                        <FiTrash2 />
+                      </Button>
+                    </Flex>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
         </Box>
-
-        <CustomerModal
-          isOpen={isOpen}
-          onClose={onClose}
-          customer={selectedCustomer}
-          onSuccess={handleSuccess}
-        />
-
-        <AlertDialog
-          isOpen={isDeleteOpen}
-          leastDestructiveRef={cancelRef}
-          onClose={onDeleteClose}
-        >
-          <AlertDialogOverlay>
-            <AlertDialogContent>
-              <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                Excluir Cliente
-              </AlertDialogHeader>
-
-              <AlertDialogBody>
-                Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.
-              </AlertDialogBody>
-
-              <AlertDialogFooter>
-                <Button ref={cancelRef} onClick={onDeleteClose}>
-                  Cancelar
-                </Button>
-                <Button colorScheme="red" onClick={handleDelete} ml={3}>
-                  Excluir
-                </Button>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialogOverlay>
-        </AlertDialog>
       </Box>
-    </DashboardLayout>
+
+      <CustomerModal
+        isOpen={isOpen}
+        onClose={onClose}
+        customer={selectedCustomer}
+        onSuccess={handleSuccess}
+      />
+
+      <AlertDialog
+        isOpen={isDeleteOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onDeleteClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Excluir Cliente
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onDeleteClose}>
+                Cancelar
+              </Button>
+              <Button colorScheme="red" onClick={handleDelete} ml={3}>
+                Excluir
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+    </Box>
   );
 }
