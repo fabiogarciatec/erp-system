@@ -22,7 +22,6 @@ import {
   FiMenu
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
 
 interface LinkItemProps {
