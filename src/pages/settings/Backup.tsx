@@ -23,23 +23,57 @@ import {
   ModalBody,
   ModalFooter,
   Select,
+  FormControl,
+  FormLabel,
+  Switch,
 } from '@chakra-ui/react';
 import { FiDownload, FiRotateCw, FiTrash2, FiUpload } from 'react-icons/fi';
 import { PageHeader } from '../../components/PageHeader';
 import { useState } from 'react';
+import { useProfile } from '../../hooks/useProfile';
+
+interface BackupConfig {
+  type: 'full' | 'incremental';
+  compress: boolean;
+  encrypt: boolean;
+}
+
+interface BackupRecord {
+  id: number;
+  date: string;
+  size: string;
+  status: string;
+  type: string;
+}
 
 export function Backup() {
   const toast = useToast();
+  const { profile } = useProfile();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isBackupInProgress, setIsBackupInProgress] = useState(false);
   const [backupProgress, setBackupProgress] = useState(0);
-  const [selectedBackupType, setSelectedBackupType] = useState('full');
+  const [backupConfig, setBackupConfig] = useState<BackupConfig>({
+    type: 'full',
+    compress: true,
+    encrypt: true,
+  });
 
   const handleBackup = () => {
     onOpen();
   };
 
   const startBackup = () => {
+    if (!profile?.id) {
+      toast({
+        title: 'Erro',
+        description: 'Você precisa estar logado para realizar backups.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     onClose();
     setIsBackupInProgress(true);
     setBackupProgress(0);
@@ -52,7 +86,7 @@ export function Backup() {
           setIsBackupInProgress(false);
           toast({
             title: 'Backup concluído',
-            description: 'O backup foi realizado com sucesso.',
+            description: `O backup ${backupConfig.type === 'full' ? 'completo' : 'incremental'} foi realizado com sucesso.`,
             status: 'success',
             duration: 5000,
             isClosable: true,
@@ -65,7 +99,7 @@ export function Backup() {
 
     toast({
       title: 'Backup iniciado',
-      description: `Iniciando backup ${selectedBackupType === 'full' ? 'completo' : 'incremental'}...`,
+      description: `Iniciando backup ${backupConfig.type === 'full' ? 'completo' : 'incremental'}...`,
       status: 'info',
       duration: 3000,
       isClosable: true,
@@ -82,7 +116,7 @@ export function Backup() {
     });
   };
 
-  const mockBackups = [
+  const mockBackups: BackupRecord[] = [
     { id: 1, date: '2024-01-15 08:30', size: '256MB', status: 'Concluído', type: 'Completo' },
     { id: 2, date: '2024-01-14 08:30', size: '50MB', status: 'Concluído', type: 'Incremental' },
     { id: 3, date: '2024-01-13 08:30', size: '254MB', status: 'Concluído', type: 'Completo' },
@@ -188,14 +222,32 @@ export function Backup() {
           <ModalHeader>Configurar Backup</ModalHeader>
           <ModalBody>
             <VStack spacing={4}>
-              <Text>Selecione o tipo de backup que deseja realizar:</Text>
-              <Select
-                value={selectedBackupType}
-                onChange={(e) => setSelectedBackupType(e.target.value)}
-              >
-                <option value="full">Backup Completo</option>
-                <option value="incremental">Backup Incremental</option>
-              </Select>
+              <FormControl>
+                <FormLabel>Tipo de Backup</FormLabel>
+                <Select
+                  value={backupConfig.type}
+                  onChange={(e) => setBackupConfig(prev => ({ ...prev, type: e.target.value as 'full' | 'incremental' }))}
+                >
+                  <option value="full">Backup Completo</option>
+                  <option value="incremental">Backup Incremental</option>
+                </Select>
+              </FormControl>
+
+              <FormControl display="flex" alignItems="center">
+                <FormLabel mb="0">Compactar arquivos</FormLabel>
+                <Switch
+                  isChecked={backupConfig.compress}
+                  onChange={(e) => setBackupConfig(prev => ({ ...prev, compress: e.target.checked }))}
+                />
+              </FormControl>
+
+              <FormControl display="flex" alignItems="center">
+                <FormLabel mb="0">Criptografar backup</FormLabel>
+                <Switch
+                  isChecked={backupConfig.encrypt}
+                  onChange={(e) => setBackupConfig(prev => ({ ...prev, encrypt: e.target.checked }))}
+                />
+              </FormControl>
             </VStack>
           </ModalBody>
           <ModalFooter>
