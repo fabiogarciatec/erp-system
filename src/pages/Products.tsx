@@ -39,18 +39,14 @@ export function Products() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { createRecord, updateRecord, deleteRecord, getRecords, loading: companyLoading } = useCompany();
 
-  const initialProductData: Product = {
-    id: '',
+  const initialProductData: Partial<Product> = {
     name: '',
     description: '',
     price: 0,
     stock: 0,
-    company_id: null,
-    created_at: null,
-    updated_at: null,
   };
 
-  const [formData, setFormData] = useState<Product>(initialProductData);
+  const [formData, setFormData] = useState<Product>(initialProductData as Product);
 
   const loadProducts = async () => {
     if (companyLoading) return;
@@ -122,7 +118,7 @@ export function Products() {
       }
 
       onClose();
-      setFormData(initialProductData);
+      setFormData(initialProductData as Product);
       setSelectedProduct(null);
       loadProducts();
     } catch (error) {
@@ -173,7 +169,7 @@ export function Products() {
 
   const handleNewProduct = () => {
     setSelectedProduct(null);
-    setFormData(initialProductData);
+    setFormData(initialProductData as Product);
     onOpen();
   };
 

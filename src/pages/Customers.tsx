@@ -31,15 +31,11 @@ import { PageHeader } from '../components/PageHeader';
 import { useCompany } from '../contexts/CompanyContext';
 import { Customer } from '@/types';
 
-const initialCustomerData: Customer = {
-  id: '',
+const initialCustomerData: Partial<Customer> = {
   name: '',
   email: '',
   phone: '',
   address: '',
-  company_id: null,
-  created_at: null,
-  updated_at: null,
 };
 
 export function Customers() {
@@ -50,7 +46,7 @@ export function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const { createRecord, updateRecord, deleteRecord, getRecords, loading: companyLoading } = useCompany();
 
-  const [formData, setFormData] = useState<Customer>(initialCustomerData);
+  const [formData, setFormData] = useState<Customer>(initialCustomerData as Customer);
 
   const loadCustomers = async () => {
     if (companyLoading) return;
@@ -129,7 +125,7 @@ export function Customers() {
       }
 
       onClose();
-      setFormData(initialCustomerData);
+      setFormData(initialCustomerData as Customer);
       setSelectedCustomer(null);
       loadCustomers();
     } catch (error) {
@@ -189,7 +185,7 @@ export function Customers() {
 
   const handleNewCustomer = () => {
     setSelectedCustomer(null);
-    setFormData(initialCustomerData);
+    setFormData(initialCustomerData as Customer);
     onOpen();
   };
 
