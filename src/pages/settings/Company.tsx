@@ -1,25 +1,15 @@
-import React from 'react';
 import {
   Box,
   Button,
+  Container,
   FormControl,
   FormLabel,
   Input,
-  VStack,
-  SimpleGrid,
-  useToast,
-  Container,
-  Heading,
-  Text,
-  Divider,
-  FormErrorMessage,
-  Spinner,
-  Center,
   Stack,
-  Flex,
-  Image,
-  Icon,
+  useToast,
+  VStack,
 } from '@chakra-ui/react';
+import { useEffect } from 'react';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/lib/supabase';
 import { PageHeader } from '@/components/PageHeader';
@@ -213,7 +203,7 @@ export function Company() {
   }, [profile, toast, fetchProfile]);
 
   // Carregar dados iniciais
-  React.useEffect(() => {
+  useEffect(() => {
     let mounted = true;
 
     const loadData = async () => {

@@ -220,24 +220,23 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const getRecord = async <T extends BaseRecord>(table: string, id: string) => {
+  const getRecord = async <T extends BaseRecord>(
+    table: string,
+    id: string
+  ): Promise<{ data: T | null; error: Error | null }> => {
     try {
-      if (!companyId) {
-        throw new Error('Company ID not found');
-      }
-
       const { data, error } = await supabase
         .from(table)
         .select('*')
         .eq('id', id)
-        .eq('company_id', companyId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        return { data: null, error };
+      }
 
       return { data: data as T, error: null };
     } catch (error) {
-      console.error(`Error fetching ${table}:`, error);
       return { data: null, error: error as Error };
     }
   };

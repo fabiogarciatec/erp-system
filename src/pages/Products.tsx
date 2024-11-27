@@ -4,7 +4,6 @@ import {
   Container,
   FormControl,
   FormLabel,
-  Heading,
   Input,
   Modal,
   ModalBody,
@@ -212,9 +211,9 @@ export function Products() {
             <Tbody>
               {products.map((product) => (
                 <Tr key={product.id}>
-                  <Td>{product.name}</Td>
-                  <Td>{product.description}</Td>
-                  <Td isNumeric>R$ {product.price.toFixed(2)}</Td>
+                  <Td>{product.name || '-'}</Td>
+                  <Td>{product.description || '-'}</Td>
+                  <Td isNumeric>{product.price || '-'}</Td>
                   <Td isNumeric>{product.stock_quantity}</Td>
                   <Td>
                     <Button

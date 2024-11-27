@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Container,
+  Flex,
   FormControl,
   FormLabel,
   Heading,
@@ -14,17 +15,19 @@ import {
   ModalHeader,
   ModalOverlay,
   Spinner,
+  Stack,
   Table,
   Tbody,
   Td,
+  Text,
   Th,
   Thead,
   Tr,
+  useColorModeValue,
   useDisclosure,
   useToast,
   VStack,
   Center,
-  Text,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
@@ -212,10 +215,10 @@ export function Customers() {
             <Tbody>
               {customers.map((customer) => (
                 <Tr key={customer.id}>
-                  <Td>{customer.name}</Td>
-                  <Td>{customer.email}</Td>
-                  <Td>{customer.phone}</Td>
-                  <Td>{customer.address}</Td>
+                  <Td>{customer.name || '-'}</Td>
+                  <Td>{customer.email || '-'}</Td>
+                  <Td>{customer.phone || '-'}</Td>
+                  <Td>{customer.address || '-'}</Td>
                   <Td>
                     <Button
                       size="sm"

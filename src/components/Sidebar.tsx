@@ -1,36 +1,18 @@
 import {
   Box,
+  Button,
   Flex,
   useColorModeValue,
-  BoxProps,
-  Text,
-  Button,
-  Divider,
+  IconButton,
+  Icon,
 } from '@chakra-ui/react';
 import {
   FiHome,
-  FiTruck,
-  FiSettings,
-  FiShoppingBag,
-  FiBarChart2,
-  FiDatabase,
   FiUsers,
+  FiSettings,
   FiBox,
-  FiTool,
-  FiGrid,
-  FiPackage,
-  FiDollarSign,
-  FiShoppingCart,
-  FiTrello,
-  FiMap,
-  FiUser,
-  FiCreditCard,
-  FiArchive,
-  FiClipboard,
-  FiTrendingUp,
-  FiShield,
-  FiBell,
-  FiLink,
+  FiTruck,
+  FiFileText,
   FiLogOut,
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
@@ -38,7 +20,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Logo from './Logo';
 import SidebarNavItem from './SidebarNavItem';
 
-interface SidebarProps extends BoxProps {
+interface SidebarProps {
   onClose: () => void;
 }
 
@@ -50,7 +32,7 @@ const NAV_ITEMS = [
   },
   {
     label: 'Cadastros',
-    icon: FiDatabase,
+    icon: FiBox,
     subItems: [
       {
         label: 'Clientes',
@@ -70,28 +52,28 @@ const NAV_ITEMS = [
       {
         label: 'Serviços',
         href: '/services',
-        icon: FiTool,
+        icon: FiFileText,
       },
       {
         label: 'Categorias',
         href: '/categories',
-        icon: FiGrid,
+        icon: FiBox,
       },
     ],
   },
   {
     label: 'Vendas',
-    icon: FiShoppingBag,
+    icon: FiBox,
     subItems: [
       {
         label: 'Produtos',
         href: '/sales/products',
-        icon: FiPackage,
+        icon: FiBox,
       },
       {
         label: 'Serviços',
         href: '/sales/services',
-        icon: FiTool,
+        icon: FiFileText,
       },
       {
         label: 'Fretes',
@@ -101,7 +83,7 @@ const NAV_ITEMS = [
       {
         label: 'Ordens de Serviço',
         href: '/sales/service-orders',
-        icon: FiClipboard,
+        icon: FiFileText,
       },
     ],
   },
@@ -112,18 +94,18 @@ const NAV_ITEMS = [
       {
         label: 'Ordens',
         href: '/shipping/orders',
-        icon: FiTrello,
+        icon: FiBox,
       },
       {
         label: 'Rastreamento',
         href: '/shipping/tracking',
-        icon: FiMap,
+        icon: FiTruck,
       },
     ],
   },
   {
     label: 'Relatórios',
-    icon: FiBarChart2,
+    icon: FiFileText,
     href: '/reports',
   },
   {
@@ -133,32 +115,32 @@ const NAV_ITEMS = [
       {
         label: 'Perfil',
         href: '/settings/profile',
-        icon: FiUser,
+        icon: FiUsers,
       },
       {
         label: 'Empresa',
         href: '/settings/company',
-        icon: FiArchive,
+        icon: FiBox,
       },
       {
         label: 'Segurança',
         href: '/settings/security',
-        icon: FiShield,
+        icon: FiSettings,
       },
       {
         label: 'Financeiro',
         href: '/settings/financial',
-        icon: FiCreditCard,
+        icon: FiBox,
       },
       {
         label: 'Vendas',
         href: '/settings/sales',
-        icon: FiTrendingUp,
+        icon: FiBox,
       },
       {
         label: 'Notificações',
         href: '/settings/notifications',
-        icon: FiBell,
+        icon: FiSettings,
       },
       {
         label: 'Usuários',
@@ -168,12 +150,12 @@ const NAV_ITEMS = [
       {
         label: 'Backup',
         href: '/settings/backup',
-        icon: FiDatabase,
+        icon: FiBox,
       },
       {
         label: 'Integrações',
         href: '/settings/integrations',
-        icon: FiLink,
+        icon: FiSettings,
       }
     ],
   },
