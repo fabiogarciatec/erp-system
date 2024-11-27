@@ -29,17 +29,17 @@ import { useEffect, useState } from 'react';
 import { FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 import { useCompany } from '../contexts/CompanyContext';
-import { ProductData } from '@/types';
+import { Product } from '@/types';
 
 export function Products() {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [products, setProducts] = useState<ProductData[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<ProductData | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { createRecord, updateRecord, deleteRecord, getRecords, loading: companyLoading } = useCompany();
 
-  const initialProductData: ProductData = {
+  const initialProductData: Product = {
     id: '',
     name: '',
     description: '',
@@ -47,14 +47,14 @@ export function Products() {
     stock_quantity: 0,
   };
 
-  const [formData, setFormData] = useState<ProductData>(initialProductData);
+  const [formData, setFormData] = useState<Product>(initialProductData);
 
   const loadProducts = async () => {
     if (companyLoading) return;
 
     setLoading(true);
     try {
-      const { data, error } = await getRecords<ProductData>('products', {
+      const { data, error } = await getRecords<Product>('products', {
         orderBy: { column: 'name', ascending: true },
       });
 
@@ -93,7 +93,7 @@ export function Products() {
       };
 
       if (selectedProduct) {
-        const { error } = await updateRecord<ProductData>(
+        const { error } = await updateRecord<Product>(
           'products',
           selectedProduct.id,
           productData
@@ -107,7 +107,7 @@ export function Products() {
           isClosable: true,
         });
       } else {
-        const { error } = await createRecord<ProductData>('products', productData);
+        const { error } = await createRecord<Product>('products', productData);
         if (error) throw error;
         toast({
           title: 'Produto criado',
@@ -134,7 +134,7 @@ export function Products() {
     }
   };
 
-  const handleEdit = (product: ProductData) => {
+  const handleEdit = (product: Product) => {
     setSelectedProduct(product);
     setFormData(product);
     onOpen();

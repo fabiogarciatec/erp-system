@@ -80,7 +80,7 @@ interface CompanyData {
 }
 
 export function Company() {
-  const { profile, fetchProfile, isLoading: profileLoading } = useProfile();
+  const { profile, isLoading: profileLoading } = useProfile();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -260,7 +260,7 @@ export function Company() {
     try {
       setSaving(true);
 
-      const updateData = {
+      const updateData: Record<string, string | undefined> = {
         ...company,
         updated_at: new Date().toISOString(),
       };

@@ -7,7 +7,7 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { isOpen: isSidebarOpen, onOpen, onClose } = useDisclosure();
+  const { onClose } = useDisclosure();
 
   return (
     <Box minH="100vh">

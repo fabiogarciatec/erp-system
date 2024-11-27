@@ -29,9 +29,9 @@ import { useEffect, useState } from 'react';
 import { FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 import { useCompany } from '../contexts/CompanyContext';
-import { CustomerData } from '@/types';
+import { Customer } from '@/types';
 
-const initialCustomerData: CustomerData = {
+const initialCustomerData: Customer = {
   id: '',
   name: '',
   email: '',
@@ -42,19 +42,19 @@ const initialCustomerData: CustomerData = {
 export function Customers() {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [customers, setCustomers] = useState<CustomerData[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const { createRecord, updateRecord, deleteRecord, getRecords, loading: companyLoading } = useCompany();
 
-  const [formData, setFormData] = useState<CustomerData>(initialCustomerData);
+  const [formData, setFormData] = useState<Customer>(initialCustomerData);
 
   const loadCustomers = async () => {
     if (companyLoading) return;
 
     setLoading(true);
     try {
-      const { data, error } = await getRecords<CustomerData>('customers', {
+      const { data, error } = await getRecords<Customer>('customers', {
         orderBy: { column: 'name', ascending: true },
       });
 
@@ -88,7 +88,7 @@ export function Customers() {
 
   const handleSubmit = async () => {
     try {
-      const customerData: CustomerData = {
+      const customerData: Customer = {
         id: formData.id,
         name: formData.name,
         email: formData.email,
@@ -97,7 +97,7 @@ export function Customers() {
       };
 
       if (selectedCustomer) {
-        const { error } = await updateRecord<CustomerData>(
+        const { error } = await updateRecord<Customer>(
           'customers',
           selectedCustomer.id,
           customerData
@@ -111,7 +111,7 @@ export function Customers() {
           isClosable: true,
         });
       } else {
-        const { error } = await createRecord<CustomerData>('customers', customerData);
+        const { error } = await createRecord<Customer>('customers', customerData);
         if (error) throw error;
         toast({
           title: 'Cliente criado',
@@ -138,7 +138,7 @@ export function Customers() {
     }
   };
 
-  const handleEdit = (customer: CustomerData) => {
+  const handleEdit = (customer: Customer) => {
     setSelectedCustomer(customer);
     setFormData({
       id: customer.id,
