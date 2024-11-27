@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState, FormEvent, ChangeEvent } from 'react';
 import {
   Box,
   Button,
@@ -17,11 +18,9 @@ import {
   Center,
   Spinner,
 } from '@chakra-ui/react';
-import { useEffect } from 'react';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/lib/supabase';
 import { PageHeader } from '@/components/PageHeader';
-import { useRef } from 'react';
 import { FiUpload } from 'react-icons/fi';
 
 interface CompanyFormData {
@@ -69,16 +68,16 @@ interface CompanyData {
 
 export function Company() {
   const { profile, fetchProfile, isLoading: profileLoading } = useProfile();
-  const [loading, setLoading] = React.useState(true);
-  const [saving, setSaving] = React.useState(false);
-  const [uploadingLogo, setUploadingLogo] = React.useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [company, setCompany] = React.useState<CompanyData | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
+  const [company, setCompany] = useState<CompanyData | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const toast = useToast();
 
   // Buscar dados da empresa
-  const fetchCompanyData = React.useCallback(async () => {
+  const fetchCompanyData = async () => {
     if (!profile?.company_id) {
       console.log('Perfil sem company_id:', profile);
       setLoading(false);
@@ -161,10 +160,10 @@ export function Company() {
     } finally {
       setLoading(false);
     }
-  }, [profile?.company_id, toast]);
+  };
 
   // Criar nova empresa
-  const createCompany = React.useCallback(async (companyData: Partial<CompanyData>) => {
+  const createCompany = async (companyData: Partial<CompanyData>) => {
     if (!profile) {
       toast({
         title: 'Erro',
@@ -222,7 +221,7 @@ export function Company() {
     } finally {
       setSaving(false);
     }
-  }, [profile, toast, fetchProfile]);
+  };
 
   // Carregar dados iniciais
   useEffect(() => {
@@ -272,7 +271,7 @@ export function Company() {
   };
 
   // Atualizar empresa
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!company || !profile?.company_id) return;
 
@@ -355,7 +354,7 @@ export function Company() {
     setCompany({ ...company, [field]: value });
   };
 
-  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 

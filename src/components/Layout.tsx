@@ -1,5 +1,5 @@
-import { Box, useDisclosure } from '@chakra-ui/react';
-import Sidebar from './Sidebar';
+import { Box, Container, useDisclosure } from '@chakra-ui/react';
+import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 
 interface LayoutProps {
@@ -7,24 +7,16 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onClose } = useDisclosure();
 
   return (
-    <Box display="flex" minH="100vh">
-      <Sidebar onClose={onClose} display={{ base: isOpen ? 'block' : 'none', md: 'block' }} />
-      <Box
-        flex="1"
-        ml={{ base: 0, md: 60 }}
-        transition=".3s ease"
-      >
+    <Box minH="100vh">
+      <Sidebar display={{ base: 'none', md: 'block' }} />
+      <Box ml={{ base: 0, md: 64 }}>
         <TopBar />
-        <Box
-          p={8}
-          bg="gray.50"
-          mt="16" // Altura da TopBar
-        >
+        <Container maxW="container.xl" py={8}>
           {children}
-        </Box>
+        </Container>
       </Box>
     </Box>
   );

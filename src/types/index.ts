@@ -1,15 +1,37 @@
 export interface BaseRecord {
   id: string;
-  company_id: string;
-  created_at: string;
+  created_at?: string;
   updated_at?: string;
 }
 
-export interface Customer extends BaseRecord {
+export interface CustomerData extends BaseRecord {
   name: string;
   email: string;
   phone: string;
   address: string;
+  company_id?: string;
+}
+
+export interface ProductData extends BaseRecord {
+  name: string;
+  description: string;
+  price: number;
+  stock_quantity: number;
+  company_id?: string;
+}
+
+export interface CompanyData extends BaseRecord {
+  name: string;
+  document: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  website: string;
+  foundation_date: string;
+  logo_url?: string;
 }
 
 export interface Product extends BaseRecord {
@@ -58,15 +80,6 @@ export interface ShippingOrder extends BaseRecord {
   estimated_delivery_date?: string;
   delivered_date?: string;
   shipping_address: string;
-}
-
-export interface Company extends BaseRecord {
-  name: string;
-  cnpj: string;
-  email: string;
-  phone: string;
-  address: string;
-  logo_url?: string;
 }
 
 export interface User extends BaseRecord {

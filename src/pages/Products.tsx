@@ -29,24 +29,7 @@ import { useEffect, useState } from 'react';
 import { FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 import { useCompany } from '../contexts/CompanyContext';
-
-interface ProductData {
-  id?: string;
-  name: string;
-  description: string;
-  price: number;
-  stock_quantity: number;
-  company_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-const initialProductData: ProductData = {
-  name: '',
-  description: '',
-  price: 0,
-  stock_quantity: 0,
-};
+import { ProductData } from '@/types';
 
 export function Products() {
   const toast = useToast();
@@ -55,6 +38,14 @@ export function Products() {
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductData | null>(null);
   const { createRecord, updateRecord, deleteRecord, getRecords, loading: companyLoading } = useCompany();
+
+  const initialProductData: ProductData = {
+    id: '',
+    name: '',
+    description: '',
+    price: 0,
+    stock_quantity: 0,
+  };
 
   const [formData, setFormData] = useState<ProductData>(initialProductData);
 

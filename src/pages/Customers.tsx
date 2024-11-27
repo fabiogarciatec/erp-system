@@ -29,19 +29,10 @@ import { useEffect, useState } from 'react';
 import { FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 import { useCompany } from '../contexts/CompanyContext';
-
-interface CustomerData {
-  id?: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  company_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
+import { CustomerData } from '@/types';
 
 const initialCustomerData: CustomerData = {
+  id: '',
   name: '',
   email: '',
   phone: '',
@@ -56,7 +47,7 @@ export function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(null);
   const { createRecord, updateRecord, deleteRecord, getRecords, loading: companyLoading } = useCompany();
 
-  const [formData, setFormData] = useState(initialCustomerData);
+  const [formData, setFormData] = useState<CustomerData>(initialCustomerData);
 
   const loadCustomers = async () => {
     if (companyLoading) return;
@@ -97,7 +88,8 @@ export function Customers() {
 
   const handleSubmit = async () => {
     try {
-      const customerData = {
+      const customerData: CustomerData = {
+        id: formData.id,
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
@@ -149,6 +141,7 @@ export function Customers() {
   const handleEdit = (customer: CustomerData) => {
     setSelectedCustomer(customer);
     setFormData({
+      id: customer.id,
       name: customer.name,
       email: customer.email,
       phone: customer.phone,
