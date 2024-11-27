@@ -15,7 +15,14 @@ import {
   MenuItem,
   IconButton,
   useDisclosure,
-  SimpleGrid
+  SimpleGrid,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
 } from '@chakra-ui/react';
 import { FiMoreVertical, FiPlus } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
@@ -172,7 +179,23 @@ export function ServiceOrders() {
       </Box>
 
       <Modal isOpen={isOpen} onClose={onClose}>
-        {/* Modal content */}
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Nova Ordem de Serviço</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {/* Add your form fields here */}
+            <Input placeholder="Nome do cliente" mb={4} />
+            <Input placeholder="Descrição do serviço" mb={4} />
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={onClose}>
+              Salvar
+            </Button>
+            <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          </ModalFooter>
+        </ModalContent>
       </Modal>
     </Box>
   );

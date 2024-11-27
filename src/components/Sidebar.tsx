@@ -225,8 +225,36 @@ export function Sidebar({ onClose, display }: SidebarProps) {
       borderColor={borderColor}
       display={display}
     >
-      <Box flex="1" p={4}>
-        <Flex direction="column" flex="1">
+      <Flex direction="column" h="full">
+        <Box 
+          flex="1" 
+          overflowY="auto" 
+          css={{
+            '&::-webkit-scrollbar': {
+              width: '6px',
+              backgroundColor: 'transparent',
+            },
+            '&::-webkit-scrollbar-track': {
+              width: '8px',
+              backgroundColor: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: useColorModeValue('rgba(0,0,0,0.1)', 'rgba(255,255,255,0.1)'),
+              borderRadius: '24px',
+              '&:hover': {
+                backgroundColor: useColorModeValue('rgba(0,0,0,0.2)', 'rgba(255,255,255,0.2)'),
+              },
+            },
+            '&:hover::-webkit-scrollbar-thumb': {
+              backgroundColor: useColorModeValue('rgba(0,0,0,0.2)', 'rgba(255,255,255,0.2)'),
+            },
+            '&::-webkit-scrollbar-thumb:active': {
+              backgroundColor: useColorModeValue('rgba(0,0,0,0.3)', 'rgba(255,255,255,0.3)'),
+            },
+          }}
+          py={4}
+          px={4}
+        >
           {NAV_ITEMS.map((item) => (
             <SidebarNavItem
               key={item.label}
@@ -238,26 +266,30 @@ export function Sidebar({ onClose, display }: SidebarProps) {
               {item.label}
             </SidebarNavItem>
           ))}
-        </Flex>
+        </Box>
 
-        <Button
-          variant="ghost"
-          onClick={handleSignOut}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          w="full"
-          p="4"
-          mt="4"
-          leftIcon={<Box as={FiLogOut} />}
-          _hover={{
-            bg: 'red.50',
-            color: 'red.500',
-          }}
-        >
-          Sair
-        </Button>
-      </Box>
+        <Box p={4} borderTop="1px" borderColor={borderColor}>
+          <Button
+            variant="ghost"
+            onClick={handleSignOut}
+            display="flex"
+            alignItems="center"
+            w="full"
+            p="4"
+            leftIcon={<Box as={FiLogOut} fontSize="18px" />}
+            color={useColorModeValue('gray.600', 'gray.400')}
+            fontWeight="medium"
+            _hover={{
+              bg: useColorModeValue('red.50', 'rgba(254, 178, 178, 0.12)'),
+              color: useColorModeValue('red.600', 'red.200'),
+              transform: 'translateY(-1px)',
+            }}
+            transition="all 0.2s"
+          >
+            Sair
+          </Button>
+        </Box>
+      </Flex>
     </Box>
   );
 }
