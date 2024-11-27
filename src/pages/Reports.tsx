@@ -21,70 +21,90 @@ import {
 import { PageHeader } from '../components/PageHeader';
 
 export function Reports() {
-  const reports = [
-    {
-      title: 'Relatório de Vendas',
-      description: 'Análise detalhada das vendas por período',
-      icon: FiDollarSign,
-    },
-    {
-      title: 'Produtos Mais Vendidos',
-      description: 'Ranking dos produtos com maior saída',
-      icon: FiShoppingBag,
-    },
-    {
-      title: 'Desempenho de Fretes',
-      description: 'Análise de entregas e custos logísticos',
-      icon: FiTruck,
-    },
-    {
-      title: 'Serviços Prestados',
-      description: 'Relatório de ordens de serviço concluídas',
-      icon: FiTool,
-    },
-    {
-      title: 'Análise Financeira',
-      description: 'Visão geral do desempenho financeiro',
-      icon: FiBarChart,
-    },
-    {
-      title: 'Indicadores de Performance',
-      description: 'KPIs e métricas principais do negócio',
-      icon: FiTrendingUp,
-    },
-  ];
+  const cardBg = 'white';
+  const borderColor = 'gray.200';
 
   return (
-    <Box w="full" p={8}>
+    <Box w="full">
       <PageHeader
         title="Relatórios"
-        subtitle="Visualize e exporte relatórios"
+        subtitle="Visualize os relatórios do sistema"
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
           { label: 'Relatórios', href: '/reports' }
         ]}
       />
 
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-        {reports.map((report, index) => (
-          <Card key={index}>
-            <CardHeader>
-              <VStack spacing={4} align="flex-start">
-                <Icon as={report.icon} boxSize={8} color="blue.500" />
-                <Heading size="md">{report.title}</Heading>
-              </VStack>
-            </CardHeader>
+      <Box pt={8}>
+        <SimpleGrid 
+          columns={{ base: 1, md: 2, lg: 3 }} 
+          spacing={6} 
+          mb={8}
+          w="full"
+        >
+          <Card
+            bg={cardBg}
+            borderWidth="1px"
+            borderColor={borderColor}
+            shadow="sm"
+            _hover={{ shadow: 'md', transform: 'translateY(-2px)' }}
+            transition="all 0.2s"
+          >
             <CardBody>
               <VStack spacing={4} align="stretch">
-                <Text>{report.description}</Text>
-                <Button colorScheme="blue" variant="outline" size="sm">
+                <Heading size="md">Vendas</Heading>
+                <Text color="gray.600">
+                  Relatórios detalhados de vendas por período
+                </Text>
+                <Button colorScheme="blue" size="sm">
                   Gerar Relatório
                 </Button>
               </VStack>
             </CardBody>
           </Card>
-        ))}
-      </SimpleGrid>
+
+          <Card
+            bg={cardBg}
+            borderWidth="1px"
+            borderColor={borderColor}
+            shadow="sm"
+            _hover={{ shadow: 'md', transform: 'translateY(-2px)' }}
+            transition="all 0.2s"
+          >
+            <CardBody>
+              <VStack spacing={4} align="stretch">
+                <Heading size="md">Estoque</Heading>
+                <Text color="gray.600">
+                  Controle de estoque e movimentações
+                </Text>
+                <Button colorScheme="blue" size="sm">
+                  Gerar Relatório
+                </Button>
+              </VStack>
+            </CardBody>
+          </Card>
+
+          <Card
+            bg={cardBg}
+            borderWidth="1px"
+            borderColor={borderColor}
+            shadow="sm"
+            _hover={{ shadow: 'md', transform: 'translateY(-2px)' }}
+            transition="all 0.2s"
+          >
+            <CardBody>
+              <VStack spacing={4} align="stretch">
+                <Heading size="md">Financeiro</Heading>
+                <Text color="gray.600">
+                  Relatórios financeiros e fluxo de caixa
+                </Text>
+                <Button colorScheme="blue" size="sm">
+                  Gerar Relatório
+                </Button>
+              </VStack>
+            </CardBody>
+          </Card>
+        </SimpleGrid>
+      </Box>
     </Box>
   );
 }

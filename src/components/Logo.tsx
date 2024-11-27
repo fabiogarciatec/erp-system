@@ -22,7 +22,7 @@ export function Logo() {
 
   return (
     <Box
-      maxW="130px"
+      maxW="180px"
       px="3"
       py="1.5"
       borderRadius="md"

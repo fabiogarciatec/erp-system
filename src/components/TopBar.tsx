@@ -18,12 +18,17 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { useProfile } from '../hooks/useProfile';
 import { useEffect } from 'react';
+import { Logo } from './Logo';
 
 export function TopBar() {
   const navigate = useNavigate();
   const { profile, fetchProfile } = useProfile();
-  const bgColor = useColorModeValue('white', 'gray.800');
+  const bgGradient = useColorModeValue(
+    'linear(to-r, blue.600, purple.600)',
+    'linear(to-r, blue.900, purple.900)'
+  );
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const textColor = useColorModeValue('white', 'gray.100');
 
   useEffect(() => {
     fetchProfile();
@@ -48,35 +53,29 @@ export function TopBar() {
       position="fixed"
       top={0}
       right={0}
-      left={{ base: 0, md: 60 }}
-      bg={bgColor}
+      left={0}
+      zIndex={1000}
+      bgGradient={bgGradient}
       borderBottom="1px"
       borderColor={borderColor}
-      h="16"
-      zIndex={1000}
-      boxShadow="sm"
+      px={4}
+      py={2}
+      color={textColor}
     >
       <Container maxW="full" h="full">
         <Flex h="full" alignItems="center" justifyContent="space-between" px={4}>
-          {/* Logo */}
-          <Box>
-          </Box>
-
+          <Logo />
+          
           {/* Perfil do usuário */}
           <Menu>
             <MenuButton
               as={Box}
               cursor="pointer"
+              color={textColor}
               _hover={{ opacity: 0.8 }}
               transition="all 0.2s"
             >
               <HStack spacing={3}>
-                <Avatar
-                  size="sm"
-                  name={profile?.full_name}
-                  src={profile?.avatar_url}
-                  bg="blue.500"
-                />
                 <Box maxW={{ base: '150px', md: '200px' }}>
                   <Text 
                     fontSize="sm" 
@@ -88,24 +87,29 @@ export function TopBar() {
                   </Text>
                   <Text 
                     fontSize="xs" 
-                    color="blue.500" 
+                    color="blue.100" 
                     lineHeight="1.2"
                     noOfLines={1}
                   >
                     {profile?.email || ''}
                   </Text>
                 </Box>
-                <IconButton
-                  aria-label="More options"
-                  icon={<FiChevronDown />}
-                  variant="ghost"
+                <Avatar
                   size="sm"
-                  color="gray.600"
-                  _hover={{ bg: 'gray.100' }}
+                  name={profile?.full_name}
+                  src={profile?.avatar_url}
+                  bg="blue.100"
+                  color="blue.600"
                 />
               </HStack>
             </MenuButton>
-            <MenuList zIndex={1001} shadow="lg" borderColor="gray.200">
+            <MenuList
+              bg={useColorModeValue('white', 'gray.800')}
+              color={useColorModeValue('gray.800', 'white')}
+              borderColor={borderColor}
+              zIndex={1001}
+              shadow="lg"
+            >
               <MenuItem 
                 icon={<FiSettings />} 
                 onClick={handleProfileClick}

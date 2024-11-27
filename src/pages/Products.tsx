@@ -24,6 +24,7 @@ import {
   useToast,
   VStack,
   Center,
+  SimpleGrid,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
@@ -192,67 +193,88 @@ export function Products() {
   };
 
   return (
-    <Container maxW="container.xl" py={8}>
-      <PageHeader title="Produtos" />
+    <Box w="full">
+      <PageHeader
+        title="Produtos"
+        subtitle="Gerencie seu catálogo de produtos"
+        breadcrumbs={[
+          { label: 'Produtos', href: '/products' }
+        ]}
+      />
 
-      <Box bg="white" rounded="lg" shadow="sm" p={6}>
-        <Button
-          leftIcon={<FiPlus />}
-          colorScheme="blue"
-          onClick={handleNewProduct}
-          mb={6}
+      <Box pt={8}>
+        <SimpleGrid 
+          columns={{ base: 1, md: 2, lg: 3 }} 
+          spacing={6} 
+          mb={8}
+          w="full"
         >
-          Novo Produto
-        </Button>
+          <Button
+            leftIcon={<FiPlus />}
+            colorScheme="blue"
+            onClick={handleNewProduct}
+            mb={6}
+          >
+            Novo Produto
+          </Button>
+        </SimpleGrid>
 
-        {products.length === 0 ? (
-          <Center py={8}>
-            <Text>Nenhum produto cadastrado.</Text>
-          </Center>
-        ) : (
-          <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>Nome</Th>
-                <Th>Descrição</Th>
-                <Th isNumeric>Preço</Th>
-                <Th isNumeric>Estoque</Th>
-                <Th>Ações</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {products.map((product) => (
-                <Tr key={product.id}>
-                  <Td>{product.name || '-'}</Td>
-                  <Td>{product.description || '-'}</Td>
-                  <Td isNumeric>{product.price || '-'}</Td>
-                  <Td isNumeric>{product.stock_quantity}</Td>
-                  <Td>
-                    <Button
-                      size="sm"
-                      leftIcon={<FiEdit2 />}
-                      variant="ghost"
-                      colorScheme="blue"
-                      onClick={() => handleEdit(product)}
-                      mr={2}
-                    >
-                      Editar
-                    </Button>
-                    <Button
-                      size="sm"
-                      leftIcon={<FiTrash2 />}
-                      variant="ghost"
-                      colorScheme="red"
-                      onClick={() => handleDelete(product.id)}
-                    >
-                      Excluir
-                    </Button>
-                  </Td>
+        <Box 
+          bg="white" 
+          rounded="lg" 
+          shadow="sm"
+          borderWidth="1px"
+          borderColor="gray.200"
+        >
+          {products.length === 0 ? (
+            <Center py={8}>
+              <Text>Nenhum produto cadastrado.</Text>
+            </Center>
+          ) : (
+            <Table variant="simple">
+              <Thead>
+                <Tr>
+                  <Th>Nome</Th>
+                  <Th>Descrição</Th>
+                  <Th isNumeric>Preço</Th>
+                  <Th isNumeric>Estoque</Th>
+                  <Th>Ações</Th>
                 </Tr>
-              ))}
-            </Tbody>
-          </Table>
-        )}
+              </Thead>
+              <Tbody>
+                {products.map((product) => (
+                  <Tr key={product.id}>
+                    <Td>{product.name || '-'}</Td>
+                    <Td>{product.description || '-'}</Td>
+                    <Td isNumeric>{product.price || '-'}</Td>
+                    <Td isNumeric>{product.stock_quantity}</Td>
+                    <Td>
+                      <Button
+                        size="sm"
+                        leftIcon={<FiEdit2 />}
+                        variant="ghost"
+                        colorScheme="blue"
+                        onClick={() => handleEdit(product)}
+                        mr={2}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        size="sm"
+                        leftIcon={<FiTrash2 />}
+                        variant="ghost"
+                        colorScheme="red"
+                        onClick={() => handleDelete(product.id)}
+                      >
+                        Excluir
+                      </Button>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          )}
+        </Box>
       </Box>
 
       <Modal isOpen={isOpen} onClose={onClose}>
@@ -315,6 +337,6 @@ export function Products() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Container>
+    </Box>
   );
 }

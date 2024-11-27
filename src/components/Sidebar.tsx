@@ -17,7 +17,6 @@ import {
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Logo } from './Logo';
 import { SidebarNavItem } from './SidebarNavItem';
 
 interface SidebarProps {
@@ -216,36 +215,17 @@ export function Sidebar({ onClose, display }: SidebarProps) {
 
   return (
     <Box
-      transition="3s ease"
+      position="fixed"
+      top="16"
+      left={0}
+      h="calc(100vh - 4rem)"
+      w="64"
       bg={bgColor}
       borderRight="1px"
-      borderRightColor={borderColor}
-      w={{ base: 'full', md: 64 }}
-      pos="fixed"
-      h="full"
+      borderColor={borderColor}
       display={display}
     >
-      <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
-        <Logo />
-      </Flex>
-
-      <Box
-        h="calc(100vh - 80px)"
-        overflowY="auto"
-        css={{
-          '&::-webkit-scrollbar': {
-            width: '4px',
-          },
-          '&::-webkit-scrollbar-track': {
-            width: '6px',
-            background: useColorModeValue('gray.100', 'whiteAlpha.50'),
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: useColorModeValue('gray.300', 'whiteAlpha.200'),
-            borderRadius: '24px',
-          },
-        }}
-      >
+      <Box flex="1" p={4}>
         <Flex direction="column" flex="1">
           {NAV_ITEMS.map((item) => (
             <SidebarNavItem

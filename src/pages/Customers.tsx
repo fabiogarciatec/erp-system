@@ -24,6 +24,7 @@ import {
   useToast,
   VStack,
   Center,
+  SimpleGrid,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
@@ -190,67 +191,87 @@ export function Customers() {
   };
 
   return (
-    <Container maxW="container.xl" py={8}>
-      <PageHeader title="Clientes" />
+    <Box w="full">
+      <PageHeader
+        title="Clientes"
+        subtitle="Gerencie seus clientes"
+        breadcrumbs={[
+          { label: 'Clientes', href: '/customers' }
+        ]}
+      />
 
-      <Box bg="white" rounded="lg" shadow="sm" p={6}>
-        <Button
-          leftIcon={<FiPlus />}
-          colorScheme="blue"
-          onClick={handleNewCustomer}
-          mb={6}
+      <Box pt={8}>
+        <SimpleGrid 
+          columns={{ base: 1, md: 2, lg: 3 }} 
+          spacing={6} 
+          mb={8}
+          w="full"
         >
-          Novo Cliente
-        </Button>
+          <Button
+            leftIcon={<FiPlus />}
+            colorScheme="blue"
+            onClick={handleNewCustomer}
+          >
+            Novo Cliente
+          </Button>
+        </SimpleGrid>
 
-        {customers.length === 0 ? (
-          <Center py={8}>
-            <Text>Nenhum cliente cadastrado.</Text>
-          </Center>
-        ) : (
-          <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>Nome</Th>
-                <Th>Email</Th>
-                <Th>Telefone</Th>
-                <Th>Endereço</Th>
-                <Th>Ações</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {customers.map((customer) => (
-                <Tr key={customer.id}>
-                  <Td>{customer.name || '-'}</Td>
-                  <Td>{customer.email || '-'}</Td>
-                  <Td>{customer.phone || '-'}</Td>
-                  <Td>{customer.address || '-'}</Td>
-                  <Td>
-                    <Button
-                      size="sm"
-                      leftIcon={<FiEdit2 />}
-                      variant="ghost"
-                      colorScheme="blue"
-                      onClick={() => handleEdit(customer)}
-                      mr={2}
-                    >
-                      Editar
-                    </Button>
-                    <Button
-                      size="sm"
-                      leftIcon={<FiTrash2 />}
-                      variant="ghost"
-                      colorScheme="red"
-                      onClick={() => handleDelete(customer.id)}
-                    >
-                      Excluir
-                    </Button>
-                  </Td>
+        <Box 
+          bg="white" 
+          rounded="lg" 
+          shadow="sm"
+          borderWidth="1px"
+          borderColor="gray.200"
+        >
+          {customers.length === 0 ? (
+            <Center py={8}>
+              <Text>Nenhum cliente cadastrado.</Text>
+            </Center>
+          ) : (
+            <Table variant="simple">
+              <Thead>
+                <Tr>
+                  <Th>Nome</Th>
+                  <Th>Email</Th>
+                  <Th>Telefone</Th>
+                  <Th>Endereço</Th>
+                  <Th>Ações</Th>
                 </Tr>
-              ))}
-            </Tbody>
-          </Table>
-        )}
+              </Thead>
+              <Tbody>
+                {customers.map((customer) => (
+                  <Tr key={customer.id}>
+                    <Td>{customer.name || '-'}</Td>
+                    <Td>{customer.email || '-'}</Td>
+                    <Td>{customer.phone || '-'}</Td>
+                    <Td>{customer.address || '-'}</Td>
+                    <Td>
+                      <Button
+                        size="sm"
+                        leftIcon={<FiEdit2 />}
+                        variant="ghost"
+                        colorScheme="blue"
+                        onClick={() => handleEdit(customer)}
+                        mr={2}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        size="sm"
+                        leftIcon={<FiTrash2 />}
+                        variant="ghost"
+                        colorScheme="red"
+                        onClick={() => handleDelete(customer.id)}
+                      >
+                        Excluir
+                      </Button>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          )}
+        </Box>
       </Box>
 
       <Modal isOpen={isOpen} onClose={onClose}>
@@ -311,6 +332,6 @@ export function Customers() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Container>
+    </Box>
   );
 }
