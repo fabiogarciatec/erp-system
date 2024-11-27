@@ -20,7 +20,7 @@ export interface Product extends BaseRecord {
   name: string;
   description?: string;
   price: number;
-  stock: number;
+  stock_quantity: number;
   category?: string;
 }
 
