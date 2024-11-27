@@ -2,22 +2,10 @@ import {
   Box,
   SimpleGrid,
   Card,
-  CardHeader,
   CardBody,
-  Heading,
   Text,
-  Icon,
-  VStack,
-  Button,
+  useColorModeValue,
 } from '@chakra-ui/react';
-import {
-  FiDollarSign,
-  FiShoppingBag,
-  FiTruck,
-  FiTool,
-  FiBarChart,
-  FiTrendingUp,
-} from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 
 export function Reports() {

@@ -1,28 +1,24 @@
 import {
-  Box,
-  Flex,
   Avatar,
-  Text,
+  Box,
+  Button,
+  Flex,
   HStack,
-  useColorModeValue,
   Menu,
   MenuButton,
   MenuList,
   MenuItem,
-  MenuDivider,
-  IconButton,
-  Container,
+  Text,
+  useColorModeValue,
 } from '@chakra-ui/react';
-import { FiChevronDown, FiSettings, FiLogOut } from 'react-icons/fi';
+import { FiLogOut } from 'react-icons/fi';
+import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../services/supabase';
-import { useProfile } from '../hooks/useProfile';
-import { useEffect } from 'react';
 import { Logo } from './Logo';
 
 export function TopBar() {
   const navigate = useNavigate();
-  const { profile, fetchProfile } = useProfile();
+  const { profile, fetchProfile } = useAuth();
   const bgGradient = useColorModeValue(
     'linear(to-r, blue.600, purple.600)',
     'linear(to-r, blue.900, purple.900)'
@@ -36,7 +32,7 @@ export function TopBar() {
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await profile.signOut();
       if (error) throw error;
       navigate('/login');
     } catch (error) {
@@ -62,74 +58,72 @@ export function TopBar() {
       py={2}
       color={textColor}
     >
-      <Container maxW="full" h="full">
-        <Flex h="full" alignItems="center" justifyContent="space-between" px={4}>
-          <Logo />
-          
-          {/* Perfil do usuário */}
-          <Menu>
-            <MenuButton
-              as={Box}
-              cursor="pointer"
-              color={textColor}
-              _hover={{ opacity: 0.8 }}
-              transition="all 0.2s"
+      <Flex h="full" alignItems="center" justifyContent="space-between" px={4}>
+        <Logo />
+        
+        {/* Perfil do usuário */}
+        <Menu>
+          <MenuButton
+            as={Box}
+            cursor="pointer"
+            color={textColor}
+            _hover={{ opacity: 0.8 }}
+            transition="all 0.2s"
+          >
+            <HStack spacing={3}>
+              <Box maxW={{ base: '150px', md: '200px' }}>
+                <Text 
+                  fontSize="sm" 
+                  fontWeight="medium" 
+                  lineHeight="1.2"
+                  noOfLines={1}
+                >
+                  {profile?.full_name || 'Carregando...'}
+                </Text>
+                <Text 
+                  fontSize="xs" 
+                  color="blue.100" 
+                  lineHeight="1.2"
+                  noOfLines={1}
+                >
+                  {profile?.email || ''}
+                </Text>
+              </Box>
+              <Avatar
+                size="sm"
+                name={profile?.full_name}
+                src={profile?.avatar_url}
+                bg="blue.100"
+                color="blue.600"
+              />
+            </HStack>
+          </MenuButton>
+          <MenuList
+            bg={useColorModeValue('white', 'gray.800')}
+            color={useColorModeValue('gray.800', 'white')}
+            borderColor={borderColor}
+            zIndex={1001}
+            shadow="lg"
+          >
+            <MenuItem 
+              icon={<FiSettings />} 
+              onClick={handleProfileClick}
+              _hover={{ bg: 'gray.50', color: 'blue.500' }}
             >
-              <HStack spacing={3}>
-                <Box maxW={{ base: '150px', md: '200px' }}>
-                  <Text 
-                    fontSize="sm" 
-                    fontWeight="medium" 
-                    lineHeight="1.2"
-                    noOfLines={1}
-                  >
-                    {profile?.full_name || 'Carregando...'}
-                  </Text>
-                  <Text 
-                    fontSize="xs" 
-                    color="blue.100" 
-                    lineHeight="1.2"
-                    noOfLines={1}
-                  >
-                    {profile?.email || ''}
-                  </Text>
-                </Box>
-                <Avatar
-                  size="sm"
-                  name={profile?.full_name}
-                  src={profile?.avatar_url}
-                  bg="blue.100"
-                  color="blue.600"
-                />
-              </HStack>
-            </MenuButton>
-            <MenuList
-              bg={useColorModeValue('white', 'gray.800')}
-              color={useColorModeValue('gray.800', 'white')}
-              borderColor={borderColor}
-              zIndex={1001}
-              shadow="lg"
+              Perfil
+            </MenuItem>
+            <MenuDivider />
+            <MenuItem 
+              icon={<FiLogOut />} 
+              onClick={handleLogout} 
+              color="red.500"
+              _hover={{ bg: 'red.50' }}
             >
-              <MenuItem 
-                icon={<FiSettings />} 
-                onClick={handleProfileClick}
-                _hover={{ bg: 'gray.50', color: 'blue.500' }}
-              >
-                Perfil
-              </MenuItem>
-              <MenuDivider />
-              <MenuItem 
-                icon={<FiLogOut />} 
-                onClick={handleLogout} 
-                color="red.500"
-                _hover={{ bg: 'red.50' }}
-              >
-                Sair
-              </MenuItem>
-            </MenuList>
-          </Menu>
-        </Flex>
-      </Container>
+              Sair
+            </MenuItem>
+          </MenuList>
+        </Menu>
+      </Flex>
     </Box>
   );
 }
