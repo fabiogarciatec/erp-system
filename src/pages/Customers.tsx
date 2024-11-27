@@ -37,6 +37,8 @@ const initialCustomerData: Customer = {
   email: '',
   phone: '',
   address: '',
+  created_at: undefined,
+  updated_at: undefined,
 };
 
 export function Customers() {
@@ -94,6 +96,8 @@ export function Customers() {
         email: formData.email,
         phone: formData.phone,
         address: formData.address,
+        created_at: formData.created_at,
+        updated_at: formData.updated_at,
       };
 
       if (selectedCustomer) {
@@ -146,6 +150,8 @@ export function Customers() {
       email: customer.email,
       phone: customer.phone,
       address: customer.address,
+      created_at: customer.created_at,
+      updated_at: customer.updated_at,
     });
     onOpen();
   };
