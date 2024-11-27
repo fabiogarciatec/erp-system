@@ -1,40 +1,51 @@
-import { ReactNode, useState } from 'react';
-import {
-  Flex,
-  Text,
-  Icon,
-  Link,
-  FlexProps,
-  Collapse,
-  useColorModeValue,
-} from '@chakra-ui/react';
+import { Box, Collapse, Flex, Icon, Link, Text, useColorModeValue } from '@chakra-ui/react';
 import { IconType } from 'react-icons';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { FiChevronDown } from 'react-icons/fi';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
-interface NavItemProps extends FlexProps {
+interface SubNavItem {
+  label: string;
+  href: string;
   icon?: IconType;
-  children: ReactNode;
-  href?: string;
-  subItems?: Array<{
-    label: string;
-    href: string;
-  }>;
 }
 
-export function SidebarNavItem({ icon, children, href, subItems, ...rest }: NavItemProps) {
+interface NavItemProps {
+  icon?: IconType;
+  children: React.ReactNode;
+  href?: string;
+  subItems?: SubNavItem[];
+  onClick?: () => void;
+}
+
+const SidebarNavItem = ({ icon, children, href, subItems, onClick, ...rest }: NavItemProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const isActive = href ? location.pathname === href : false;
+  
+  const isActive = href 
+    ? location.pathname === href 
+    : subItems?.some(item => location.pathname === item.href) || false;
+  
   const hasSubItems = subItems && subItems.length > 0;
 
-  const color = useColorModeValue('gray.600', 'gray.400');
-  const activeColor = useColorModeValue('blue.500', 'blue.200');
-  const hoverBg = useColorModeValue('gray.100', 'gray.700');
+  useEffect(() => {
+    if (hasSubItems && subItems.some(item => location.pathname === item.href)) {
+      setIsOpen(true);
+    }
+  }, [location.pathname, hasSubItems, subItems]);
 
-  const handleToggle = () => {
+  const color = useColorModeValue('gray.600', 'gray.400');
+  const activeColor = useColorModeValue('blue.600', 'blue.300');
+  const activeBg = useColorModeValue('blue.50', 'blue.900');
+  const hoverBg = useColorModeValue('blue.50', 'gray.700');
+  const subItemActiveBg = useColorModeValue('blue.50', 'blue.900');
+  const subItemHoverBg = useColorModeValue('blue.50', 'gray.700');
+
+  const handleClick = () => {
     if (hasSubItems) {
       setIsOpen(!isOpen);
+    } else if (onClick) {
+      onClick();
     }
   };
 
@@ -45,14 +56,14 @@ export function SidebarNavItem({ icon, children, href, subItems, ...rest }: NavI
       mx="4"
       borderRadius="lg"
       role="group"
-      cursor={hasSubItems ? 'pointer' : 'default'}
-      bg={isActive ? hoverBg : 'transparent'}
+      cursor="pointer"
+      bg={isActive ? activeBg : 'transparent'}
       color={isActive ? activeColor : color}
       _hover={{
-        bg: hoverBg,
+        bg: isActive ? activeBg : hoverBg,
         color: activeColor,
       }}
-      onClick={handleToggle}
+      onClick={handleClick}
       {...rest}
     >
       {icon && (
@@ -60,12 +71,13 @@ export function SidebarNavItem({ icon, children, href, subItems, ...rest }: NavI
           mr="4"
           fontSize="16"
           as={icon}
+          color={isActive ? activeColor : color}
           _groupHover={{
             color: activeColor,
           }}
         />
       )}
-      <Text flex="1">{children}</Text>
+      <Text flex="1" fontWeight={isActive ? "semibold" : "normal"}>{children}</Text>
       {hasSubItems && (
         <Icon
           as={FiChevronDown}
@@ -92,32 +104,61 @@ export function SidebarNavItem({ icon, children, href, subItems, ...rest }: NavI
       ) : (
         NavContent
       )}
-
+      
       {hasSubItems && (
         <Collapse in={isOpen} animateOpacity>
-          {subItems.map((subItem) => (
-            <Link
-              key={subItem.href}
-              as={RouterLink}
-              to={subItem.href}
-              style={{ textDecoration: 'none' }}
-              _focus={{ boxShadow: 'none' }}
-            >
-              <Flex
-                align="center"
-                pl="12"
-                py="2"
-                color={location.pathname === subItem.href ? activeColor : color}
-                _hover={{
-                  color: activeColor,
-                }}
+          {subItems.map((subItem) => {
+            const isSubItemActive = location.pathname === subItem.href;
+            
+            return (
+              <Link
+                key={subItem.href}
+                as={RouterLink}
+                to={subItem.href}
+                style={{ textDecoration: 'none' }}
+                _focus={{ boxShadow: 'none' }}
               >
-                <Text>{subItem.label}</Text>
-              </Flex>
-            </Link>
-          ))}
+                <Flex
+                  align="center"
+                  py="2"
+                  px="12"
+                  mx="4"
+                  borderRadius="lg"
+                  role="group"
+                  cursor="pointer"
+                  color={isSubItemActive ? activeColor : color}
+                  bg={isSubItemActive ? subItemActiveBg : 'transparent'}
+                  _hover={{
+                    bg: isSubItemActive ? subItemActiveBg : subItemHoverBg,
+                    color: activeColor,
+                  }}
+                  onClick={onClick}
+                >
+                  {subItem.icon && (
+                    <Icon
+                      mr="3"
+                      fontSize="14"
+                      as={subItem.icon}
+                      color={isSubItemActive ? activeColor : color}
+                      _groupHover={{
+                        color: activeColor,
+                      }}
+                    />
+                  )}
+                  <Text 
+                    fontSize="sm" 
+                    fontWeight={isSubItemActive ? "semibold" : "normal"}
+                  >
+                    {subItem.label}
+                  </Text>
+                </Flex>
+              </Link>
+            );
+          })}
         </Collapse>
       )}
     </>
   );
-}
+};
+
+export default SidebarNavItem;

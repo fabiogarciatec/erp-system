@@ -1,152 +1,182 @@
 import {
   Box,
-  VStack,
   Button,
-  Text,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Badge,
+  Container,
+  Divider,
   HStack,
+  Input,
+  Table,
+  Tbody,
+  Td,
+  Text,
+  Th,
+  Thead,
+  Tr,
+  VStack,
   useToast,
-  IconButton,
-  Flex,
   Progress,
-  useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Select,
-  FormControl,
-  FormLabel,
-  Switch,
 } from '@chakra-ui/react';
 import { FiDownload, FiRotateCw, FiTrash2, FiUpload } from 'react-icons/fi';
 import { PageHeader } from '../../components/PageHeader';
-import { useState } from 'react';
+import { useState, useRef, ChangeEvent } from 'react';
 import { useProfile } from '../../hooks/useProfile';
-
-interface BackupConfig {
-  type: 'full' | 'incremental';
-  compress: boolean;
-  encrypt: boolean;
-}
+import { createBackup, restoreBackup } from '../../services/backupService';
+import { formatFileSize } from '../../utils/formatters';
 
 interface BackupRecord {
   id: number;
   date: string;
   size: string;
-  status: string;
+  status: 'Em andamento' | 'Concluído' | 'Erro';
   type: string;
+  filename?: string;
 }
 
-export function Backup() {
+function Backup() {
   const toast = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { profile } = useProfile();
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const [isBackupInProgress, setIsBackupInProgress] = useState(false);
+  const [isRestoreInProgress, setIsRestoreInProgress] = useState(false);
   const [backupProgress, setBackupProgress] = useState(0);
-  const [backupConfig, setBackupConfig] = useState<BackupConfig>({
-    type: 'full',
-    compress: true,
-    encrypt: true,
-  });
+  const [backups, setBackups] = useState<BackupRecord[]>([]);
 
-  const handleBackup = () => {
-    onOpen();
-  };
-
-  const startBackup = () => {
-    if (!profile?.id) {
+  const handleBackup = async () => {
+    if (!profile?.company_id) {
       toast({
         title: 'Erro',
-        description: 'Você precisa estar logado para realizar backups.',
+        description: 'Você precisa estar vinculado a uma empresa para realizar backup.',
         status: 'error',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
       return;
     }
 
-    onClose();
-    setIsBackupInProgress(true);
-    setBackupProgress(0);
+    try {
+      setIsBackupInProgress(true);
+      setBackupProgress(0);
+      
+      // Simular progresso
+      const progressInterval = setInterval(() => {
+        setBackupProgress(prev => Math.min(prev + 10, 90));
+      }, 500);
 
-    // Simulação do progresso do backup
-    const interval = setInterval(() => {
-      setBackupProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsBackupInProgress(false);
-          toast({
-            title: 'Backup concluído',
-            description: `O backup ${backupConfig.type === 'full' ? 'completo' : 'incremental'} foi realizado com sucesso.`,
-            status: 'success',
-            duration: 5000,
-            isClosable: true,
-          });
-          return 100;
-        }
-        return prev + 10;
+      const { fileName, size } = await createBackup(profile.company_id);
+      
+      clearInterval(progressInterval);
+      setBackupProgress(100);
+
+      const newBackup: BackupRecord = {
+        id: Date.now(),
+        date: new Date().toLocaleString(),
+        size: formatFileSize(size),
+        status: 'Concluído',
+        type: 'Completo',
+        filename: fileName,
+      };
+
+      setBackups([newBackup, ...backups]);
+
+      toast({
+        title: 'Backup concluído',
+        description: 'O backup foi realizado com sucesso.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
       });
-    }, 500);
+    } catch (error) {
+      console.error('Erro ao criar backup:', error);
+      toast({
+        title: 'Erro ao criar backup',
+        description: 'Ocorreu um erro ao criar o backup. Tente novamente.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsBackupInProgress(false);
+      setBackupProgress(0);
+    }
+  };
 
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !profile?.company_id) return;
+
+    setIsRestoreInProgress(true);
+    try {
+      await restoreBackup(file, profile.company_id);
+      toast({
+        title: 'Backup restaurado',
+        description: 'O backup foi restaurado com sucesso.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Erro ao restaurar backup:', error);
+      toast({
+        title: 'Erro ao restaurar backup',
+        description: error instanceof Error ? error.message : 'Ocorreu um erro ao restaurar o backup. Tente novamente.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsRestoreInProgress(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleDeleteBackup = (id: number) => {
+    setBackups(backups.filter(backup => backup.id !== id));
     toast({
-      title: 'Backup iniciado',
-      description: `Iniciando backup ${backupConfig.type === 'full' ? 'completo' : 'incremental'}...`,
+      title: 'Backup removido',
+      description: 'O backup foi removido da lista.',
       status: 'info',
       duration: 3000,
       isClosable: true,
     });
   };
 
-  const handleDelete = () => {
-    toast({
-      title: 'Backup excluído',
-      description: 'O backup foi excluído com sucesso.',
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
-  };
-
-  const mockBackups: BackupRecord[] = [
-    { id: 1, date: '2024-01-15 08:30', size: '256MB', status: 'Concluído', type: 'Completo' },
-    { id: 2, date: '2024-01-14 08:30', size: '50MB', status: 'Concluído', type: 'Incremental' },
-    { id: 3, date: '2024-01-13 08:30', size: '254MB', status: 'Concluído', type: 'Completo' },
-  ];
-
   return (
-    <Box w="full" p={8}>
-      <PageHeader
-        title="Backup"
-        subtitle="Gerencie os backups do sistema"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'Configurações', href: '/settings' },
-          { label: 'Backup', href: '/settings/backup' }
-        ]}
-      />
+    <Container maxW="container.xl" py={8}>
+      <PageHeader title="Backup" />
 
       <Box bg="white" rounded="lg" shadow="sm" p={6}>
         <VStack spacing={6} align="stretch">
           <HStack justify="space-between">
             <Text fontSize="lg" fontWeight="bold">Backups Realizados</Text>
-            <Button
-              leftIcon={<FiRotateCw />}
-              colorScheme="blue"
-              onClick={handleBackup}
-              isLoading={isBackupInProgress}
-              loadingText="Realizando backup..."
-            >
-              Iniciar Novo Backup
-            </Button>
+            <HStack>
+              <Button
+                leftIcon={<FiRotateCw />}
+                colorScheme="blue"
+                onClick={handleBackup}
+                isLoading={isBackupInProgress}
+                loadingText="Realizando backup..."
+              >
+                Realizar Backup
+              </Button>
+              <Input
+                type="file"
+                accept=".zip,.json"
+                onChange={handleFileChange}
+                ref={fileInputRef}
+                display="none"
+              />
+              <Button
+                leftIcon={<FiUpload />}
+                colorScheme="green"
+                onClick={() => fileInputRef.current?.click()}
+                isLoading={isRestoreInProgress}
+                loadingText="Restaurando..."
+              >
+                Restaurar Backup
+              </Button>
+            </HStack>
           </HStack>
 
           {isBackupInProgress && (
@@ -156,110 +186,62 @@ export function Backup() {
             </Box>
           )}
 
+          <Divider />
+
           <Table variant="simple">
             <Thead>
               <Tr>
                 <Th>Data</Th>
-                <Th>Tipo</Th>
                 <Th>Tamanho</Th>
                 <Th>Status</Th>
+                <Th>Tipo</Th>
                 <Th>Ações</Th>
               </Tr>
             </Thead>
             <Tbody>
-              {mockBackups.map((backup) => (
+              {backups.map((backup) => (
                 <Tr key={backup.id}>
                   <Td>{backup.date}</Td>
-                  <Td>{backup.type}</Td>
                   <Td>{backup.size}</Td>
-                  <Td>
-                    <Badge colorScheme="green">{backup.status}</Badge>
-                  </Td>
+                  <Td>{backup.status}</Td>
+                  <Td>{backup.type}</Td>
                   <Td>
                     <HStack spacing={2}>
-                      <IconButton
-                        aria-label="Download backup"
-                        icon={<FiDownload />}
+                      {backup.filename && (
+                        <Button
+                          size="sm"
+                          leftIcon={<FiDownload />}
+                          variant="ghost"
+                          colorScheme="blue"
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = `data:application/zip;base64,${backup.filename}`;
+                            link.download = backup.filename;
+                            link.click();
+                          }}
+                        >
+                          Download
+                        </Button>
+                      )}
+                      <Button
                         size="sm"
-                        colorScheme="blue"
+                        leftIcon={<FiTrash2 />}
                         variant="ghost"
-                      />
-                      <IconButton
-                        aria-label="Excluir backup"
-                        icon={<FiTrash2 />}
-                        size="sm"
                         colorScheme="red"
-                        variant="ghost"
-                        onClick={handleDelete}
-                      />
+                        onClick={() => handleDeleteBackup(backup.id)}
+                      >
+                        Excluir
+                      </Button>
                     </HStack>
                   </Td>
                 </Tr>
               ))}
             </Tbody>
           </Table>
-
-          <Flex direction="column" gap={4}>
-            <Text fontSize="sm" color="gray.600">
-              Os backups são realizados automaticamente todos os dias às 08:30.
-              Mantenha sempre uma cópia de segurança atualizada dos seus dados.
-            </Text>
-            <HStack>
-              <Button leftIcon={<FiUpload />} size="sm" variant="outline">
-                Importar Backup
-              </Button>
-              <Button leftIcon={<FiDownload />} size="sm" variant="outline">
-                Exportar Todos
-              </Button>
-            </HStack>
-          </Flex>
         </VStack>
       </Box>
-
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Configurar Backup</ModalHeader>
-          <ModalBody>
-            <VStack spacing={4}>
-              <FormControl>
-                <FormLabel>Tipo de Backup</FormLabel>
-                <Select
-                  value={backupConfig.type}
-                  onChange={(e) => setBackupConfig(prev => ({ ...prev, type: e.target.value as 'full' | 'incremental' }))}
-                >
-                  <option value="full">Backup Completo</option>
-                  <option value="incremental">Backup Incremental</option>
-                </Select>
-              </FormControl>
-
-              <FormControl display="flex" alignItems="center">
-                <FormLabel mb="0">Compactar arquivos</FormLabel>
-                <Switch
-                  isChecked={backupConfig.compress}
-                  onChange={(e) => setBackupConfig(prev => ({ ...prev, compress: e.target.checked }))}
-                />
-              </FormControl>
-
-              <FormControl display="flex" alignItems="center">
-                <FormLabel mb="0">Criptografar backup</FormLabel>
-                <Switch
-                  isChecked={backupConfig.encrypt}
-                  onChange={(e) => setBackupConfig(prev => ({ ...prev, encrypt: e.target.checked }))}
-                />
-              </FormControl>
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button colorScheme="blue" onClick={startBackup}>
-              Iniciar Backup
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </Box>
+    </Container>
   );
 }
+
+export { Backup };

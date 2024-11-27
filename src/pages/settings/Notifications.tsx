@@ -11,7 +11,7 @@ import {
 } from '@chakra-ui/react';
 import { PageHeader } from '../../components/PageHeader';
 
-export default function Notifications() {
+export function Notifications() {
   const toast = useToast();
 
   const handleSave = () => {

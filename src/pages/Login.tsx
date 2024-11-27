@@ -1,5 +1,3 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -11,97 +9,90 @@ import {
   Stack,
   Text,
   useToast,
+  VStack,
 } from '@chakra-ui/react';
-import { signInWithEmail } from '../services/supabase';
+import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { signIn } = useAuth();
   const toast = useToast();
-  const navigate = useNavigate();
-  const { user } = useAuth();
-
-  useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
-    }
-  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLoading(true);
+
     try {
-      await signInWithEmail(email, password);
-      // Não precisamos mais navegar aqui, o useEffect cuidará disso
-      toast({
-        title: 'Login realizado com sucesso',
-        description: 'Você será redirecionado para o dashboard.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error: any) {
+      const { error } = await signIn(email, password);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing in:', error);
       toast({
         title: 'Erro ao fazer login',
-        description: error.message || 'Verifique suas credenciais e tente novamente.',
+        description: 'Email ou senha inválidos.',
         status: 'error',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
-      setIsLoading(false);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Container maxW="lg" py={12}>
-      <Stack spacing={8}>
-        <Stack align="center">
-          <Heading fontSize="4xl">ERP FATEC</Heading>
-          <Text fontSize="lg" color="gray.600">
-            Entre com suas credenciais
+    <Container maxW="container.sm" py={20}>
+      <VStack spacing={8}>
+        <Box textAlign="center">
+          <Heading>ERP SaaS</Heading>
+          <Text mt={2} color="gray.600">
+            Entre com suas credenciais para acessar o sistema
           </Text>
-        </Stack>
+        </Box>
+
         <Box
-          rounded="lg"
-          bg="white"
-          boxShadow="lg"
-          p={8}
           as="form"
           onSubmit={handleSubmit}
+          bg="white"
+          p={8}
+          rounded="lg"
+          shadow="base"
+          w="full"
         >
           <Stack spacing={4}>
-            <FormControl id="email">
+            <FormControl isRequired>
               <FormLabel>Email</FormLabel>
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
               />
             </FormControl>
-            <FormControl id="password">
+
+            <FormControl isRequired>
               <FormLabel>Senha</FormLabel>
               <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
               />
             </FormControl>
+
             <Button
               type="submit"
               colorScheme="blue"
               size="lg"
-              fontSize="md"
-              isLoading={isLoading}
+              w="full"
+              isLoading={loading}
             >
               Entrar
             </Button>
           </Stack>
         </Box>
-      </Stack>
+      </VStack>
     </Container>
   );
 }
