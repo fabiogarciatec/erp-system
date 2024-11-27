@@ -37,6 +37,7 @@ const initialCustomerData: Customer = {
   email: '',
   phone: '',
   address: '',
+  company_id: undefined,
   created_at: undefined,
   updated_at: undefined,
 };
@@ -96,6 +97,7 @@ export function Customers() {
         email: formData.email,
         phone: formData.phone,
         address: formData.address,
+        company_id: formData.company_id,
         created_at: formData.created_at,
         updated_at: formData.updated_at,
       };
@@ -150,6 +152,7 @@ export function Customers() {
       email: customer.email,
       phone: customer.phone,
       address: customer.address,
+      company_id: customer.company_id,
       created_at: customer.created_at,
       updated_at: customer.updated_at,
     });

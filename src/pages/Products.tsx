@@ -45,6 +45,7 @@ export function Products() {
     description: '',
     price: 0,
     stock: 0,
+    company_id: undefined,
     created_at: undefined,
     updated_at: undefined,
   };

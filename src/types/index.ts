@@ -1,32 +1,27 @@
 export interface BaseRecord {
   id: string;
+  company_id?: string;
   created_at?: string;
   updated_at?: string;
 }
 
-export interface Customer {
-  id: string;
+export interface Customer extends BaseRecord {
   name: string;
   email: string;
   phone: string;
   address?: string;
   city?: string;
   state?: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
 export type CustomerData = Customer;
 
-export interface Product {
-  id: string;
+export interface Product extends BaseRecord {
   name: string;
   description?: string;
   price: number;
   stock?: number;
   category?: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
 export type ProductData = Product;
