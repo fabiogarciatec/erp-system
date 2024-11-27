@@ -11,7 +11,7 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <Box minH="100vh">
-      <Sidebar display={{ base: 'none', md: 'block' }} />
+      <Sidebar display={{ base: 'none', md: 'block' }} onClose={onClose} />
       <Box ml={{ base: 0, md: 64 }}>
         <TopBar />
         <Container maxW="container.xl" py={8}>

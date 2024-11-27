@@ -12,11 +12,13 @@ import {
   FiTruck,
   FiFileText,
   FiLogOut,
+  FiDollarSign,
+  FiLayers,
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import Logo from './Logo';
-import SidebarNavItem from './SidebarNavItem';
+import { Logo } from './Logo';
+import { SidebarNavItem } from './SidebarNavItem';
 
 interface SidebarProps {
   onClose: () => void;
@@ -31,7 +33,7 @@ const NAV_ITEMS = [
   },
   {
     label: 'Cadastros',
-    icon: FiBox,
+    icon: FiUsers,
     subItems: [
       {
         label: 'Clientes',
@@ -56,7 +58,7 @@ const NAV_ITEMS = [
       {
         label: 'Categorias',
         href: '/categories',
-        icon: FiBox,
+        icon: FiLayers,
       },
     ],
   },
@@ -103,9 +105,46 @@ const NAV_ITEMS = [
     ],
   },
   {
+    label: 'Financeiro',
+    icon: FiDollarSign,
+    subItems: [
+      {
+        label: 'Contas a Receber',
+        href: '/financial/receivables',
+        icon: FiDollarSign,
+      },
+      {
+        label: 'Contas a Pagar',
+        href: '/financial/payables',
+        icon: FiDollarSign,
+      },
+      {
+        label: 'Fluxo de Caixa',
+        href: '/financial/cash-flow',
+        icon: FiDollarSign,
+      },
+    ],
+  },
+  {
     label: 'Relatórios',
     icon: FiFileText,
-    href: '/reports',
+    subItems: [
+      {
+        label: 'Vendas',
+        href: '/reports/sales',
+        icon: FiBox,
+      },
+      {
+        label: 'Financeiro',
+        href: '/reports/financial',
+        icon: FiDollarSign,
+      },
+      {
+        label: 'Estoque',
+        href: '/reports/inventory',
+        icon: FiBox,
+      },
+    ],
   },
   {
     label: 'Configurações',
@@ -129,7 +168,7 @@ const NAV_ITEMS = [
       {
         label: 'Financeiro',
         href: '/settings/financial',
-        icon: FiBox,
+        icon: FiDollarSign,
       },
       {
         label: 'Vendas',
@@ -160,12 +199,13 @@ const NAV_ITEMS = [
   },
 ];
 
-const Sidebar = ({ onClose, display, ...rest }: SidebarProps) => {
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const { signOut } = useAuth();
+export function Sidebar({ onClose, display }: SidebarProps) {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
-  const handleLogout = async () => {
+  const handleSignOut = async () => {
     try {
       await signOut();
       navigate('/login');
@@ -176,90 +216,68 @@ const Sidebar = ({ onClose, display, ...rest }: SidebarProps) => {
 
   return (
     <Box
-      bg={useColorModeValue('white', 'gray.800')}
+      transition="3s ease"
+      bg={bgColor}
       borderRight="1px"
       borderRightColor={borderColor}
-      w={display}
+      w={{ base: 'full', md: 64 }}
       pos="fixed"
       h="full"
-      {...rest}
+      display={display}
     >
-      <Flex h="full" direction="column">
-        <Box 
-          px="4" 
-          bg={useColorModeValue('white', 'gray.800')} 
-          borderBottom="1px" 
-          borderBottomColor={borderColor}
+      <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
+        <Logo />
+      </Flex>
+
+      <Box
+        h="calc(100vh - 80px)"
+        overflowY="auto"
+        css={{
+          '&::-webkit-scrollbar': {
+            width: '4px',
+          },
+          '&::-webkit-scrollbar-track': {
+            width: '6px',
+            background: useColorModeValue('gray.100', 'whiteAlpha.50'),
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: useColorModeValue('gray.300', 'whiteAlpha.200'),
+            borderRadius: '24px',
+          },
+        }}
+      >
+        <Flex direction="column" flex="1">
+          {NAV_ITEMS.map((item) => (
+            <SidebarNavItem
+              key={item.label}
+              icon={item.icon}
+              href={item.href}
+              subItems={item.subItems}
+              onClick={onClose}
+            >
+              {item.label}
+            </SidebarNavItem>
+          ))}
+        </Flex>
+
+        <Button
+          variant="ghost"
+          onClick={handleSignOut}
           display="flex"
           alignItems="center"
           justifyContent="center"
-          height="16"
-        >
-          <Logo />
-        </Box>
-
-        <Box
-          flex="1"
-          overflowY="auto"
-          bg={useColorModeValue('white', 'gray.800')}
-          css={{
-            '&::-webkit-scrollbar': {
-              width: '4px',
-            },
-            '&::-webkit-scrollbar-track': {
-              width: '6px',
-              background: useColorModeValue('gray.100', 'whiteAlpha.50'),
-            },
-            '&::-webkit-scrollbar-thumb': {
-              background: useColorModeValue('gray.300', 'whiteAlpha.200'),
-              borderRadius: '24px',
-            },
+          w="full"
+          p="4"
+          mt="4"
+          leftIcon={<Box as={FiLogOut} />}
+          _hover={{
+            bg: 'red.50',
+            color: 'red.500',
           }}
         >
-          <Flex direction="column" pt="6">
-            {NAV_ITEMS.map((item) => (
-              <SidebarNavItem
-                key={item.label}
-                icon={item.icon}
-                href={item.href}
-                subItems={item.subItems}
-                onClick={onClose}
-              >
-                {item.label}
-              </SidebarNavItem>
-            ))}
-            <Box minH="20px" />
-          </Flex>
-        </Box>
-
-        <Box 
-          p="4" 
-          borderTop="1px" 
-          borderTopColor={borderColor}
-          bg={useColorModeValue('white', 'gray.800')}
-        >
-          <Button
-            w="full"
-            variant="ghost"
-            colorScheme="red"
-            leftIcon={<FiLogOut />}
-            onClick={handleLogout}
-            _hover={{
-              bg: 'red.50',
-              color: 'red.500',
-            }}
-            size="lg"
-            fontSize="md"
-            fontWeight="normal"
-            justifyContent="flex-start"
-            height="45px"
-          >
-            Sair
-          </Button>
-        </Box>
-      </Flex>
+          Sair
+        </Button>
+      </Box>
     </Box>
   );
-};
-
-export default Sidebar;
+}

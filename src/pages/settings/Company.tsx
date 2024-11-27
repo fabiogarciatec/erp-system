@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, FormEvent, ChangeEvent } from 'react';
+import { useEffect, useRef, useState, FormEvent, ChangeEvent, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -17,23 +17,36 @@ import {
   Icon,
   Center,
   Spinner,
+  FormErrorMessage,
 } from '@chakra-ui/react';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/lib/supabase';
 import { PageHeader } from '@/components/PageHeader';
 import { FiUpload } from 'react-icons/fi';
 
+interface FormErrors {
+  name?: string;
+  document?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  [key: string]: string | undefined;
+}
+
 interface CompanyFormData {
   name: string;
-  cnpj: string;
+  document: string;
   email: string;
   phone: string;
   address: string;
   city: string;
   state: string;
   zip_code: string;
-  website: string;
-  foundation_date: string;
+  website?: string;
+  foundation_date?: string;
   logo_url?: string;
 }
 
@@ -74,10 +87,11 @@ export function Company() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [company, setCompany] = useState<CompanyData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const toast = useToast();
 
   // Buscar dados da empresa
-  const fetchCompanyData = async () => {
+  const fetchCompanyData = useCallback(async () => {
     if (!profile?.company_id) {
       console.log('Perfil sem company_id:', profile);
       setLoading(false);
@@ -160,114 +174,56 @@ export function Company() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Criar nova empresa
-  const createCompany = async (companyData: Partial<CompanyData>) => {
-    if (!profile) {
-      toast({
-        title: 'Erro',
-        description: 'Você precisa estar logado para criar uma empresa.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      setSaving(true);
-
-      // Inserir nova empresa
-      const { data: newCompany, error: companyError } = await supabase
-        .from('companies')
-        .insert([{
-          ...companyData,
-          created_by: profile.id,
-        }])
-        .select()
-        .single();
-
-      if (companyError) throw companyError;
-
-      // Atualizar o perfil do usuário com o ID da nova empresa
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ company_id: newCompany.id })
-        .eq('id', profile.id);
-
-      if (profileError) throw profileError;
-
-      // Atualizar o estado local
-      setCompany(newCompany);
-      await fetchProfile();
-
-      toast({
-        title: 'Empresa criada',
-        description: 'Sua empresa foi criada com sucesso!',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
-    } catch (error: any) {
-      console.error('Erro ao criar empresa:', error);
-      toast({
-        title: 'Erro ao criar empresa',
-        description: error.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Carregar dados iniciais
-  useEffect(() => {
-    let mounted = true;
-
-    const loadData = async () => {
-      try {
-        console.log('Estado inicial:', {
-          profileLoading,
-          profile,
-          mounted
-        });
-
-        if (!profileLoading && profile && mounted) {
-          console.log('Iniciando busca de dados da empresa...');
-          await fetchCompanyData();
-        }
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-      }
-    };
-
-    loadData();
-
-    return () => {
-      mounted = false;
-    };
-  }, [profile, profileLoading, fetchCompanyData]);
+  }, [profile?.company_id, toast]);
 
   // Validar campos
-  const validateForm = (data: Partial<CompanyData>) => {
-    const newErrors: Record<string, string> = {};
+  const validateForm = (data: Partial<CompanyData>): boolean => {
+    const errors: FormErrors = {};
 
     if (!data.name?.trim()) {
-      newErrors.name = 'Nome é obrigatório';
+      errors.name = 'Nome é obrigatório';
     }
 
     if (!data.document?.trim()) {
-      newErrors.document = 'CNPJ é obrigatório';
+      errors.document = 'CNPJ é obrigatório';
+    } else if (!/^\d{14}$/.test(data.document.replace(/\D/g, ''))) {
+      errors.document = 'CNPJ inválido';
     }
 
-    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-      newErrors.email = 'Email inválido';
+    if (!data.email?.trim()) {
+      errors.email = 'Email é obrigatório';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      errors.email = 'Email inválido';
     }
 
-    return Object.keys(newErrors).length === 0;
+    if (!data.phone?.trim()) {
+      errors.phone = 'Telefone é obrigatório';
+    } else if (!/^\d{10,11}$/.test(data.phone.replace(/\D/g, ''))) {
+      errors.phone = 'Telefone inválido';
+    }
+
+    if (!data.address?.trim()) {
+      errors.address = 'Endereço é obrigatório';
+    }
+
+    if (!data.city?.trim()) {
+      errors.city = 'Cidade é obrigatória';
+    }
+
+    if (!data.state?.trim()) {
+      errors.state = 'Estado é obrigatório';
+    } else if (!/^[A-Z]{2}$/.test(data.state.toUpperCase())) {
+      errors.state = 'Estado inválido (use UF)';
+    }
+
+    if (!data.zip_code?.trim()) {
+      errors.zip_code = 'CEP é obrigatório';
+    } else if (!/^\d{8}$/.test(data.zip_code.replace(/\D/g, ''))) {
+      errors.zip_code = 'CEP inválido';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   // Atualizar empresa
@@ -275,33 +231,22 @@ export function Company() {
     e.preventDefault();
     if (!company || !profile?.company_id) return;
 
-    const companyName = company.name || '';
-    const companyCNPJ = company.document || '';
-    const companyEmail = company.email || '';
-    const companyPhone = company.phone || '';
-    const companyAddress = company.address || '';
-    const companyCity = company.city || '';
-    const companyState = company.state || '';
-    const companyZipCode = company.zip_code || '';
-    const companyWebsite = company.website || '';
-    const companyFoundationDate = company.foundation_date || '';
-    const companyLogoUrl = company.logo_url;
-
-    const formData: CompanyFormData = {
-      name: companyName,
-      cnpj: companyCNPJ,
-      email: companyEmail,
-      phone: companyPhone,
-      address: companyAddress,
-      city: companyCity,
-      state: companyState,
-      zip_code: companyZipCode,
-      website: companyWebsite,
-      foundation_date: companyFoundationDate,
-      logo_url: companyLogoUrl,
+    // Validar campos obrigatórios
+    const requiredFields: CompanyFormData = {
+      name: company.name || '',
+      document: company.document || '',
+      email: company.email || '',
+      phone: company.phone || '',
+      address: company.address || '',
+      city: company.city || '',
+      state: company.state || '',
+      zip_code: company.zip_code || '',
+      website: company.website,
+      foundation_date: company.foundation_date,
+      logo_url: company.logo_url,
     };
 
-    if (!validateForm(formData)) {
+    if (!validateForm(requiredFields)) {
       toast({
         title: 'Erro de validação',
         description: 'Por favor, corrija os campos destacados.',
@@ -312,24 +257,33 @@ export function Company() {
       return;
     }
 
-    setSaving(true);
-
     try {
-      const { error } = await supabase
+      setSaving(true);
+
+      const updateData = {
+        ...company,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Remover campos undefined ou null
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined || updateData[key] === null) {
+          delete updateData[key];
+        }
+      });
+
+      const { error: updateError } = await supabase
         .from('companies')
-        .update({
-          ...formData,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', profile.company_id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
       toast({
         title: 'Sucesso',
-        description: 'Dados da empresa atualizados com sucesso.',
+        description: 'Dados da empresa atualizados com sucesso!',
         status: 'success',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
 
@@ -337,8 +291,8 @@ export function Company() {
     } catch (error: any) {
       console.error('Erro ao atualizar empresa:', error);
       toast({
-        title: 'Erro ao salvar',
-        description: error.message || 'Ocorreu um erro ao salvar os dados.',
+        title: 'Erro ao atualizar',
+        description: error.message,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -349,20 +303,20 @@ export function Company() {
   };
 
   // Atualizar campo do formulário
-  const handleChange = (field: keyof CompanyData, value: string) => {
+  const handleInputChange = (field: keyof CompanyData, value: string) => {
     if (!company) return;
     setCompany({ ...company, [field]: value });
   };
 
+  // Upload de logo
   const handleLogoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || !company?.id) return;
 
     try {
       setUploadingLogo(true);
-      console.log('Iniciando upload da logo...', { fileSize: file.size, fileType: file.type });
 
-      // Validações básicas
+      // Validações
       if (!file.type.startsWith('image/')) {
         throw new Error('Por favor, selecione uma imagem válida (JPG, PNG)');
       }
@@ -371,30 +325,21 @@ export function Company() {
         throw new Error('A imagem deve ter no máximo 5MB');
       }
 
-      if (!company?.id) {
-        throw new Error('ID da empresa não encontrado');
-      }
-
       // Gerar nome do arquivo
       const fileExt = file.name.split('.').pop()?.toLowerCase() || 'png';
       const fileName = `logo_${company.id}_${Date.now()}.${fileExt}`;
-      console.log('Nome do arquivo gerado:', fileName);
 
       // Upload do arquivo
-      console.log('Iniciando upload para o Supabase Storage...');
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('company_logos')
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true
         });
 
       if (uploadError) {
-        console.error('Erro detalhado do upload:', uploadError);
         throw new Error(`Erro no upload: ${uploadError.message}`);
       }
-
-      console.log('Upload concluído:', uploadData);
 
       // Obter URL pública
       const { data: urlData } = supabase.storage
@@ -402,46 +347,48 @@ export function Company() {
         .getPublicUrl(fileName);
 
       const publicUrl = urlData.publicUrl;
-      console.log('URL pública gerada:', publicUrl);
 
       // Atualizar empresa
-      console.log('Atualizando informações da empresa...');
       const { error: updateError } = await supabase
         .from('companies')
         .update({ logo_url: publicUrl })
         .eq('id', company.id);
 
       if (updateError) {
-        console.error('Erro ao atualizar empresa:', updateError);
+        // Se falhar ao atualizar a empresa, remover a imagem do storage
+        await supabase.storage
+          .from('company_logos')
+          .remove([fileName]);
         throw new Error(`Erro ao atualizar empresa: ${updateError.message}`);
       }
 
+      // Remover logo antiga se existir
+      if (company.logo_url) {
+        const oldFileName = company.logo_url.split('/').pop();
+        if (oldFileName && oldFileName !== fileName) {
+          await supabase.storage
+            .from('company_logos')
+            .remove([oldFileName])
+            .then(({ error }) => {
+              if (error) {
+                console.warn('Erro ao remover logo antiga:', error);
+              }
+            });
+        }
+      }
+
       // Atualizar estado local
-      setCompany(prev => ({ ...prev, logo_url: publicUrl }));
+      setCompany(prev => prev ? { ...prev, logo_url: publicUrl } : null);
 
       toast({
         title: 'Sucesso!',
         description: 'Logo atualizada com sucesso',
         status: 'success',
         duration: 3000,
+        isClosable: true,
       });
 
-      // Limpar logo antiga se existir
-      if (company.logo_url) {
-        const oldFileName = company.logo_url.split('/').pop();
-        if (oldFileName) {
-          console.log('Removendo logo antiga:', oldFileName);
-          await supabase.storage
-            .from('company_logos')
-            .remove([oldFileName])
-            .then(({ error }) => {
-              if (error) console.warn('Erro ao remover logo antiga:', error);
-            });
-        }
-      }
-
     } catch (error) {
-      console.error('Erro completo:', error);
       toast({
         title: 'Erro no upload',
         description: error instanceof Error ? error.message : 'Erro ao fazer upload da logo',
@@ -456,6 +403,27 @@ export function Company() {
       }
     }
   };
+
+  // Carregar dados iniciais
+  useEffect(() => {
+    let mounted = true;
+
+    const loadData = async () => {
+      try {
+        if (!profileLoading && profile && mounted) {
+          await fetchCompanyData();
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      mounted = false;
+    };
+  }, [profile, profileLoading, fetchCompanyData]);
 
   if (loading || profileLoading) {
     return (
@@ -626,56 +594,60 @@ export function Company() {
               Informações Básicas
             </Heading>
             <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-              <FormControl isRequired>
+              <FormControl isRequired isInvalid={!!formErrors.name}>
                 <FormLabel>Nome da Empresa</FormLabel>
                 <Input
                   value={company?.name || ''}
-                  onChange={(e) => handleChange('name', e.target.value)}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
                   placeholder="Nome da empresa"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
                 />
+                <FormErrorMessage>{formErrors.name}</FormErrorMessage>
               </FormControl>
 
-              <FormControl isRequired>
+              <FormControl isRequired isInvalid={!!formErrors.document}>
                 <FormLabel>CNPJ</FormLabel>
                 <Input
                   value={company?.document || ''}
-                  onChange={(e) => handleChange('document', e.target.value)}
+                  onChange={(e) => handleInputChange('document', e.target.value)}
                   placeholder="00.000.000/0000-00"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
                 />
+                <FormErrorMessage>{formErrors.document}</FormErrorMessage>
               </FormControl>
 
-              <FormControl>
-                <FormLabel>Email</FormLabel>
+              <FormControl isRequired isInvalid={!!formErrors.email}>
+                <FormLabel>E-mail</FormLabel>
                 <Input
                   type="email"
                   value={company?.email || ''}
-                  onChange={(e) => handleChange('email', e.target.value)}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="email@empresa.com"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
                 />
+                <FormErrorMessage>{formErrors.email}</FormErrorMessage>
               </FormControl>
 
-              <FormControl>
+              <FormControl isRequired isInvalid={!!formErrors.phone}>
                 <FormLabel>Telefone</FormLabel>
                 <Input
                   value={company?.phone || ''}
-                  onChange={(e) => handleChange('phone', e.target.value)}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
                   placeholder="(00) 0000-0000"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
                 />
+                <FormErrorMessage>{formErrors.phone}</FormErrorMessage>
               </FormControl>
 
               <FormControl>
                 <FormLabel>Website</FormLabel>
                 <Input
                   value={company?.website || ''}
-                  onChange={(e) => handleChange('website', e.target.value)}
+                  onChange={(e) => handleInputChange('website', e.target.value)}
                   placeholder="www.empresa.com.br"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
@@ -687,7 +659,7 @@ export function Company() {
                 <Input
                   type="date"
                   value={company?.foundation_date || ''}
-                  onChange={(e) => handleChange('foundation_date', e.target.value)}
+                  onChange={(e) => handleInputChange('foundation_date', e.target.value)}
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
                 />
@@ -701,22 +673,23 @@ export function Company() {
               Endereço
             </Heading>
             <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-              <FormControl>
+              <FormControl isRequired isInvalid={!!formErrors.address}>
                 <FormLabel>Endereço</FormLabel>
                 <Input
                   value={company?.address || ''}
-                  onChange={(e) => handleChange('address', e.target.value)}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
                   placeholder="Rua, Avenida, etc"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
                 />
+                <FormErrorMessage>{formErrors.address}</FormErrorMessage>
               </FormControl>
 
               <FormControl>
                 <FormLabel>Número</FormLabel>
                 <Input
                   value={company?.address_number || ''}
-                  onChange={(e) => handleChange('address_number', e.target.value)}
+                  onChange={(e) => handleInputChange('address_number', e.target.value)}
                   placeholder="123"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
@@ -727,7 +700,7 @@ export function Company() {
                 <FormLabel>Complemento</FormLabel>
                 <Input
                   value={company?.address_complement || ''}
-                  onChange={(e) => handleChange('address_complement', e.target.value)}
+                  onChange={(e) => handleInputChange('address_complement', e.target.value)}
                   placeholder="Sala, Andar, etc"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
@@ -738,44 +711,48 @@ export function Company() {
                 <FormLabel>Bairro</FormLabel>
                 <Input
                   value={company?.neighborhood || ''}
-                  onChange={(e) => handleChange('neighborhood', e.target.value)}
+                  onChange={(e) => handleInputChange('neighborhood', e.target.value)}
                   placeholder="Nome do bairro"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
                 />
               </FormControl>
 
-              <FormControl>
+              <FormControl isRequired isInvalid={!!formErrors.city}>
                 <FormLabel>Cidade</FormLabel>
                 <Input
                   value={company?.city || ''}
-                  onChange={(e) => handleChange('city', e.target.value)}
+                  onChange={(e) => handleInputChange('city', e.target.value)}
                   placeholder="Nome da cidade"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
                 />
+                <FormErrorMessage>{formErrors.city}</FormErrorMessage>
               </FormControl>
 
-              <FormControl>
+              <FormControl isRequired isInvalid={!!formErrors.state}>
                 <FormLabel>Estado</FormLabel>
                 <Input
                   value={company?.state || ''}
-                  onChange={(e) => handleChange('state', e.target.value)}
+                  onChange={(e) => handleInputChange('state', e.target.value)}
                   placeholder="UF"
+                  maxLength={2}
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
                 />
+                <FormErrorMessage>{formErrors.state}</FormErrorMessage>
               </FormControl>
 
-              <FormControl>
+              <FormControl isRequired isInvalid={!!formErrors.zip_code}>
                 <FormLabel>CEP</FormLabel>
                 <Input
                   value={company?.zip_code || ''}
-                  onChange={(e) => handleChange('zip_code', e.target.value)}
+                  onChange={(e) => handleInputChange('zip_code', e.target.value)}
                   placeholder="00000-000"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
                 />
+                <FormErrorMessage>{formErrors.zip_code}</FormErrorMessage>
               </FormControl>
             </SimpleGrid>
           </Box>
@@ -790,7 +767,7 @@ export function Company() {
                 <FormLabel>Tipo de Empresa</FormLabel>
                 <Input
                   value={company?.business_type || ''}
-                  onChange={(e) => handleChange('business_type', e.target.value)}
+                  onChange={(e) => handleInputChange('business_type', e.target.value)}
                   placeholder="Ex: LTDA, MEI, etc"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
@@ -801,7 +778,7 @@ export function Company() {
                 <FormLabel>Setor de Atuação</FormLabel>
                 <Input
                   value={company?.industry_sector || ''}
-                  onChange={(e) => handleChange('industry_sector', e.target.value)}
+                  onChange={(e) => handleInputChange('industry_sector', e.target.value)}
                   placeholder="Ex: Tecnologia, Varejo, etc"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
@@ -812,7 +789,7 @@ export function Company() {
                 <FormLabel>Regime Tributário</FormLabel>
                 <Input
                   value={company?.tax_regime || ''}
-                  onChange={(e) => handleChange('tax_regime', e.target.value)}
+                  onChange={(e) => handleInputChange('tax_regime', e.target.value)}
                   placeholder="Ex: Simples Nacional, Lucro Real"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
@@ -823,7 +800,7 @@ export function Company() {
                 <FormLabel>Inscrição Estadual</FormLabel>
                 <Input
                   value={company?.state_registration || ''}
-                  onChange={(e) => handleChange('state_registration', e.target.value)}
+                  onChange={(e) => handleInputChange('state_registration', e.target.value)}
                   placeholder="Número da Inscrição Estadual"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
@@ -834,7 +811,7 @@ export function Company() {
                 <FormLabel>Inscrição Municipal</FormLabel>
                 <Input
                   value={company?.municipal_registration || ''}
-                  onChange={(e) => handleChange('municipal_registration', e.target.value)}
+                  onChange={(e) => handleInputChange('municipal_registration', e.target.value)}
                   placeholder="Número da Inscrição Municipal"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
@@ -853,7 +830,7 @@ export function Company() {
                 <FormLabel>Nome do Representante</FormLabel>
                 <Input
                   value={company?.legal_representative || ''}
-                  onChange={(e) => handleChange('legal_representative', e.target.value)}
+                  onChange={(e) => handleInputChange('legal_representative', e.target.value)}
                   placeholder="Nome completo"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
@@ -864,7 +841,7 @@ export function Company() {
                 <FormLabel>CPF do Representante</FormLabel>
                 <Input
                   value={company?.legal_representative_cpf || ''}
-                  onChange={(e) => handleChange('legal_representative_cpf', e.target.value)}
+                  onChange={(e) => handleInputChange('legal_representative_cpf', e.target.value)}
                   placeholder="000.000.000-00"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
@@ -875,7 +852,7 @@ export function Company() {
                 <FormLabel>Telefone do Representante</FormLabel>
                 <Input
                   value={company?.legal_representative_phone || ''}
-                  onChange={(e) => handleChange('legal_representative_phone', e.target.value)}
+                  onChange={(e) => handleInputChange('legal_representative_phone', e.target.value)}
                   placeholder="(00) 00000-0000"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}
@@ -886,7 +863,7 @@ export function Company() {
                 <FormLabel>Email do Representante</FormLabel>
                 <Input
                   value={company?.legal_representative_email || ''}
-                  onChange={(e) => handleChange('legal_representative_email', e.target.value)}
+                  onChange={(e) => handleInputChange('legal_representative_email', e.target.value)}
                   placeholder="email@representante.com"
                   bg="gray.50"
                   _hover={{ bg: 'gray.100' }}

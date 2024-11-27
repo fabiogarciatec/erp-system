@@ -13,7 +13,7 @@ const glowAnimation = keyframes`
   }
 `;
 
-const Logo = () => {
+export function Logo() {
   const bgGradient = useColorModeValue(
     'linear(to-r, orange.400, yellow.400)',
     'linear(to-r, orange.200, yellow.200)'
@@ -29,44 +29,23 @@ const Logo = () => {
       bgGradient={bgGradient}
       position="relative"
       transform="translateZ(5px)"
-      transition="all 0.2s ease"
-      _before={{
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        borderRadius: 'md',
-        background: 'white',
-        opacity: 0.2,
-        filter: 'blur(4px)',
-        transform: 'translateZ(-1px)',
-      }}
       css={css`
-        animation: ${glowAnimation} 3s infinite;
+        animation: ${glowAnimation} 2s infinite;
+        &:hover {
+          animation: none;
+          box-shadow: 0 0 20px rgba(255, 165, 0, 0.7);
+        }
       `}
-      _hover={{
-        transform: 'translateZ(8px) scale(1.01)',
-      }}
     >
       <Text
-        fontSize="17px"
+        fontSize="xl"
         fontWeight="bold"
-        textAlign="center"
         color={textColor}
-        lineHeight="1.2"
-        textShadow="0 1px 1px rgba(0,0,0,0.1)"
-        css={css`
-          background: linear-gradient(to right, #ffffff, #f0f0f0);
-          -webkit-background-clip: text;
-          background-clip: text;
-        `}
+        textAlign="center"
+        textShadow="1px 1px 2px rgba(0, 0, 0, 0.2)"
       >
         FATEC ERP
       </Text>
     </Box>
   );
-};
-
-export default Logo;
+}
