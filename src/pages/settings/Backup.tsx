@@ -142,6 +142,14 @@ function Backup() {
     });
   };
 
+  const downloadBackup = async (filename: string | undefined) => {
+    if (!filename) return;
+    const link = document.createElement('a');
+    link.href = `data:application/zip;base64,${filename}`;
+    link.download = filename;
+    link.click();
+  };
+
   return (
     <Container maxW="container.xl" py={8}>
       <PageHeader title="Backup" />
@@ -213,12 +221,7 @@ function Backup() {
                           leftIcon={<FiDownload />}
                           variant="ghost"
                           colorScheme="blue"
-                          onClick={() => {
-                            const link = document.createElement('a');
-                            link.href = `data:application/zip;base64,${backup.filename}`;
-                            link.download = backup.filename;
-                            link.click();
-                          }}
+                          onClick={() => downloadBackup(backup.filename)}
                         >
                           Download
                         </Button>

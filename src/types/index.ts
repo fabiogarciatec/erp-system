@@ -4,41 +4,61 @@ export interface BaseRecord {
   updated_at?: string;
 }
 
-export interface CustomerData extends BaseRecord {
+export interface Customer {
+  id: string;
   name: string;
   email: string;
   phone: string;
-  address: string;
-  company_id?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface ProductData extends BaseRecord {
+export type CustomerData = Customer;
+
+export interface Product {
+  id: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
-  stock_quantity: number;
-  company_id?: string;
+  stock?: number;
+  category?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface CompanyData extends BaseRecord {
-  name: string;
-  document: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  zip_code: string;
-  website: string;
-  foundation_date: string;
+export type ProductData = Product;
+
+export interface CompanyData {
+  id?: string;
+  name?: string;
+  document?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  foundation_date?: string;
+  address?: string;
+  address_number?: string;
+  address_complement?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  business_type?: string;
+  industry_sector?: string;
+  tax_regime?: string;
+  state_registration?: string;
+  municipal_registration?: string;
+  legal_representative?: string;
+  legal_representative_cpf?: string;
+  legal_representative_phone?: string;
+  legal_representative_email?: string;
+  company_size?: string;
+  notes?: string;
   logo_url?: string;
-}
-
-export interface Product extends BaseRecord {
-  name: string;
-  description: string;
-  price: number;
-  stock: number;
+  [key: string]: string | undefined;
 }
 
 export interface Service extends BaseRecord {

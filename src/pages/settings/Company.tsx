@@ -302,6 +302,56 @@ export function Company() {
     }
   };
 
+  // Criar empresa
+  const createCompany = async (data: Partial<CompanyData>) => {
+    if (!profile?.id) return;
+
+    try {
+      setSaving(true);
+
+      const { data: newCompany, error: createError } = await supabase
+        .from('companies')
+        .insert([{
+          ...data,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }])
+        .select()
+        .single();
+
+      if (createError) throw createError;
+
+      // Atualizar o perfil do usuário com o company_id
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ company_id: newCompany.id })
+        .eq('id', profile.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Empresa criada com sucesso!',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+
+      // Recarregar a página para atualizar os dados
+      window.location.reload();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao criar empresa',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // Atualizar campo do formulário
   const handleInputChange = (field: keyof CompanyData, value: string) => {
     if (!company) return;

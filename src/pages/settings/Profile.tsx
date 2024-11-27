@@ -77,10 +77,6 @@ export function Profile() {
     }
   };
 
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
-
   if (isLoading && !profile) {
     return (
       <Center h="100vh">

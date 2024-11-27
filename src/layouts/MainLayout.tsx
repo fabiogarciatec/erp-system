@@ -1,5 +1,5 @@
 import { Box, useColorModeValue } from '@chakra-ui/react';
-import Sidebar from '../components/Sidebar';
+import { Sidebar } from '@/components/Sidebar';
 
 interface MainLayoutProps {
   children: React.ReactNode;
