@@ -37,9 +37,9 @@ const initialCustomerData: Customer = {
   email: '',
   phone: '',
   address: '',
-  company_id: undefined,
-  created_at: undefined,
-  updated_at: undefined,
+  company_id: null,
+  created_at: null,
+  updated_at: null,
 };
 
 export function Customers() {

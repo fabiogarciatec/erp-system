@@ -45,9 +45,9 @@ export function Products() {
     description: '',
     price: 0,
     stock: 0,
-    company_id: undefined,
-    created_at: undefined,
-    updated_at: undefined,
+    company_id: null,
+    created_at: null,
+    updated_at: null,
   };
 
   const [formData, setFormData] = useState<Product>(initialProductData);

@@ -1,8 +1,8 @@
 export interface BaseRecord {
   id: string;
-  company_id?: string;
-  created_at?: string;
-  updated_at?: string;
+  company_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface Customer extends BaseRecord {
