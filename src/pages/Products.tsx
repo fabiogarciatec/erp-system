@@ -16,6 +16,7 @@ import {
   Table,
   Tbody,
   Td,
+  Text,
   Th,
   Thead,
   Tr,
@@ -23,35 +24,46 @@ import {
   useToast,
   VStack,
   Center,
-  Text,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 import { useCompany } from '../contexts/CompanyContext';
-import { Product } from '../types';
+
+interface ProductData {
+  id?: string;
+  name: string;
+  description: string;
+  price: number;
+  stock_quantity: number;
+  company_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+const initialProductData: ProductData = {
+  name: '',
+  description: '',
+  price: 0,
+  stock_quantity: 0,
+};
 
 export function Products() {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductData[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ProductData | null>(null);
   const { createRecord, updateRecord, deleteRecord, getRecords, loading: companyLoading } = useCompany();
 
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    price: '',
-    stock: '',
-  });
+  const [formData, setFormData] = useState<ProductData>(initialProductData);
 
   const loadProducts = async () => {
     if (companyLoading) return;
 
     setLoading(true);
     try {
-      const { data, error } = await getRecords<Product>('products', {
+      const { data, error } = await getRecords<ProductData>('products', {
         orderBy: { column: 'name', ascending: true },
       });
 
@@ -86,14 +98,11 @@ export function Products() {
   const handleSubmit = async () => {
     try {
       const productData = {
-        name: formData.name,
-        description: formData.description,
-        price: parseFloat(formData.price),
-        stock_quantity: parseInt(formData.stock),
+        ...formData,
       };
 
       if (selectedProduct) {
-        const { error } = await updateRecord<Product>(
+        const { error } = await updateRecord<ProductData>(
           'products',
           selectedProduct.id,
           productData
@@ -107,7 +116,7 @@ export function Products() {
           isClosable: true,
         });
       } else {
-        const { error } = await createRecord<Product>('products', productData);
+        const { error } = await createRecord<ProductData>('products', productData);
         if (error) throw error;
         toast({
           title: 'Produto criado',
@@ -119,7 +128,7 @@ export function Products() {
       }
 
       onClose();
-      setFormData({ name: '', description: '', price: '', stock: '' });
+      setFormData(initialProductData);
       setSelectedProduct(null);
       loadProducts();
     } catch (error) {
@@ -134,14 +143,9 @@ export function Products() {
     }
   };
 
-  const handleEdit = (product: Product) => {
+  const handleEdit = (product: ProductData) => {
     setSelectedProduct(product);
-    setFormData({
-      name: product.name,
-      description: product.description,
-      price: product.price.toString(),
-      stock: product.stock_quantity.toString(),
-    });
+    setFormData(product);
     onOpen();
   };
 
@@ -175,7 +179,7 @@ export function Products() {
 
   const handleNewProduct = () => {
     setSelectedProduct(null);
-    setFormData({ name: '', description: '', price: '', stock: '' });
+    setFormData(initialProductData);
     onOpen();
   };
 
@@ -277,7 +281,7 @@ export function Products() {
                   step="0.01"
                   value={formData.price}
                   onChange={(e) =>
-                    setFormData({ ...formData, price: e.target.value })
+                    setFormData({ ...formData, price: parseFloat(e.target.value) })
                   }
                 />
               </FormControl>
@@ -285,9 +289,9 @@ export function Products() {
                 <FormLabel>Estoque</FormLabel>
                 <Input
                   type="number"
-                  value={formData.stock}
+                  value={formData.stock_quantity}
                   onChange={(e) =>
-                    setFormData({ ...formData, stock: e.target.value })
+                    setFormData({ ...formData, stock_quantity: parseInt(e.target.value) })
                   }
                 />
               </FormControl>

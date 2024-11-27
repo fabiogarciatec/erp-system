@@ -2,10 +2,8 @@ import {
   Box,
   Button,
   Container,
-  Flex,
   FormControl,
   FormLabel,
-  Heading,
   Input,
   Modal,
   ModalBody,
@@ -15,7 +13,6 @@ import {
   ModalHeader,
   ModalOverlay,
   Spinner,
-  Stack,
   Table,
   Tbody,
   Td,
@@ -23,7 +20,6 @@ import {
   Th,
   Thead,
   Tr,
-  useColorModeValue,
   useDisclosure,
   useToast,
   VStack,
@@ -33,29 +29,41 @@ import { useEffect, useState } from 'react';
 import { FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 import { useCompany } from '../contexts/CompanyContext';
-import { Customer } from '../types';
+
+interface CustomerData {
+  id?: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  company_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+const initialCustomerData: CustomerData = {
+  name: '',
+  email: '',
+  phone: '',
+  address: '',
+};
 
 export function Customers() {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customers, setCustomers] = useState<CustomerData[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(null);
   const { createRecord, updateRecord, deleteRecord, getRecords, loading: companyLoading } = useCompany();
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-  });
+  const [formData, setFormData] = useState(initialCustomerData);
 
   const loadCustomers = async () => {
     if (companyLoading) return;
 
     setLoading(true);
     try {
-      const { data, error } = await getRecords<Customer>('customers', {
+      const { data, error } = await getRecords<CustomerData>('customers', {
         orderBy: { column: 'name', ascending: true },
       });
 
@@ -97,7 +105,7 @@ export function Customers() {
       };
 
       if (selectedCustomer) {
-        const { error } = await updateRecord<Customer>(
+        const { error } = await updateRecord<CustomerData>(
           'customers',
           selectedCustomer.id,
           customerData
@@ -111,7 +119,7 @@ export function Customers() {
           isClosable: true,
         });
       } else {
-        const { error } = await createRecord<Customer>('customers', customerData);
+        const { error } = await createRecord<CustomerData>('customers', customerData);
         if (error) throw error;
         toast({
           title: 'Cliente criado',
@@ -123,7 +131,7 @@ export function Customers() {
       }
 
       onClose();
-      setFormData({ name: '', email: '', phone: '', address: '' });
+      setFormData(initialCustomerData);
       setSelectedCustomer(null);
       loadCustomers();
     } catch (error) {
@@ -138,7 +146,7 @@ export function Customers() {
     }
   };
 
-  const handleEdit = (customer: Customer) => {
+  const handleEdit = (customer: CustomerData) => {
     setSelectedCustomer(customer);
     setFormData({
       name: customer.name,
@@ -179,7 +187,7 @@ export function Customers() {
 
   const handleNewCustomer = () => {
     setSelectedCustomer(null);
-    setFormData({ name: '', email: '', phone: '', address: '' });
+    setFormData(initialCustomerData);
     onOpen();
   };
 

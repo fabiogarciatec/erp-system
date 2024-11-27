@@ -3,8 +3,6 @@ import {
   Button,
   Flex,
   useColorModeValue,
-  IconButton,
-  Icon,
 } from '@chakra-ui/react';
 import {
   FiHome,
@@ -22,6 +20,7 @@ import SidebarNavItem from './SidebarNavItem';
 
 interface SidebarProps {
   onClose: () => void;
+  display?: { base: string; md: string };
 }
 
 const NAV_ITEMS = [
@@ -161,7 +160,7 @@ const NAV_ITEMS = [
   },
 ];
 
-const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
+const Sidebar = ({ onClose, display, ...rest }: SidebarProps) => {
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const { signOut } = useAuth();
   const navigate = useNavigate();
@@ -180,7 +179,7 @@ const Sidebar = ({ onClose, ...rest }: SidebarProps) => {
       bg={useColorModeValue('white', 'gray.800')}
       borderRight="1px"
       borderRightColor={borderColor}
-      w={{ base: 'full', md: 60 }}
+      w={display}
       pos="fixed"
       h="full"
       {...rest}

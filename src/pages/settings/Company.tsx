@@ -8,13 +8,35 @@ import {
   Stack,
   useToast,
   VStack,
+  Text,
+  Heading,
+  SimpleGrid,
+  Flex,
+  Image,
+  Icon,
+  Center,
+  Spinner,
 } from '@chakra-ui/react';
 import { useEffect } from 'react';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/lib/supabase';
 import { PageHeader } from '@/components/PageHeader';
-import { useCallback, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { FiUpload } from 'react-icons/fi';
+
+interface CompanyFormData {
+  name: string;
+  cnpj: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  website: string;
+  foundation_date: string;
+  logo_url?: string;
+}
 
 interface CompanyData {
   id?: string;
@@ -254,7 +276,33 @@ export function Company() {
     e.preventDefault();
     if (!company || !profile?.company_id) return;
 
-    if (!validateForm(company)) {
+    const companyName = company.name || '';
+    const companyCNPJ = company.document || '';
+    const companyEmail = company.email || '';
+    const companyPhone = company.phone || '';
+    const companyAddress = company.address || '';
+    const companyCity = company.city || '';
+    const companyState = company.state || '';
+    const companyZipCode = company.zip_code || '';
+    const companyWebsite = company.website || '';
+    const companyFoundationDate = company.foundation_date || '';
+    const companyLogoUrl = company.logo_url;
+
+    const formData: CompanyFormData = {
+      name: companyName,
+      cnpj: companyCNPJ,
+      email: companyEmail,
+      phone: companyPhone,
+      address: companyAddress,
+      city: companyCity,
+      state: companyState,
+      zip_code: companyZipCode,
+      website: companyWebsite,
+      foundation_date: companyFoundationDate,
+      logo_url: companyLogoUrl,
+    };
+
+    if (!validateForm(formData)) {
       toast({
         title: 'Erro de validação',
         description: 'Por favor, corrija os campos destacados.',
@@ -271,7 +319,7 @@ export function Company() {
       const { error } = await supabase
         .from('companies')
         .update({
-          ...company,
+          ...formData,
           updated_at: new Date().toISOString(),
         })
         .eq('id', profile.company_id);
