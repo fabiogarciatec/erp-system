@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test:admin": "tsx src/scripts/testAdmin.ts",
     "migrate": "tsx src/scripts/runMigrations.ts",
-    "test:auth": "tsx src/scripts/testAuth.ts"
+    "test:auth": "tsx src/scripts/testAuth.ts",
+    "clean": "rimraf node_modules/.vite"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.2.4",
@@ -23,7 +24,7 @@
     "@types/react-input-mask": "^3.0.6",
     "dotenv": "^16.4.5",
     "file-saver": "^2.0.5",
-    "framer-motion": "^10.16.12",
+    "framer-motion": "10.16.4",
     "jszip": "^3.10.1",
     "pg": "^8.13.1",
     "postgres": "^3.4.5",
@@ -44,6 +45,7 @@
     "eslint": "^8.53.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.4",
+    "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.2",
     "typescript": "^5.2.2",

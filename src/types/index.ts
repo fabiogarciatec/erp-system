@@ -15,15 +15,7 @@ export interface Customer extends BaseRecord {
 
 export type CustomerData = Customer;
 
-export interface Product extends BaseRecord {
-  name: string;
-  description?: string;
-  price: number;
-  stock_quantity: number;
-  category?: string;
-}
-
-export type ProductData = Product;
+export type { Product, ProductInsert, ProductUpdate } from './supabase';
 
 export interface Service extends BaseRecord {
   name: string;

@@ -156,6 +156,68 @@ export interface Database {
           updated_at?: string
         }
       }
+      produtos: {
+        Row: {
+          id: string
+          nome: string
+          codigo: string | null
+          descricao: string | null
+          preco: number
+          estoque_atual: number
+          estoque_minimo: number | null
+          empresa_id: string
+          fornecedor_id: string | null
+          categoria: string | null
+          unidade: string | null
+          marca: string | null
+          modelo: string | null
+          imagem_url: string | null
+          status: 'active' | 'inactive' | 'discontinued'
+          created_at: string
+          updated_at: string
+          created_by: string | null
+        }
+        Insert: {
+          id?: string
+          nome: string
+          codigo?: string | null
+          descricao?: string | null
+          preco: number
+          estoque_atual: number
+          estoque_minimo?: number | null
+          empresa_id: string
+          fornecedor_id?: string | null
+          categoria?: string | null
+          unidade?: string | null
+          marca?: string | null
+          modelo?: string | null
+          imagem_url?: string | null
+          status?: 'active' | 'inactive' | 'discontinued'
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+        }
+        Update: {
+          id?: string
+          nome?: string
+          codigo?: string | null
+          descricao?: string | null
+          preco?: number
+          estoque_atual?: number
+          estoque_minimo?: number | null
+          empresa_id?: string
+          fornecedor_id?: string | null
+          categoria?: string | null
+          unidade?: string | null
+          marca?: string | null
+          modelo?: string | null
+          imagem_url?: string | null
+          status?: 'active' | 'inactive' | 'discontinued'
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+        }
+      }
     }
   }
 }
@@ -165,20 +227,45 @@ export type Usuario = Database['public']['Tables']['usuarios']['Row'] & {
   empresas?: Empresa;
 };
 
-export type Empresa = Database['public']['Tables']['empresas']['Row'];
+export type Empresa = Database['public']['Tables']['empresas']['Row']
 
-export type Customer = Database['public']['Tables']['customers']['Row'];
+export type Customer = Database['public']['Tables']['customers']['Row']
+
+export interface Product {
+  id: string;
+  nome: string;
+  codigo: string | null;
+  descricao: string | null;
+  preco: number;
+  estoque_atual: number;
+  estoque_minimo: number | null;
+  empresa_id: string;
+  fornecedor_id: string | null;
+  categoria: string | null;
+  unidade: string | null;
+  marca: string | null;
+  modelo: string | null;
+  imagem_url: string | null;
+  status: 'active' | 'inactive' | 'discontinued';
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+}
 
 // Tipos para inserção
-export type UsuarioInsert = Database['public']['Tables']['usuarios']['Insert'];
+export type UsuarioInsert = Database['public']['Tables']['usuarios']['Insert']
 
-export type EmpresaInsert = Database['public']['Tables']['empresas']['Insert'];
+export type EmpresaInsert = Database['public']['Tables']['empresas']['Insert']
 
-export type CustomerInsert = Database['public']['Tables']['customers']['Insert'];
+export type CustomerInsert = Database['public']['Tables']['customers']['Insert']
+
+export type ProductInsert = Database['public']['Tables']['produtos']['Insert']
 
 // Tipos para atualização
-export type UsuarioUpdate = Database['public']['Tables']['usuarios']['Update'];
+export type UsuarioUpdate = Database['public']['Tables']['usuarios']['Update']
 
-export type EmpresaUpdate = Database['public']['Tables']['empresas']['Update'];
+export type EmpresaUpdate = Database['public']['Tables']['empresas']['Update']
 
-export type CustomerUpdate = Database['public']['Tables']['customers']['Update'];
+export type CustomerUpdate = Database['public']['Tables']['customers']['Update']
+
+export type ProductUpdate = Database['public']['Tables']['produtos']['Update']

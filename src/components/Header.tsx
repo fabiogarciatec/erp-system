@@ -12,7 +12,7 @@ import {
   useColorMode,
   useColorModeValue,
 } from '@chakra-ui/react';
-import { FiMoon, FiSun, FiBell } from 'react-icons/fi';
+import { FiMoon, FiSun, FiBell, FiUser } from 'react-icons/fi';
 
 function Header() {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -27,6 +27,9 @@ function Header() {
       borderColor={borderColor}
       px="4"
       py="2"
+      position="sticky"
+      top="0"
+      zIndex="sticky"
     >
       <Flex justify="flex-end" align="center">
         <HStack spacing="4">
@@ -48,23 +51,19 @@ function Header() {
               <HStack>
                 <Avatar
                   size="sm"
-                  name="Admin User"
-                  src="https://bit.ly/broken-link"
+                  name="Usuário"
+                  icon={<FiUser />}
+                  bg="blue.500"
+                  color="white"
                 />
                 <Text display={{ base: 'none', md: 'block' }}>
-                  Admin User
+                  Usuário
                 </Text>
               </HStack>
             </MenuButton>
             <MenuList>
-              <MenuItem as="a" href="/settings/profile">
-                Meu Perfil
-              </MenuItem>
-              <MenuItem as="a" href="/settings">
+              <MenuItem as="a" href="/configuracoes">
                 Configurações
-              </MenuItem>
-              <MenuItem>
-                Sair
               </MenuItem>
             </MenuList>
           </Menu>

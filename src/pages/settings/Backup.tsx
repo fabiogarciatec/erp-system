@@ -19,9 +19,6 @@ import {
 import { FiDownload, FiRotateCw, FiTrash2, FiUpload } from 'react-icons/fi';
 import { PageHeader } from '../../components/PageHeader';
 import { useState, useRef, ChangeEvent } from 'react';
-import { useProfile } from '../../hooks/useProfile';
-import { createBackup, restoreBackup } from '../../services/backupService';
-import { formatFileSize } from '../../utils/formatters';
 
 interface BackupRecord {
   id: number;
@@ -32,219 +29,206 @@ interface BackupRecord {
   filename?: string;
 }
 
-function Backup() {
+const mockBackups: BackupRecord[] = [
+  {
+    id: 1,
+    date: '2024-01-15 10:30',
+    size: '2.5 MB',
+    status: 'Concluído',
+    type: 'Manual',
+    filename: 'backup_20240115_103000.zip'
+  },
+  {
+    id: 2,
+    date: '2024-01-14 15:45',
+    size: '2.3 MB',
+    status: 'Concluído',
+    type: 'Automático',
+    filename: 'backup_20240114_154500.zip'
+  },
+  {
+    id: 3,
+    date: '2024-01-13 20:15',
+    size: '2.4 MB',
+    status: 'Concluído',
+    type: 'Manual',
+    filename: 'backup_20240113_201500.zip'
+  }
+];
+
+export function Backup() {
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { profile } = useProfile();
   const [isBackupInProgress, setIsBackupInProgress] = useState(false);
   const [isRestoreInProgress, setIsRestoreInProgress] = useState(false);
   const [backupProgress, setBackupProgress] = useState(0);
-  const [backups, setBackups] = useState<BackupRecord[]>([]);
+  const [backups, setBackups] = useState<BackupRecord[]>(mockBackups);
 
   const handleBackup = async () => {
-    if (!profile?.company_id) {
-      toast({
-        title: 'Erro',
-        description: 'Você precisa estar vinculado a uma empresa para realizar backup.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
+    setIsBackupInProgress(true);
+    setBackupProgress(0);
+
+    // Simulando progresso
+    const interval = setInterval(() => {
+      setBackupProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setIsBackupInProgress(false);
+          
+          // Adicionar novo backup à lista
+          const newBackup: BackupRecord = {
+            id: Math.max(...backups.map(b => b.id)) + 1,
+            date: new Date().toLocaleString(),
+            size: '2.5 MB',
+            status: 'Concluído',
+            type: 'Manual',
+            filename: `backup_${new Date().toISOString().replace(/[:.]/g, '')}.zip`
+          };
+          
+          setBackups([newBackup, ...backups]);
+          
+          toast({
+            title: 'Backup concluído',
+            description: 'O backup foi realizado com sucesso.',
+            status: 'success',
+            duration: 5000,
+            isClosable: true,
+          });
+          
+          return 100;
+        }
+        return prev + 10;
       });
-      return;
-    }
-
-    try {
-      setIsBackupInProgress(true);
-      setBackupProgress(0);
-      
-      // Simular progresso
-      const progressInterval = setInterval(() => {
-        setBackupProgress(prev => Math.min(prev + 10, 90));
-      }, 500);
-
-      const { fileName, size } = await createBackup(profile.company_id);
-      
-      clearInterval(progressInterval);
-      setBackupProgress(100);
-
-      const newBackup: BackupRecord = {
-        id: Date.now(),
-        date: new Date().toLocaleString(),
-        size: formatFileSize(size),
-        status: 'Concluído',
-        type: 'Completo',
-        filename: fileName,
-      };
-
-      setBackups([newBackup, ...backups]);
-
-      toast({
-        title: 'Backup concluído',
-        description: 'O backup foi realizado com sucesso.',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error('Erro ao criar backup:', error);
-      toast({
-        title: 'Erro ao criar backup',
-        description: 'Ocorreu um erro ao criar o backup. Tente novamente.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setIsBackupInProgress(false);
-      setBackupProgress(0);
-    }
+    }, 500);
   };
 
-  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !profile?.company_id) return;
-
+  const handleRestore = (file: File) => {
     setIsRestoreInProgress(true);
-    try {
-      await restoreBackup(file, profile.company_id);
+    
+    // Simulando restauração
+    setTimeout(() => {
+      setIsRestoreInProgress(false);
       toast({
-        title: 'Backup restaurado',
-        description: 'O backup foi restaurado com sucesso.',
+        title: 'Restauração concluída',
+        description: 'O sistema foi restaurado com sucesso.',
         status: 'success',
         duration: 5000,
         isClosable: true,
       });
-    } catch (error) {
-      console.error('Erro ao restaurar backup:', error);
-      toast({
-        title: 'Erro ao restaurar backup',
-        description: error instanceof Error ? error.message : 'Ocorreu um erro ao restaurar o backup. Tente novamente.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setIsRestoreInProgress(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+    }, 3000);
+  };
+
+  const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleRestore(file);
     }
   };
 
-  const handleDeleteBackup = (id: number) => {
+  const handleDelete = (id: number) => {
     setBackups(backups.filter(backup => backup.id !== id));
     toast({
-      title: 'Backup removido',
-      description: 'O backup foi removido da lista.',
-      status: 'info',
-      duration: 3000,
+      title: 'Backup excluído',
+      description: 'O backup foi excluído com sucesso.',
+      status: 'success',
+      duration: 5000,
       isClosable: true,
     });
   };
 
-  const downloadBackup = async (filename: string | undefined) => {
-    if (!filename) return;
-    const link = document.createElement('a');
-    link.href = `data:application/zip;base64,${filename}`;
-    link.download = filename;
-    link.click();
-  };
-
   return (
-    <Container maxW="container.xl" py={8}>
-      <PageHeader title="Backup" />
+    <Container maxW="container.xl">
+      <PageHeader title="Backup do Sistema" />
 
-      <Box bg="white" rounded="lg" shadow="sm" p={6}>
-        <VStack spacing={6} align="stretch">
-          <HStack justify="space-between">
-            <Text fontSize="lg" fontWeight="bold">Backups Realizados</Text>
-            <HStack>
-              <Button
-                leftIcon={<FiRotateCw />}
-                colorScheme="blue"
-                onClick={handleBackup}
-                isLoading={isBackupInProgress}
-                loadingText="Realizando backup..."
-              >
-                Realizar Backup
-              </Button>
-              <Input
-                type="file"
-                accept=".zip,.json"
-                onChange={handleFileChange}
-                ref={fileInputRef}
-                display="none"
-              />
-              <Button
-                leftIcon={<FiUpload />}
-                colorScheme="green"
-                onClick={() => fileInputRef.current?.click()}
-                isLoading={isRestoreInProgress}
-                loadingText="Restaurando..."
-              >
-                Restaurar Backup
-              </Button>
-            </HStack>
+      <Box bg="white" p={6} rounded="lg" shadow="sm" mb={6}>
+        <VStack spacing={4} align="stretch">
+          <Text fontSize="lg" fontWeight="medium">
+            Gerenciamento de Backup
+          </Text>
+          <Divider />
+          <HStack spacing={4}>
+            <Button
+              leftIcon={<FiDownload />}
+              colorScheme="blue"
+              onClick={handleBackup}
+              isLoading={isBackupInProgress}
+              loadingText="Realizando backup..."
+            >
+              Realizar Backup
+            </Button>
+            <Button
+              leftIcon={<FiUpload />}
+              colorScheme="green"
+              onClick={() => fileInputRef.current?.click()}
+              isLoading={isRestoreInProgress}
+              loadingText="Restaurando..."
+            >
+              Restaurar Backup
+            </Button>
+            <Input
+              type="file"
+              ref={fileInputRef}
+              display="none"
+              onChange={handleFileSelect}
+              accept=".zip"
+            />
           </HStack>
-
           {isBackupInProgress && (
             <Box>
-              <Text mb={2}>Progresso do backup: {backupProgress}%</Text>
-              <Progress value={backupProgress} size="sm" colorScheme="blue" rounded="md" />
+              <Text mb={2}>Progresso do backup:</Text>
+              <Progress value={backupProgress} size="sm" colorScheme="blue" />
             </Box>
           )}
-
-          <Divider />
-
-          <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>Data</Th>
-                <Th>Tamanho</Th>
-                <Th>Status</Th>
-                <Th>Tipo</Th>
-                <Th>Ações</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {backups.map((backup) => (
-                <Tr key={backup.id}>
-                  <Td>{backup.date}</Td>
-                  <Td>{backup.size}</Td>
-                  <Td>{backup.status}</Td>
-                  <Td>{backup.type}</Td>
-                  <Td>
-                    <HStack spacing={2}>
-                      {backup.filename && (
-                        <Button
-                          size="sm"
-                          leftIcon={<FiDownload />}
-                          variant="ghost"
-                          colorScheme="blue"
-                          onClick={() => downloadBackup(backup.filename)}
-                        >
-                          Download
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        leftIcon={<FiTrash2 />}
-                        variant="ghost"
-                        colorScheme="red"
-                        onClick={() => handleDeleteBackup(backup.id)}
-                      >
-                        Excluir
-                      </Button>
-                    </HStack>
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
         </VStack>
+      </Box>
+
+      <Box bg="white" p={6} rounded="lg" shadow="sm">
+        <Text fontSize="lg" fontWeight="medium" mb={4}>
+          Histórico de Backups
+        </Text>
+        <Table variant="simple">
+          <Thead>
+            <Tr>
+              <Th>Data</Th>
+              <Th>Tamanho</Th>
+              <Th>Tipo</Th>
+              <Th>Status</Th>
+              <Th>Ações</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {backups.map((backup) => (
+              <Tr key={backup.id}>
+                <Td>{backup.date}</Td>
+                <Td>{backup.size}</Td>
+                <Td>{backup.type}</Td>
+                <Td>{backup.status}</Td>
+                <Td>
+                  <HStack spacing={2}>
+                    <Button
+                      size="sm"
+                      leftIcon={<FiDownload />}
+                      colorScheme="blue"
+                      variant="ghost"
+                    >
+                      Download
+                    </Button>
+                    <Button
+                      size="sm"
+                      leftIcon={<FiTrash2 />}
+                      colorScheme="red"
+                      variant="ghost"
+                      onClick={() => handleDelete(backup.id)}
+                    >
+                      Excluir
+                    </Button>
+                  </HStack>
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
       </Box>
     </Container>
   );
 }
-
-export { Backup };

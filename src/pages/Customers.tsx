@@ -24,8 +24,17 @@ import {
   HStack,
   Text,
   Badge,
+  Flex,
+  Stack,
+  InputGroup,
+  InputLeftElement,
+  Icon,
+  TableContainer,
+  Select,
+  ButtonGroup,
+  Textarea,
 } from '@chakra-ui/react';
-import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiSearch } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import { Customer } from '../types/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -58,28 +67,54 @@ export function Customers() {
     }
   };
 
-  const handleCreateCustomer = async (formData: Omit<Customer, 'id' | 'created_at' | 'updated_at'>) => {
-    try {
-      await customerService.create({
-        ...formData,
-        empresa_id: usuario.empresa_id,
-      });
+  const handleCreateCustomer = async (data: any) => {
+    if (!usuario?.empresa_id) {
       toast({
-        title: 'Cliente criado',
-        description: 'O cliente foi criado com sucesso.',
-        status: 'success',
-        duration: 5000,
+        title: 'Erro',
+        description: 'ID da empresa não encontrado',
+        status: 'error',
+        duration: 3000,
         isClosable: true,
       });
+      return;
+    }
+
+    try {
+      const newCustomer: Omit<Customer, 'id' | 'created_at' | 'updated_at'> = {
+        nome: data.nome || '',
+        email: data.email || null,
+        telefone: data.telefone || null,
+        cpf_cnpj: data.cpf_cnpj || null,
+        endereco: data.endereco || {},
+        status: (data.status as 'active' | 'inactive' | 'suspended') || 'active',
+        tipo: (data.tipo as 'individual' | 'corporate') || 'individual',
+        empresa_id: usuario.empresa_id,
+        observacoes: data.observacoes || null,
+        ultima_compra: null,
+        created_by: usuario.id
+      };
+
+      const result = await customerService.create(newCustomer);
+      
+      if ('error' in result) {
+        throw result.error;
+      }
+
       loadCustomers();
       onClose();
+      toast({
+        title: 'Cliente criado com sucesso!',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
     } catch (error) {
       console.error('Erro ao criar cliente:', error);
       toast({
         title: 'Erro ao criar cliente',
-        description: 'Não foi possível criar o cliente.',
+        description: 'Ocorreu um erro ao criar o cliente. Tente novamente.',
         status: 'error',
-        duration: 5000,
+        duration: 3000,
         isClosable: true,
       });
     }
@@ -139,9 +174,9 @@ export function Customers() {
   }, []);
 
   return (
-    <Container maxW="container.xl" py={8}>
-      <Box mb={4}>
-        <HStack justify="space-between" mb={4}>
+    <Box w="full" minH="100vh" bg="gray.100">
+      <Container maxW="full" p={{ base: 4, lg: 8 }}>
+        <Flex justify="space-between" align="center" wrap="wrap" gap={4} mb={4}>
           <Text fontSize="2xl" fontWeight="bold">
             Clientes
           </Text>
@@ -155,109 +190,149 @@ export function Customers() {
           >
             Novo Cliente
           </Button>
-        </HStack>
-      </Box>
+        </Flex>
 
-      <Box overflowX="auto">
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th>Nome</Th>
-              <Th>Email</Th>
-              <Th>Telefone</Th>
-              <Th>Tipo</Th>
-              <Th>Status</Th>
-              <Th>Ações</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {customers.map((customer) => (
-              <Tr key={customer.id}>
-                <Td>{customer.nome}</Td>
-                <Td>{customer.email}</Td>
-                <Td>{customer.telefone}</Td>
-                <Td>
-                  <Badge colorScheme={customer.tipo === 'individual' ? 'green' : 'blue'}>
-                    {customer.tipo === 'individual' ? 'Pessoa Física' : 'Pessoa Jurídica'}
-                  </Badge>
-                </Td>
-                <Td>
-                  <Badge colorScheme={customer.status === 'active' ? 'green' : 'red'}>
-                    {customer.status === 'active' ? 'Ativo' : 'Inativo'}
-                  </Badge>
-                </Td>
-                <Td>
-                  <HStack spacing={2}>
-                    <Button
-                      size="sm"
-                      leftIcon={<FiEdit2 />}
-                      onClick={() => {
-                        setSelectedCustomer(customer);
-                        onOpen();
-                      }}
-                    >
-                      Editar
-                    </Button>
-                    <Button
-                      size="sm"
-                      colorScheme="red"
-                      leftIcon={<FiTrash2 />}
-                      onClick={() => handleDeleteCustomer(customer.id)}
-                    >
-                      Excluir
-                    </Button>
-                  </HStack>
-                </Td>
+        <TableContainer>
+          <Table variant="simple">
+            <Thead>
+              <Tr>
+                <Th>Nome</Th>
+                <Th>Email</Th>
+                <Th>Telefone</Th>
+                <Th>Tipo</Th>
+                <Th>Status</Th>
+                <Th>Ações</Th>
               </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </Box>
+            </Thead>
+            <Tbody>
+              {customers.map((customer) => (
+                <Tr key={customer.id}>
+                  <Td>{customer.nome}</Td>
+                  <Td>{customer.email}</Td>
+                  <Td>{customer.telefone}</Td>
+                  <Td>
+                    <Badge colorScheme={customer.tipo === 'individual' ? 'green' : 'blue'}>
+                      {customer.tipo === 'individual' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+                    </Badge>
+                  </Td>
+                  <Td>
+                    <Badge colorScheme={customer.status === 'active' ? 'green' : 'red'}>
+                      {customer.status === 'active' ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                  </Td>
+                  <Td>
+                    <HStack spacing={2}>
+                      <Button
+                        size="sm"
+                        leftIcon={<FiEdit2 />}
+                        onClick={() => {
+                          setSelectedCustomer(customer);
+                          onOpen();
+                        }}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        size="sm"
+                        colorScheme="red"
+                        leftIcon={<FiTrash2 />}
+                        onClick={() => handleDeleteCustomer(customer.id)}
+                      >
+                        Excluir
+                      </Button>
+                    </HStack>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </TableContainer>
 
-      {/* Modal de Cliente */}
-      <Modal isOpen={isOpen} onClose={onClose} size="xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            {selectedCustomer ? 'Editar Cliente' : 'Novo Cliente'}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={4}>
-              <FormControl isRequired>
-                <FormLabel>Nome</FormLabel>
-                <Input
-                  defaultValue={selectedCustomer?.nome}
-                  placeholder="Nome do cliente"
-                />
-              </FormControl>
-              <FormControl isRequired>
-                <FormLabel>Email</FormLabel>
-                <Input
-                  type="email"
-                  defaultValue={selectedCustomer?.email}
-                  placeholder="Email do cliente"
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Telefone</FormLabel>
-                <Input
-                  defaultValue={selectedCustomer?.telefone || ''}
-                  placeholder="Telefone do cliente"
-                />
-              </FormControl>
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button colorScheme="blue">
-              {selectedCustomer ? 'Salvar' : 'Criar'}
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </Container>
+        {/* Modal de Cliente */}
+        <Modal isOpen={isOpen} onClose={onClose} size="xl">
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
+              {selectedCustomer ? 'Editar Cliente' : 'Novo Cliente'}
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <VStack spacing={4}>
+                <FormControl isRequired>
+                  <FormLabel>Nome</FormLabel>
+                  <Input
+                    name="nome"
+                    defaultValue={selectedCustomer?.nome ?? ''}
+                    placeholder="Nome do cliente"
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Email</FormLabel>
+                  <Input
+                    name="email"
+                    type="email"
+                    defaultValue={selectedCustomer?.email ?? ''}
+                    placeholder="Email do cliente"
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Telefone</FormLabel>
+                  <Input
+                    name="telefone"
+                    defaultValue={selectedCustomer?.telefone ?? ''}
+                    placeholder="Telefone do cliente"
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>CPF/CNPJ</FormLabel>
+                  <Input
+                    name="cpf_cnpj"
+                    defaultValue={selectedCustomer?.cpf_cnpj ?? ''}
+                    placeholder="CPF ou CNPJ do cliente"
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Tipo</FormLabel>
+                  <Select
+                    name="tipo"
+                    defaultValue={selectedCustomer?.tipo ?? 'individual'}
+                  >
+                    <option value="individual">Pessoa Física</option>
+                    <option value="corporate">Pessoa Jurídica</option>
+                  </Select>
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Status</FormLabel>
+                  <Select
+                    name="status"
+                    defaultValue={selectedCustomer?.status ?? 'active'}
+                  >
+                    <option value="active">Ativo</option>
+                    <option value="inactive">Inativo</option>
+                    <option value="suspended">Suspenso</option>
+                  </Select>
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Observações</FormLabel>
+                  <Textarea
+                    name="observacoes"
+                    defaultValue={selectedCustomer?.observacoes ?? ''}
+                    placeholder="Observações sobre o cliente"
+                  />
+                </FormControl>
+              </VStack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button colorScheme="blue" onClick={() => handleCreateCustomer({})}>
+                {selectedCustomer ? 'Salvar' : 'Criar'}
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </Container>
+    </Box>
   );
 }

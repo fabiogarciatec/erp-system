@@ -2,11 +2,6 @@ import {
   Box,
   Container,
   Text,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
   VStack,
   Card,
   CardBody,
@@ -14,8 +9,9 @@ import {
   SimpleGrid,
   useColorModeValue,
 } from '@chakra-ui/react';
-import { FiUser, FiUsers, FiSettings, FiDatabase, FiLink } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import { FiUser, FiUsers, FiSettings, FiDatabase, FiLink, FiBell, FiShield } from 'react-icons/fi';
+import { Link, Outlet, useLocation } from 'react-router-dom';
+import { PageHeader } from '../components/PageHeader';
 
 interface SettingCard {
   title: string;
@@ -32,22 +28,28 @@ const settingCards: SettingCard[] = [
     href: '/settings/profile',
   },
   {
-    title: 'Usuários',
-    description: 'Gerencie os usuários do sistema',
-    icon: FiUsers,
-    href: '/settings/users',
-  },
-  {
-    title: 'Configurações Gerais',
+    title: 'Geral',
     description: 'Configurações gerais do sistema',
     icon: FiSettings,
     href: '/settings/general',
   },
   {
-    title: 'Backup',
-    description: 'Configure e gerencie backups do sistema',
-    icon: FiDatabase,
-    href: '/settings/backup',
+    title: 'Segurança',
+    description: 'Configure opções de segurança e autenticação',
+    icon: FiShield,
+    href: '/settings/security',
+  },
+  {
+    title: 'Empresa',
+    description: 'Gerencie informações da empresa',
+    icon: FiUsers,
+    href: '/settings/company',
+  },
+  {
+    title: 'Notificações',
+    description: 'Configure suas preferências de notificação',
+    icon: FiBell,
+    href: '/settings/notifications',
   },
   {
     title: 'Integrações',
@@ -55,46 +57,48 @@ const settingCards: SettingCard[] = [
     icon: FiLink,
     href: '/settings/integrations',
   },
+  {
+    title: 'Backup',
+    description: 'Configure e gerencie backups do sistema',
+    icon: FiDatabase,
+    href: '/settings/backup',
+  },
 ];
 
 export function Settings() {
+  const location = useLocation();
   const cardBg = useColorModeValue('white', 'gray.700');
-  const cardHoverBg = useColorModeValue('gray.50', 'gray.600');
+  const isRoot = location.pathname === '/settings';
+
+  if (!isRoot) {
+    return <Outlet />;
+  }
 
   return (
     <Container maxW="container.xl" py={8}>
-      <Box mb={4}>
-        <Text fontSize="2xl" fontWeight="bold" mb={4}>
-          Configurações
-        </Text>
-      </Box>
-
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+      <PageHeader title="Configurações" />
+      
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6} mt={6}>
         {settingCards.map((card) => (
           <Card
-            key={card.title}
+            key={card.href}
             as={Link}
             to={card.href}
-            _hover={{
-              bg: cardHoverBg,
-              transform: 'translateY(-2px)',
-              boxShadow: 'md',
-            }}
-            bg={cardBg}
+            _hover={{ transform: 'translateY(-2px)', shadow: 'lg' }}
             transition="all 0.2s"
-            cursor="pointer"
+            bg={cardBg}
           >
             <CardBody>
               <VStack align="start" spacing={4}>
                 <Icon as={card.icon} boxSize={6} color="blue.500" />
-                <VStack align="start" spacing={1}>
-                  <Text fontWeight="bold" fontSize="lg">
+                <Box>
+                  <Text fontSize="lg" fontWeight="bold">
                     {card.title}
                   </Text>
                   <Text color="gray.500" fontSize="sm">
                     {card.description}
                   </Text>
-                </VStack>
+                </Box>
               </VStack>
             </CardBody>
           </Card>
