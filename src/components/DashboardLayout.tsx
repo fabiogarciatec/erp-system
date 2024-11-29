@@ -1,7 +1,6 @@
 import { Box } from '@chakra-ui/react';
 import { ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
-import { TopBar } from './TopBar';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -14,11 +13,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         onClose={() => {}}
         display={{ base: 'none', md: 'block' }}
       />
-      <TopBar />
-      {/* Conteúdo principal com margem para Sidebar e TopBar */}
+      {/* Conteúdo principal com margem apenas para Sidebar */}
       <Box
         ml={{ base: 0, md: 60 }}
-        mt="16"
         p="4"
         position="relative"
         zIndex={1}

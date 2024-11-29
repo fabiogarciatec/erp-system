@@ -2,37 +2,60 @@ import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import { BrowserRouter } from 'react-router-dom';
 import { AppRoutes } from './routes';
 import { AuthProvider } from './contexts/AuthContext';
-import { CompanyProvider } from './contexts/CompanyContext';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const theme = extendTheme({
   config: {
     initialColorMode: 'light',
     useSystemColorMode: false,
   },
+  styles: {
+    global: {
+      'html, body': {
+        backgroundColor: 'gray.50',
+        color: 'gray.900',
+      },
+    },
+  },
+  fonts: {
+    heading: 'Inter, system-ui, sans-serif',
+    body: 'Inter, system-ui, sans-serif',
+  },
   colors: {
     brand: {
-      50: '#FFF5F5',
-      100: '#FED7D7',
-      200: '#FEB2B2',
-      300: '#FC8181',
-      400: '#F56565',
-      500: '#E53E3E',
-      600: '#C53030',
-      700: '#9B2C2C',
-      800: '#822727',
-      900: '#63171B',
+      50: '#E3F2FD',
+      100: '#BBDEFB',
+      200: '#90CAF9',
+      300: '#64B5F6',
+      400: '#42A5F5',
+      500: '#2196F3',
+      600: '#1E88E5',
+      700: '#1976D2',
+      800: '#1565C0',
+      900: '#0D47A1',
     },
   },
 });
 
-export function App() {
+export default function App() {
   return (
     <ChakraProvider theme={theme}>
       <BrowserRouter>
         <AuthProvider>
-          <CompanyProvider>
-            <AppRoutes />
-          </CompanyProvider>
+          <AppRoutes />
+          <ToastContainer 
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
         </AuthProvider>
       </BrowserRouter>
     </ChakraProvider>

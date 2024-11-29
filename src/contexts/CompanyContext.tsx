@@ -50,13 +50,13 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const { data, error } = await supabase
-          .from('users')
-          .select('company_id')
+          .from('usuarios')
+          .select('empresa_id')
           .eq('auth_id', user.id)
           .single();
 
         if (error) {
-          console.error('Error fetching company_id:', error);
+          console.error('Error fetching empresa_id:', error);
           toast({
             title: 'Erro ao carregar dados da empresa',
             description: 'Por favor, tente novamente mais tarde.',
@@ -68,7 +68,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (data) {
-          setCompanyId(data.company_id);
+          setCompanyId(data.empresa_id);
         } else {
           console.error('No company found for user:', user.id);
           toast({
@@ -107,7 +107,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
 
       const { data: record, error } = await supabase
         .from(table)
-        .insert([{ ...data, company_id: companyId }])
+        .insert([{ ...data, empresa_id: companyId }])
         .select()
         .single();
 
@@ -134,7 +134,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
         .from(table)
         .update(data)
         .eq('id', id)
-        .eq('company_id', companyId)
+        .eq('empresa_id', companyId)
         .select()
         .single();
 
@@ -157,7 +157,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
         .from(table)
         .delete()
         .eq('id', id)
-        .eq('company_id', companyId);
+        .eq('empresa_id', companyId);
 
       if (error) throw error;
 
@@ -184,7 +184,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
       let query = supabase
         .from(table)
         .select('*')
-        .eq('company_id', companyId);
+        .eq('empresa_id', companyId);
 
       if (options?.orderBy) {
         query = query.order(options.orderBy.column, {

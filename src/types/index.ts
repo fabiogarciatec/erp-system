@@ -1,6 +1,5 @@
 export interface BaseRecord {
   id: string;
-  company_id: string;
   created_at: string;
   updated_at: string;
 }
@@ -25,36 +24,6 @@ export interface Product extends BaseRecord {
 }
 
 export type ProductData = Product;
-
-export interface CompanyData {
-  id?: string;
-  name?: string;
-  document?: string;
-  email?: string;
-  phone?: string;
-  website?: string;
-  foundation_date?: string;
-  address?: string;
-  address_number?: string;
-  address_complement?: string;
-  neighborhood?: string;
-  city?: string;
-  state?: string;
-  zip_code?: string;
-  business_type?: string;
-  industry_sector?: string;
-  tax_regime?: string;
-  state_registration?: string;
-  municipal_registration?: string;
-  legal_representative?: string;
-  legal_representative_cpf?: string;
-  legal_representative_phone?: string;
-  legal_representative_email?: string;
-  company_size?: string;
-  notes?: string;
-  logo_url?: string;
-  [key: string]: string | undefined;
-}
 
 export interface Service extends BaseRecord {
   name: string;
@@ -97,15 +66,16 @@ export interface ShippingOrder extends BaseRecord {
   shipping_address: string;
 }
 
-export interface User extends BaseRecord {
+export interface Usuario {
+  auth_id: string;
   email: string;
-  name: string;
-  role: 'admin' | 'manager' | 'employee';
+  nome: string;
+  role: 'user' | 'admin';
   avatar_url?: string;
   last_login?: string;
 }
 
-export interface BackupMetadata extends BaseRecord {
+export interface BackupMetadata {
   filename: string;
   size: number;
   tables: string[];

@@ -13,7 +13,6 @@ import {
   FiFileText,
   FiLogOut,
   FiDollarSign,
-  FiLayers,
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -40,66 +39,9 @@ const NAV_ITEMS = [
         icon: FiUsers,
       },
       {
-        label: 'Fornecedores',
-        href: '/suppliers',
-        icon: FiTruck,
-      },
-      {
         label: 'Produtos',
         href: '/products',
         icon: FiBox,
-      },
-      {
-        label: 'Serviços',
-        href: '/services',
-        icon: FiFileText,
-      },
-      {
-        label: 'Categorias',
-        href: '/categories',
-        icon: FiLayers,
-      },
-    ],
-  },
-  {
-    label: 'Vendas',
-    icon: FiBox,
-    subItems: [
-      {
-        label: 'Produtos',
-        href: '/sales/products',
-        icon: FiBox,
-      },
-      {
-        label: 'Serviços',
-        href: '/sales/services',
-        icon: FiFileText,
-      },
-      {
-        label: 'Fretes',
-        href: '/shipping',
-        icon: FiTruck,
-      },
-      {
-        label: 'Ordens de Serviço',
-        href: '/sales/service-orders',
-        icon: FiFileText,
-      },
-    ],
-  },
-  {
-    label: 'Expedição',
-    icon: FiTruck,
-    subItems: [
-      {
-        label: 'Ordens',
-        href: '/shipping/orders',
-        icon: FiBox,
-      },
-      {
-        label: 'Rastreamento',
-        href: '/shipping/tracking',
-        icon: FiTruck,
       },
     ],
   },
@@ -155,24 +97,9 @@ const NAV_ITEMS = [
         icon: FiUsers,
       },
       {
-        label: 'Empresa',
-        href: '/settings/company',
-        icon: FiBox,
-      },
-      {
         label: 'Segurança',
         href: '/settings/security',
         icon: FiSettings,
-      },
-      {
-        label: 'Financeiro',
-        href: '/settings/financial',
-        icon: FiDollarSign,
-      },
-      {
-        label: 'Vendas',
-        href: '/settings/sales',
-        icon: FiBox,
       },
       {
         label: 'Notificações',
