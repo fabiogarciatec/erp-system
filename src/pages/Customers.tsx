@@ -12,54 +12,38 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  Spinner,
   Table,
   Tbody,
   Td,
-  Text,
   Th,
   Thead,
   Tr,
   useDisclosure,
   useToast,
   VStack,
-  Center,
-  SimpleGrid,
+  HStack,
+  Text,
+  Badge,
 } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
-import { FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
-import { PageHeader } from '../components/PageHeader';
-import { useCompany } from '../contexts/CompanyContext';
-import { Customer } from '@/types';
-
-const initialCustomerData: Partial<Customer> = {
-  name: '',
-  email: '',
-  phone: '',
-  address: '',
-};
+import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { Customer } from '../types/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { customerService } from '../services/api';
 
 export function Customers() {
-  const toast = useToast();
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const { createRecord, updateRecord, deleteRecord, getRecords, loading: companyLoading } = useCompany();
-
-  const [formData, setFormData] = useState<Customer>(initialCustomerData as Customer);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
+  const { usuario } = useAuth();
 
   const loadCustomers = async () => {
-    if (companyLoading) return;
-
     setLoading(true);
     try {
-      const { data, error } = await getRecords<Customer>('customers', {
-        orderBy: { column: 'name', ascending: true },
-      });
-
-      if (error) throw error;
-      setCustomers(data || []);
+      const data = await customerService.getRecords();
+      setCustomers(data);
     } catch (error) {
       console.error('Erro ao carregar clientes:', error);
       toast({
@@ -74,66 +58,26 @@ export function Customers() {
     }
   };
 
-  useEffect(() => {
-    loadCustomers();
-  }, [getRecords, toast, companyLoading]);
-
-  if (companyLoading || loading) {
-    return (
-      <Center h="100vh">
-        <Spinner size="xl" />
-      </Center>
-    );
-  }
-
-  const handleSubmit = async () => {
+  const handleCreateCustomer = async (formData: Omit<Customer, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const customerData: Customer = {
-        id: formData.id,
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-        company_id: formData.company_id,
-        created_at: formData.created_at,
-        updated_at: formData.updated_at,
-      };
-
-      if (selectedCustomer) {
-        const { error } = await updateRecord<Customer>(
-          'customers',
-          selectedCustomer.id,
-          customerData
-        );
-        if (error) throw error;
-        toast({
-          title: 'Cliente atualizado',
-          description: 'O cliente foi atualizado com sucesso.',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        });
-      } else {
-        const { error } = await createRecord<Customer>('customers', customerData);
-        if (error) throw error;
-        toast({
-          title: 'Cliente criado',
-          description: 'O cliente foi criado com sucesso.',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        });
-      }
-
-      onClose();
-      setFormData(initialCustomerData as Customer);
-      setSelectedCustomer(null);
-      loadCustomers();
-    } catch (error) {
-      console.error('Erro ao salvar cliente:', error);
+      await customerService.create({
+        ...formData,
+        empresa_id: usuario.empresa_id,
+      });
       toast({
-        title: 'Erro ao salvar cliente',
-        description: 'Ocorreu um erro ao salvar o cliente. Tente novamente.',
+        title: 'Cliente criado',
+        description: 'O cliente foi criado com sucesso.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      loadCustomers();
+      onClose();
+    } catch (error) {
+      console.error('Erro ao criar cliente:', error);
+      toast({
+        title: 'Erro ao criar cliente',
+        description: 'Não foi possível criar o cliente.',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -141,28 +85,35 @@ export function Customers() {
     }
   };
 
-  const handleEdit = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setFormData({
-      id: customer.id,
-      name: customer.name,
-      email: customer.email,
-      phone: customer.phone,
-      address: customer.address,
-      company_id: customer.company_id,
-      created_at: customer.created_at,
-      updated_at: customer.updated_at,
-    });
-    onOpen();
+  const handleUpdateCustomer = async (id: string, formData: Partial<Customer>) => {
+    try {
+      await customerService.update(id, formData);
+      toast({
+        title: 'Cliente atualizado',
+        description: 'O cliente foi atualizado com sucesso.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      loadCustomers();
+      onClose();
+    } catch (error) {
+      console.error('Erro ao atualizar cliente:', error);
+      toast({
+        title: 'Erro ao atualizar cliente',
+        description: 'Não foi possível atualizar o cliente.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteCustomer = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja excluir este cliente?')) return;
 
     try {
-      const { error } = await deleteRecord('customers', id);
-      if (error) throw error;
-
+      await customerService.delete(id);
       toast({
         title: 'Cliente excluído',
         description: 'O cliente foi excluído com sucesso.',
@@ -170,13 +121,12 @@ export function Customers() {
         duration: 5000,
         isClosable: true,
       });
-
       loadCustomers();
     } catch (error) {
       console.error('Erro ao excluir cliente:', error);
       toast({
         title: 'Erro ao excluir cliente',
-        description: 'Ocorreu um erro ao excluir o cliente. Tente novamente.',
+        description: 'Não foi possível excluir o cliente.',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -184,97 +134,88 @@ export function Customers() {
     }
   };
 
-  const handleNewCustomer = () => {
-    setSelectedCustomer(null);
-    setFormData(initialCustomerData as Customer);
-    onOpen();
-  };
+  useEffect(() => {
+    loadCustomers();
+  }, []);
 
   return (
-    <Box w="full">
-      <PageHeader
-        title="Clientes"
-        subtitle="Gerencie seus clientes"
-        breadcrumbs={[
-          { label: 'Clientes', href: '/customers' }
-        ]}
-      />
-
-      <Box pt={8}>
-        <SimpleGrid 
-          columns={{ base: 1, md: 2, lg: 3 }} 
-          spacing={6} 
-          mb={8}
-          w="full"
-        >
+    <Container maxW="container.xl" py={8}>
+      <Box mb={4}>
+        <HStack justify="space-between" mb={4}>
+          <Text fontSize="2xl" fontWeight="bold">
+            Clientes
+          </Text>
           <Button
             leftIcon={<FiPlus />}
             colorScheme="blue"
-            onClick={handleNewCustomer}
+            onClick={() => {
+              setSelectedCustomer(null);
+              onOpen();
+            }}
           >
             Novo Cliente
           </Button>
-        </SimpleGrid>
-
-        <Box 
-          bg="white" 
-          rounded="lg" 
-          shadow="sm"
-          borderWidth="1px"
-          borderColor="gray.200"
-        >
-          {customers.length === 0 ? (
-            <Center py={8}>
-              <Text>Nenhum cliente cadastrado.</Text>
-            </Center>
-          ) : (
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Nome</Th>
-                  <Th>Email</Th>
-                  <Th>Telefone</Th>
-                  <Th>Endereço</Th>
-                  <Th>Ações</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {customers.map((customer) => (
-                  <Tr key={customer.id}>
-                    <Td>{customer.name || '-'}</Td>
-                    <Td>{customer.email || '-'}</Td>
-                    <Td>{customer.phone || '-'}</Td>
-                    <Td>{customer.address || '-'}</Td>
-                    <Td>
-                      <Button
-                        size="sm"
-                        leftIcon={<FiEdit2 />}
-                        variant="ghost"
-                        colorScheme="blue"
-                        onClick={() => handleEdit(customer)}
-                        mr={2}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        size="sm"
-                        leftIcon={<FiTrash2 />}
-                        variant="ghost"
-                        colorScheme="red"
-                        onClick={() => handleDelete(customer.id)}
-                      >
-                        Excluir
-                      </Button>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          )}
-        </Box>
+        </HStack>
       </Box>
 
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Box overflowX="auto">
+        <Table variant="simple">
+          <Thead>
+            <Tr>
+              <Th>Nome</Th>
+              <Th>Email</Th>
+              <Th>Telefone</Th>
+              <Th>Tipo</Th>
+              <Th>Status</Th>
+              <Th>Ações</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {customers.map((customer) => (
+              <Tr key={customer.id}>
+                <Td>{customer.nome}</Td>
+                <Td>{customer.email}</Td>
+                <Td>{customer.telefone}</Td>
+                <Td>
+                  <Badge colorScheme={customer.tipo === 'individual' ? 'green' : 'blue'}>
+                    {customer.tipo === 'individual' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+                  </Badge>
+                </Td>
+                <Td>
+                  <Badge colorScheme={customer.status === 'active' ? 'green' : 'red'}>
+                    {customer.status === 'active' ? 'Ativo' : 'Inativo'}
+                  </Badge>
+                </Td>
+                <Td>
+                  <HStack spacing={2}>
+                    <Button
+                      size="sm"
+                      leftIcon={<FiEdit2 />}
+                      onClick={() => {
+                        setSelectedCustomer(customer);
+                        onOpen();
+                      }}
+                    >
+                      Editar
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorScheme="red"
+                      leftIcon={<FiTrash2 />}
+                      onClick={() => handleDeleteCustomer(customer.id)}
+                    >
+                      Excluir
+                    </Button>
+                  </HStack>
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </Box>
+
+      {/* Modal de Cliente */}
+      <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
@@ -283,41 +224,26 @@ export function Customers() {
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4}>
-              <FormControl>
+              <FormControl isRequired>
                 <FormLabel>Nome</FormLabel>
                 <Input
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  defaultValue={selectedCustomer?.nome}
+                  placeholder="Nome do cliente"
                 />
               </FormControl>
-              <FormControl>
+              <FormControl isRequired>
                 <FormLabel>Email</FormLabel>
                 <Input
                   type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
+                  defaultValue={selectedCustomer?.email}
+                  placeholder="Email do cliente"
                 />
               </FormControl>
               <FormControl>
                 <FormLabel>Telefone</FormLabel>
                 <Input
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Endereço</FormLabel>
-                <Input
-                  value={formData.address}
-                  onChange={(e) =>
-                    setFormData({ ...formData, address: e.target.value })
-                  }
+                  defaultValue={selectedCustomer?.telefone || ''}
+                  placeholder="Telefone do cliente"
                 />
               </FormControl>
             </VStack>
@@ -326,12 +252,12 @@ export function Customers() {
             <Button variant="ghost" mr={3} onClick={onClose}>
               Cancelar
             </Button>
-            <Button colorScheme="blue" onClick={handleSubmit}>
-              Salvar
+            <Button colorScheme="blue">
+              {selectedCustomer ? 'Salvar' : 'Criar'}
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Box>
+    </Container>
   );
 }

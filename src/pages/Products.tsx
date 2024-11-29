@@ -12,60 +12,43 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  Spinner,
   Table,
   Tbody,
   Td,
-  Text,
   Th,
   Thead,
   Tr,
   useDisclosure,
   useToast,
   VStack,
-  Center,
-  SimpleGrid,
+  HStack,
+  Text,
+  Badge,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
 } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
-import { FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
-import { PageHeader } from '../components/PageHeader';
-import { useCompany } from '../contexts/CompanyContext';
-import { Product } from '@/types';
+import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { Product } from '../types/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { productService } from '../services/api';
 
 export function Products() {
-  const toast = useToast();
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const { createRecord, updateRecord, deleteRecord, getRecords, loading: companyLoading } = useCompany();
-
-  const initialProductData = {
-    name: '',
-    description: '',
-    price: 0,
-    stock_quantity: 0,
-  } as const;
-
-  const [formData, setFormData] = useState<Product>({
-    ...initialProductData,
-    id: '',
-    company_id: '',
-    created_at: '',
-    updated_at: '',
-  });
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
+  const { usuario } = useAuth();
 
   const loadProducts = async () => {
-    if (companyLoading) return;
-
     setLoading(true);
     try {
-      const { data, error } = await getRecords<Product>('products', {
-        orderBy: { column: 'name', ascending: true },
-      });
-
-      if (error) throw error;
-      setProducts(data || []);
+      const data = await productService.getRecords();
+      setProducts(data);
     } catch (error) {
       console.error('Erro ao carregar produtos:', error);
       toast({
@@ -80,65 +63,26 @@ export function Products() {
     }
   };
 
-  useEffect(() => {
-    loadProducts();
-  }, [getRecords, toast, companyLoading]);
-
-  if (companyLoading || loading) {
-    return (
-      <Center h="100vh">
-        <Spinner size="xl" />
-      </Center>
-    );
-  }
-
-  const handleSubmit = async () => {
+  const handleCreateProduct = async (formData: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const productData = {
+      await productService.create({
         ...formData,
-      };
-
-      if (selectedProduct) {
-        const { error } = await updateRecord<Product>(
-          'products',
-          selectedProduct.id,
-          productData
-        );
-        if (error) throw error;
-        toast({
-          title: 'Produto atualizado',
-          description: 'O produto foi atualizado com sucesso.',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        });
-      } else {
-        const { error } = await createRecord<Product>('products', productData);
-        if (error) throw error;
-        toast({
-          title: 'Produto criado',
-          description: 'O produto foi criado com sucesso.',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        });
-      }
-
-      onClose();
-      setFormData({
-        ...initialProductData,
-        id: '',
-        company_id: '',
-        created_at: '',
-        updated_at: '',
+        empresa_id: usuario.empresa_id,
       });
-      setSelectedProduct(null);
-      loadProducts();
-    } catch (error) {
-      console.error('Erro ao salvar produto:', error);
       toast({
-        title: 'Erro ao salvar produto',
-        description: 'Ocorreu um erro ao salvar o produto. Tente novamente.',
+        title: 'Produto criado',
+        description: 'O produto foi criado com sucesso.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      loadProducts();
+      onClose();
+    } catch (error) {
+      console.error('Erro ao criar produto:', error);
+      toast({
+        title: 'Erro ao criar produto',
+        description: 'Não foi possível criar o produto.',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -146,19 +90,35 @@ export function Products() {
     }
   };
 
-  const handleEdit = (product: Product) => {
-    setSelectedProduct(product);
-    setFormData(product);
-    onOpen();
+  const handleUpdateProduct = async (id: string, formData: Partial<Product>) => {
+    try {
+      await productService.update(id, formData);
+      toast({
+        title: 'Produto atualizado',
+        description: 'O produto foi atualizado com sucesso.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      loadProducts();
+      onClose();
+    } catch (error) {
+      console.error('Erro ao atualizar produto:', error);
+      toast({
+        title: 'Erro ao atualizar produto',
+        description: 'Não foi possível atualizar o produto.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteProduct = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja excluir este produto?')) return;
 
     try {
-      const { error } = await deleteRecord('products', id);
-      if (error) throw error;
-
+      await productService.delete(id);
       toast({
         title: 'Produto excluído',
         description: 'O produto foi excluído com sucesso.',
@@ -166,13 +126,12 @@ export function Products() {
         duration: 5000,
         isClosable: true,
       });
-
       loadProducts();
     } catch (error) {
       console.error('Erro ao excluir produto:', error);
       toast({
         title: 'Erro ao excluir produto',
-        description: 'Ocorreu um erro ao excluir o produto. Tente novamente.',
+        description: 'Não foi possível excluir o produto.',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -180,104 +139,91 @@ export function Products() {
     }
   };
 
-  const handleNewProduct = () => {
-    setSelectedProduct(null);
-    setFormData({
-      ...initialProductData,
-      id: '',
-      company_id: '',
-      created_at: '',
-      updated_at: '',
-    });
-    onOpen();
-  };
+  useEffect(() => {
+    loadProducts();
+  }, []);
 
   return (
-    <Box w="full">
-      <PageHeader
-        title="Produtos"
-        subtitle="Gerencie seu catálogo de produtos"
-        breadcrumbs={[
-          { label: 'Produtos', href: '/products' }
-        ]}
-      />
-
-      <Box pt={8}>
-        <SimpleGrid 
-          columns={{ base: 1, md: 2, lg: 3 }} 
-          spacing={6} 
-          mb={8}
-          w="full"
-        >
+    <Container maxW="container.xl" py={8}>
+      <Box mb={4}>
+        <HStack justify="space-between" mb={4}>
+          <Text fontSize="2xl" fontWeight="bold">
+            Produtos
+          </Text>
           <Button
             leftIcon={<FiPlus />}
             colorScheme="blue"
-            onClick={handleNewProduct}
-            mb={6}
+            onClick={() => {
+              setSelectedProduct(null);
+              onOpen();
+            }}
           >
             Novo Produto
           </Button>
-        </SimpleGrid>
-
-        <Box 
-          bg="white" 
-          rounded="lg" 
-          shadow="sm"
-          borderWidth="1px"
-          borderColor="gray.200"
-        >
-          {products.length === 0 ? (
-            <Center py={8}>
-              <Text>Nenhum produto cadastrado.</Text>
-            </Center>
-          ) : (
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Nome</Th>
-                  <Th>Descrição</Th>
-                  <Th isNumeric>Preço</Th>
-                  <Th isNumeric>Estoque</Th>
-                  <Th>Ações</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {products.map((product) => (
-                  <Tr key={product.id}>
-                    <Td>{product.name || '-'}</Td>
-                    <Td>{product.description || '-'}</Td>
-                    <Td isNumeric>{product.price || '-'}</Td>
-                    <Td isNumeric>{product.stock_quantity}</Td>
-                    <Td>
-                      <Button
-                        size="sm"
-                        leftIcon={<FiEdit2 />}
-                        variant="ghost"
-                        colorScheme="blue"
-                        onClick={() => handleEdit(product)}
-                        mr={2}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        size="sm"
-                        leftIcon={<FiTrash2 />}
-                        variant="ghost"
-                        colorScheme="red"
-                        onClick={() => handleDelete(product.id)}
-                      >
-                        Excluir
-                      </Button>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          )}
-        </Box>
+        </HStack>
       </Box>
 
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Box overflowX="auto">
+        <Table variant="simple">
+          <Thead>
+            <Tr>
+              <Th>Nome</Th>
+              <Th>Código</Th>
+              <Th>Preço</Th>
+              <Th>Estoque</Th>
+              <Th>Status</Th>
+              <Th>Ações</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {products.map((product) => (
+              <Tr key={product.id}>
+                <Td>{product.nome}</Td>
+                <Td>{product.codigo}</Td>
+                <Td>R$ {product.preco.toFixed(2)}</Td>
+                <Td>
+                  <HStack>
+                    <Text>{product.estoque_atual}</Text>
+                    {product.estoque_atual <= product.estoque_minimo && (
+                      <Badge colorScheme="red">Baixo</Badge>
+                    )}
+                  </HStack>
+                </Td>
+                <Td>
+                  <Badge colorScheme={product.status === 'active' ? 'green' : 'red'}>
+                    {product.status === 'active' ? 'Ativo' : 'Inativo'}
+                  </Badge>
+                </Td>
+                <Td>
+                  <HStack spacing={2}>
+                    <Button
+                      size="sm"
+                      leftIcon={<FiEdit2 />}
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        onOpen();
+                      }}
+                    >
+                      Editar
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorScheme="red"
+                      leftIcon={<FiTrash2 />}
+                      onClick={() => handleDeleteProduct(product.id)}
+                    >
+                      Excluir
+                    </Button>
+                  </HStack>
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </Box>
+
+      {/* Modal de Produto */}
+      <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
@@ -286,44 +232,69 @@ export function Products() {
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4}>
-              <FormControl>
+              <FormControl isRequired>
                 <FormLabel>Nome</FormLabel>
                 <Input
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  defaultValue={selectedProduct?.nome}
+                  placeholder="Nome do produto"
                 />
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel>Código</FormLabel>
+                <Input
+                  defaultValue={selectedProduct?.codigo}
+                  placeholder="Código do produto"
+                />
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel>Preço</FormLabel>
+                <NumberInput
+                  defaultValue={selectedProduct?.preco}
+                  min={0}
+                  precision={2}
+                  step={0.01}
+                >
+                  <NumberInputField placeholder="Preço do produto" />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
               </FormControl>
               <FormControl>
                 <FormLabel>Descrição</FormLabel>
                 <Input
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
+                  defaultValue={selectedProduct?.descricao}
+                  placeholder="Descrição do produto"
                 />
               </FormControl>
               <FormControl>
-                <FormLabel>Preço</FormLabel>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) =>
-                    setFormData({ ...formData, price: parseFloat(e.target.value) })
-                  }
-                />
+                <FormLabel>Estoque Atual</FormLabel>
+                <NumberInput
+                  defaultValue={selectedProduct?.estoque_atual}
+                  min={0}
+                  step={1}
+                >
+                  <NumberInputField placeholder="Quantidade em estoque" />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
               </FormControl>
               <FormControl>
-                <FormLabel>Estoque</FormLabel>
-                <Input
-                  type="number"
-                  value={formData.stock_quantity}
-                  onChange={(e) =>
-                    setFormData({ ...formData, stock_quantity: parseInt(e.target.value) })
-                  }
-                />
+                <FormLabel>Estoque Mínimo</FormLabel>
+                <NumberInput
+                  defaultValue={selectedProduct?.estoque_minimo}
+                  min={0}
+                  step={1}
+                >
+                  <NumberInputField placeholder="Quantidade mínima" />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
               </FormControl>
             </VStack>
           </ModalBody>
@@ -331,12 +302,12 @@ export function Products() {
             <Button variant="ghost" mr={3} onClick={onClose}>
               Cancelar
             </Button>
-            <Button colorScheme="blue" onClick={handleSubmit}>
-              Salvar
+            <Button colorScheme="blue">
+              {selectedProduct ? 'Salvar' : 'Criar'}
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Box>
+    </Container>
   );
 }

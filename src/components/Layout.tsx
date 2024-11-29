@@ -1,23 +1,23 @@
-import { Box, Container, useDisclosure } from '@chakra-ui/react';
-import { Sidebar } from './Sidebar';
-import { TopBar } from './TopBar';
+import { Box, Flex } from '@chakra-ui/react';
+import Sidebar from './Sidebar';
+import Header from './Header';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-export function Layout({ children }: LayoutProps) {
-  const { onClose } = useDisclosure();
-
+function Layout({ children }: LayoutProps) {
   return (
-    <Box minH="100vh">
-      <Sidebar display={{ base: 'none', md: 'block' }} onClose={onClose} />
-      <Box ml={{ base: 0, md: 64 }}>
-        <TopBar />
-        <Container maxW="container.xl" py={8}>
+    <Flex h="100vh">
+      <Sidebar />
+      <Box flex="1" ml="60">
+        <Header />
+        <Box as="main" p="4">
           {children}
-        </Container>
+        </Box>
       </Box>
-    </Box>
+    </Flex>
   );
 }
+
+export default Layout;

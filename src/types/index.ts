@@ -72,7 +72,68 @@ export interface Usuario {
   nome: string;
   role: 'user' | 'admin';
   avatar_url?: string;
-  last_login?: string;
+  company_id?: string;
+}
+
+export interface UserData {
+  id: string;
+  email: string;
+  full_name: string;
+  role: 'user' | 'admin';
+  avatar_url?: string;
+  company_id?: string;
+}
+
+export interface Database {
+  public: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: string;
+          email: string;
+          full_name: string;
+          role: 'user' | 'admin';
+          avatar_url?: string;
+          company_id?: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          email: string;
+          full_name: string;
+          role?: 'user' | 'admin';
+          avatar_url?: string;
+          company_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          full_name?: string;
+          role?: 'user' | 'admin';
+          avatar_url?: string;
+          company_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+    };
+    Functions: {
+      get_user_data: {
+        Args: { user_id: string };
+        Returns: {
+          id: string;
+          email: string;
+          full_name: string;
+          role: 'user' | 'admin';
+          avatar_url?: string;
+          company_id?: string;
+        };
+      };
+    };
+  };
 }
 
 export interface BackupMetadata {

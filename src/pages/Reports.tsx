@@ -21,10 +21,35 @@ import {
 } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader';
 
-export function Reports() {
+interface ReportsProps {
+  type?: 'sales' | 'financial' | 'inventory';
+}
+
+export function Reports({ type }: ReportsProps) {
   const cardBg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
+  // Se um tipo específico for passado, renderiza apenas aquele relatório
+  if (type) {
+    return (
+      <Box w="full">
+        <PageHeader
+          title={`Relatório de ${type === 'sales' ? 'Vendas' : type === 'financial' ? 'Financeiro' : 'Estoque'}`}
+          subtitle="Detalhes do relatório"
+          breadcrumbs={[
+            { label: 'Relatórios', href: '/reports' },
+            { label: type, href: `/reports/${type}` }
+          ]}
+        />
+        <Box pt={8}>
+          <Text>Relatório detalhado de {type === 'sales' ? 'Vendas' : type === 'financial' ? 'Financeiro' : 'Estoque'}</Text>
+          {/* Aqui você pode adicionar o conteúdo específico de cada tipo de relatório */}
+        </Box>
+      </Box>
+    );
+  }
+
+  // Se nenhum tipo for passado, renderiza a página principal de relatórios
   return (
     <Box w="full">
       <PageHeader

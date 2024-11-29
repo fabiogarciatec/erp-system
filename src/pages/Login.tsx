@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -123,10 +124,11 @@ function SignUpModal({ isOpen, onClose }: SignUpModalProps) {
 }
 
 export function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -135,23 +137,43 @@ export function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setIsLoading(true);
 
     try {
       console.log('Login: Iniciando processo de login');
-      await signIn(email, password);
-      console.log('Login: Login bem sucedido, aguardando redirecionamento');
+      const user = await signIn(email, password);
+      console.log('Login: Login bem sucedido, usuário:', user);
+      
+      // Aguardar um momento para garantir que o estado foi atualizado
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log('Login: Redirecionando para hello');
+      toast({
+        title: 'Login realizado com sucesso!',
+        status: 'success',
+        duration: 5000,
+        isClosable: true
+      });
+      navigate('/hello', { replace: true });
     } catch (error: any) {
-      console.error('Login: Erro no login:', error);
+      console.error('Login: Erro durante login:', error);
+      let errorMessage = 'Erro ao fazer login';
+      
+      if (error.message === 'Invalid login credentials') {
+        errorMessage = 'Email ou senha incorretos';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: 'Erro ao fazer login',
-        description: error.message || 'Verifique suas credenciais e tente novamente.',
+        description: errorMessage,
         status: 'error',
         duration: 5000,
-        isClosable: true,
+        isClosable: true
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
@@ -220,30 +242,23 @@ export function Login() {
                   type="submit"
                   colorScheme="blue"
                   size="lg"
-                  fontSize="md"
-                  isLoading={isSubmitting}
+                  width="full"
+                  isLoading={isLoading}
                   loadingText="Entrando..."
-                  w="full"
                 >
                   Entrar
                 </Button>
+
+                <Stack direction="row" justify="space-between" width="full" fontSize="sm">
+                  <Link color="blue.500" onClick={onOpen}>
+                    Criar conta
+                  </Link>
+                  <Link color="blue.500" href="/esqueci-senha">
+                    Esqueceu a senha?
+                  </Link>
+                </Stack>
               </VStack>
             </form>
-
-            <Stack pt={6} spacing={4}>
-              <Text align="center">
-                Não tem uma conta?{' '}
-                <Link color="blue.500" onClick={onOpen} _hover={{ textDecoration: 'underline' }}>
-                  Cadastre-se
-                </Link>
-              </Text>
-              <Text align="center" fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')}>
-                Ao entrar, você concorda com nossos{' '}
-                <Link color="blue.500" href="#" _hover={{ textDecoration: 'underline' }}>
-                  termos de serviço
-                </Link>
-              </Text>
-            </Stack>
           </Box>
         </Stack>
       </Container>

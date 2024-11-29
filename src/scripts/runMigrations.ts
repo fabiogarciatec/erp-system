@@ -23,15 +23,21 @@ async function runMigrations() {
       join(__dirname, '../../supabase/migrations/20240128000000_initial_schema.sql'),
       'utf8'
     );
+    const fixSchemaSQL = await readFile(
+      join(__dirname, '../../supabase/migrations/20240311000000_fix_schema.sql'),
+      'utf8'
+    );
+    const removeRlsSQL = await readFile(
+      join(__dirname, '../../supabase/migrations/20240311004000_remove_all_rls.sql'),
+      'utf8'
+    );
 
     // Executar setup
     console.log('Configurando funções...');
     try {
-      const { data: setupData, error: setupError } = await supabaseAdmin
-        .from('_sql')
-        .insert({ query: setupSQL })
-        .select()
-        .single();
+      const { data: setupData, error: setupError } = await supabaseAdmin.rpc('exec_sql', {
+        sql_string: setupSQL
+      });
 
       if (setupError) {
         console.error('Erro na configuração:', setupError);
@@ -47,11 +53,9 @@ async function runMigrations() {
     // Executar cleanup
     console.log('Executando limpeza...');
     try {
-      const { data: cleanupData, error: cleanupError } = await supabaseAdmin
-        .from('_sql')
-        .insert({ query: cleanupSQL })
-        .select()
-        .single();
+      const { data: cleanupData, error: cleanupError } = await supabaseAdmin.rpc('exec_sql', {
+        sql_string: cleanupSQL
+      });
 
       if (cleanupError) {
         console.error('Erro na limpeza:', cleanupError);
@@ -66,11 +70,9 @@ async function runMigrations() {
     // Executar schema inicial
     console.log('Criando novo schema...');
     try {
-      const { data: schemaData, error: schemaError } = await supabaseAdmin
-        .from('_sql')
-        .insert({ query: schemaSQL })
-        .select()
-        .single();
+      const { data: schemaData, error: schemaError } = await supabaseAdmin.rpc('exec_sql', {
+        sql_string: schemaSQL
+      });
 
       if (schemaError) {
         console.error('Erro na criação do schema:', schemaError);
@@ -83,8 +85,43 @@ async function runMigrations() {
       return;
     }
 
-    console.log('Migrações concluídas com sucesso!');
+    // Executar correções no schema
+    console.log('Aplicando correções no schema...');
+    try {
+      const { data: fixSchemaData, error: fixSchemaError } = await supabaseAdmin.rpc('exec_sql', {
+        sql_string: fixSchemaSQL
+      });
 
+      if (fixSchemaError) {
+        console.error('Erro na correção do schema:', fixSchemaError);
+        return;
+      }
+
+      console.log('Correções do schema aplicadas com sucesso');
+    } catch (error) {
+      console.error('Erro na correção do schema:', error);
+      return;
+    }
+
+    // Remover RLS
+    console.log('Removendo RLS...');
+    try {
+      const { data: removeRlsData, error: removeRlsError } = await supabaseAdmin.rpc('exec_sql', {
+        sql_string: removeRlsSQL
+      });
+
+      if (removeRlsError) {
+        console.error('Erro ao remover RLS:', removeRlsError);
+        return;
+      }
+
+      console.log('RLS removido com sucesso');
+    } catch (error) {
+      console.error('Erro ao remover RLS:', error);
+      return;
+    }
+
+    console.log('Migrações concluídas com sucesso!');
   } catch (error) {
     console.error('Erro ao executar migrações:', error);
   }

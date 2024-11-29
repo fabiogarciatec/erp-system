@@ -1,73 +1,56 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './contexts/AuthContext';
-import { Login } from './pages/Login';
-import { Layout } from './components/Layout';
-import { Products } from './pages/Products';
-import { Customers } from './pages/Customers';
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import Layout from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
-import { Services } from './pages/Services';
+import { Customers } from './pages/Customers';
+import { Products } from './pages/Products';
+import { Sales } from './pages/Sales';
+import { Financial } from './pages/Financial';
 import { Reports } from './pages/Reports';
-import { SalesProducts } from './pages/SalesProducts';
-import { ServiceOrders } from './pages/ServiceOrders';
-import { Shipping } from './pages/Shipping';
-import { ShippingOrders } from './pages/ShippingOrders';
-import { Profile } from './pages/settings/Profile';
-import { Company } from './pages/settings/Company';
-import { Security } from './pages/settings/Security';
-import { Notifications } from './pages/settings/Notifications';
-import { Backup } from './pages/settings/Backup';
+import { Settings } from './pages/Settings';
+import { Profile } from './pages/Profile';
+import { Users } from './pages/Users';
+import { Inventory } from './pages/Inventory';
 
-function PrivateRoute({ children }: { children: JSX.Element }) {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return null; // ou um componente de loading
-  }
-
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  return <Layout>{children}</Layout>;
-}
-
-export function AppRoutes() {
+function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      
-      {/* Dashboard */}
-      <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-      
-      {/* Cadastro */}
-      <Route path="/customers" element={<PrivateRoute><Customers /></PrivateRoute>} />
-      <Route path="/suppliers" element={<PrivateRoute><Navigate to="/" /></PrivateRoute>} />
-      <Route path="/products" element={<PrivateRoute><Products /></PrivateRoute>} />
-      <Route path="/services" element={<PrivateRoute><Services /></PrivateRoute>} />
-      <Route path="/categories" element={<PrivateRoute><Navigate to="/" /></PrivateRoute>} />
-      
-      {/* Vendas */}
-      <Route path="/sales/products" element={<PrivateRoute><SalesProducts /></PrivateRoute>} />
-      <Route path="/sales/services" element={<PrivateRoute><Navigate to="/" /></PrivateRoute>} />
-      <Route path="/shipping" element={<PrivateRoute><Shipping /></PrivateRoute>} />
-      <Route path="/sales/service-orders" element={<PrivateRoute><ServiceOrders /></PrivateRoute>} />
-      
-      {/* Expedição */}
-      <Route path="/shipping/orders" element={<PrivateRoute><ShippingOrders /></PrivateRoute>} />
-      <Route path="/shipping/tracking" element={<PrivateRoute><Navigate to="/" /></PrivateRoute>} />
-      
-      {/* Relatórios */}
-      <Route path="/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
-      
-      {/* Configurações */}
-      <Route path="/settings/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-      <Route path="/settings/company" element={<PrivateRoute><Company /></PrivateRoute>} />
-      <Route path="/settings/security" element={<PrivateRoute><Security /></PrivateRoute>} />
-      <Route path="/settings/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
-      <Route path="/settings/backup" element={<PrivateRoute><Backup /></PrivateRoute>} />
-      
-      {/* Rota padrão */}
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout><Outlet /></Layout>}>
+          <Route index element={<Dashboard />} />
+          
+          {/* Cadastros */}
+          <Route path="customers" element={<Customers />} />
+          <Route path="products" element={<Products />} />
+          
+          {/* Vendas */}
+          <Route path="sales" element={<Sales />} />
+          
+          {/* Financeiro */}
+          <Route path="financial" element={<Financial />}>
+            <Route path="receivables" element={<Financial type="receivables" />} />
+            <Route path="payables" element={<Financial type="payables" />} />
+            <Route path="cash-flow" element={<Financial type="cash-flow" />} />
+          </Route>
+          
+          {/* Estoque */}
+          <Route path="inventory" element={<Inventory />} />
+          
+          {/* Relatórios */}
+          <Route path="reports">
+            <Route index element={<Reports />} />
+            <Route path="sales" element={<Reports type="sales" />} />
+            <Route path="financial" element={<Reports type="financial" />} />
+            <Route path="inventory" element={<Reports type="inventory" />} />
+          </Route>
+          
+          {/* Configurações */}
+          <Route path="settings" element={<Settings />} />
+          <Route path="settings/profile" element={<Profile />} />
+          <Route path="settings/users" element={<Users />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
+
+export default AppRoutes;

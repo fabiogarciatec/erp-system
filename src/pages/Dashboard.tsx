@@ -24,18 +24,22 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react';
 import { PageHeader } from '../components/PageHeader';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Dashboard() {
+  const { usuario } = useAuth();
   const cardBg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+
+  console.log('Dashboard: Rendering with user:', usuario);
 
   return (
     <Box w="full">
       <PageHeader
         title="Dashboard"
-        subtitle="Bem-vindo ao seu painel de controle"
+        subtitle={`Bem-vindo, ${usuario?.nome || 'Usuário'}!`}
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' }
+          { label: 'Dashboard', href: '/dashboard' }
         ]}
       />
 
@@ -104,11 +108,7 @@ export function Dashboard() {
           </Stat>
         </SimpleGrid>
 
-        <Grid 
-          templateColumns={{ base: '1fr', lg: '2fr 1fr' }} 
-          gap={6}
-          w="full"
-        >
+        <Grid templateColumns={{ base: '1fr', lg: '2fr 1fr' }} gap={6}>
           <GridItem>
             <Card bg={cardBg} borderWidth="1px" borderColor={borderColor} shadow="sm" h="full">
               <CardHeader pb={0}>

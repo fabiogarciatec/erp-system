@@ -1,0 +1,73 @@
+import { Customer, Product } from '../types/supabase';
+
+// Dados mockados de clientes
+export const mockCustomers: Customer[] = [
+  {
+    id: '1',
+    nome: 'João Silva',
+    email: 'joao@email.com',
+    telefone: '(11) 99999-9999',
+    tipo: 'individual',
+    cpf_cnpj: '123.456.789-00',
+    endereco: 'Rua A, 123',
+    cidade: 'São Paulo',
+    estado: 'SP',
+    cep: '01234-567',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    empresa_id: '1',
+    observacoes: 'Cliente VIP',
+  },
+  {
+    id: '2',
+    nome: 'Empresa XYZ',
+    email: 'contato@xyz.com',
+    telefone: '(11) 3333-3333',
+    tipo: 'corporate',
+    cpf_cnpj: '12.345.678/0001-90',
+    endereco: 'Av B, 456',
+    cidade: 'São Paulo',
+    estado: 'SP',
+    cep: '04567-890',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    empresa_id: '1',
+    observacoes: 'Cliente Corporate',
+  },
+];
+
+// Dados mockados de produtos
+export const mockProducts: Product[] = [
+  {
+    id: '1',
+    nome: 'Produto A',
+    descricao: 'Descrição do Produto A',
+    preco: 99.99,
+    codigo: 'PROD-001',
+    categoria: 'Categoria 1',
+    unidade: 'un',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    empresa_id: '1',
+    estoque_atual: 100,
+    estoque_minimo: 10,
+  },
+  {
+    id: '2',
+    nome: 'Produto B',
+    descricao: 'Descrição do Produto B',
+    preco: 149.99,
+    codigo: 'PROD-002',
+    categoria: 'Categoria 2',
+    unidade: 'un',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    empresa_id: '1',
+    estoque_atual: 50,
+    estoque_minimo: 5,
+  },
+];
