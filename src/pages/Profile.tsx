@@ -128,101 +128,114 @@ export function Profile() {
   };
 
   return (
-    <Container maxW="container.lg" py={8}>
-      <PageHeader title="Meu Perfil" />
+    <Box w="100%">
+      <PageHeader 
+        title="Perfil"
+        subtitle="Gerencie suas informações pessoais"
+        breadcrumbs={[
+          { label: 'Perfil', href: '/profile' }
+        ]}
+      />
       
-      <Card mt={6}>
-        <CardBody>
-          <VStack spacing={6} align="stretch">
-            {/* Avatar */}
-            <Box textAlign="center">
-              <Avatar
-                size="2xl"
-                name={profile.name}
-                src={profile.avatar_url || undefined}
-                mb={4}
-              />
-              <FormControl>
-                <FormLabel htmlFor="avatar" cursor="pointer">
-                  <Button as="span" size="sm">
-                    Alterar foto
-                  </Button>
-                </FormLabel>
-                <Input
-                  id="avatar"
-                  type="file"
-                  accept="image/*"
-                  display="none"
-                  onChange={handleFileUpload}
-                />
-              </FormControl>
-            </Box>
-
-            <Divider />
-
-            {/* Informações básicas */}
-            <VStack spacing={4} align="stretch">
-              <HStack spacing={4}>
-                <FormControl>
-                  <FormLabel>Nome</FormLabel>
-                  <Input
-                    value={profile.name}
-                    onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Seu nome"
+      <Box 
+        mt="154px"  
+        px={6}
+      >
+        <Box maxW="1600px" mx="auto">
+          <Card mt={6}>
+            <CardBody>
+              <VStack spacing={6} align="stretch">
+                {/* Avatar */}
+                <Box textAlign="center">
+                  <Avatar
+                    size="2xl"
+                    name={profile.name}
+                    src={profile.avatar_url || undefined}
+                    mb={4}
                   />
-                </FormControl>
+                  <FormControl>
+                    <FormLabel htmlFor="avatar" cursor="pointer">
+                      <Button as="span" size="sm">
+                        Alterar foto
+                      </Button>
+                    </FormLabel>
+                    <Input
+                      id="avatar"
+                      type="file"
+                      accept="image/*"
+                      display="none"
+                      onChange={handleFileUpload}
+                    />
+                  </FormControl>
+                </Box>
 
-                <FormControl>
-                  <FormLabel>E-mail</FormLabel>
-                  <Input
-                    value={profile.email}
-                    isReadOnly
-                    bg="gray.50"
-                  />
-                </FormControl>
-              </HStack>
+                <Divider />
 
-              <HStack spacing={4}>
-                <FormControl>
-                  <FormLabel>Telefone</FormLabel>
-                  <Input
-                    value={profile.phone}
-                    onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="Seu telefone"
-                  />
-                </FormControl>
+                {/* Informações básicas */}
+                <VStack spacing={4} align="stretch">
+                  <HStack spacing={4}>
+                    <FormControl>
+                      <FormLabel>Nome</FormLabel>
+                      <Input
+                        value={profile.name}
+                        onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Seu nome"
+                      />
+                    </FormControl>
 
-                <FormControl>
-                  <FormLabel>Departamento</FormLabel>
-                  <Input
-                    value={profile.department}
-                    onChange={(e) => setProfile(prev => ({ ...prev, department: e.target.value }))}
-                    placeholder="Seu departamento"
-                  />
-                </FormControl>
-              </HStack>
+                    <FormControl>
+                      <FormLabel>E-mail</FormLabel>
+                      <Input
+                        value={profile.email}
+                        isReadOnly
+                        bg="gray.50"
+                      />
+                    </FormControl>
+                  </HStack>
 
-              <FormControl>
-                <FormLabel>Cargo</FormLabel>
-                <Input
-                  value={profile.role}
-                  isReadOnly
-                  bg="gray.50"
-                />
-              </FormControl>
-            </VStack>
+                  <HStack spacing={4}>
+                    <FormControl>
+                      <FormLabel>Telefone</FormLabel>
+                      <Input
+                        value={profile.phone}
+                        onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
+                        placeholder="Seu telefone"
+                      />
+                    </FormControl>
 
-            <Button
-              colorScheme="blue"
-              onClick={handleUpdateProfile}
-              isLoading={isLoading}
-              alignSelf="flex-end"
-            >
-              Salvar alterações
-            </Button>
-          </VStack>
-        </CardBody>
-      </Card>
-    </Container>
+                    <FormControl>
+                      <FormLabel>Departamento</FormLabel>
+                      <Input
+                        value={profile.department}
+                        onChange={(e) => setProfile(prev => ({ ...prev, department: e.target.value }))}
+                        placeholder="Seu departamento"
+                      />
+                    </FormControl>
+                  </HStack>
+
+                  <FormControl>
+                    <FormLabel>Cargo</FormLabel>
+                    <Input
+                      value={profile.role}
+                      isReadOnly
+                      bg="gray.50"
+                    />
+                  </FormControl>
+                </VStack>
+
+                <Button
+                  colorScheme="blue"
+                  onClick={handleUpdateProfile}
+                  isLoading={isLoading}
+                  alignSelf="flex-end"
+                >
+                  Salvar alterações
+                </Button>
+              </VStack>
+            </CardBody>
+          </Card>
+        </Box>
+      </Box>
+    </Box>
   );
 }

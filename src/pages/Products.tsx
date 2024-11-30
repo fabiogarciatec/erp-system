@@ -37,8 +37,9 @@ import {
   Select,
   ButtonGroup,
   TableContainer,
+  PageHeader, // Import PageHeader
 } from '@chakra-ui/react';
-import { FiPlus, FiEdit2, FiTrash2, FiSearch } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiDownload } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import { Product } from '../types/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -152,175 +153,204 @@ export function Products() {
     }
   };
 
+  const handleExportProducts = async () => {
+    // Implement export logic here
+  };
+
   useEffect(() => {
     loadProducts();
   }, []);
 
   return (
-    <Box w="full" minH="100vh" bg="gray.100">
-      <Container maxW="full" p={{ base: 4, lg: 8 }}>
-        <Flex justify="space-between" align="center" wrap="wrap" gap={4} mb={4}>
-          <Text fontSize="2xl" fontWeight="bold">
-            Produtos
-          </Text>
-          <Button
-            leftIcon={<FiPlus />}
-            colorScheme="blue"
-            onClick={() => {
-              setSelectedProduct(null);
-              onOpen();
-            }}
-          >
-            Novo Produto
-          </Button>
-        </Flex>
+    <Box w="100%">
+      <PageHeader
+        title="Produtos"
+        subtitle="Gerencie seu catálogo de produtos"
+        breadcrumbs={[
+          { label: 'Cadastros', href: '/cadastros' },
+          { label: 'Produtos', href: '/cadastros/produtos' }
+        ]}
+        rightContent={
+          <Box>
+            <Button
+              leftIcon={<FiDownload />}
+              colorScheme="gray"
+              variant="ghost"
+              mr={2}
+              onClick={handleExportProducts}
+            >
+              Exportar
+            </Button>
+            <Button
+              leftIcon={<FiPlus />}
+              colorScheme="blue"
+              onClick={onOpen}
+            >
+              Novo Produto
+            </Button>
+          </Box>
+        }
+      />
 
-        <TableContainer>
-          <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>Nome</Th>
-                <Th>Código</Th>
-                <Th>Preço</Th>
-                <Th>Estoque</Th>
-                <Th>Status</Th>
-                <Th>Ações</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {products.map((product) => (
-                <Tr key={product.id}>
-                  <Td>{product.nome}</Td>
-                  <Td>{product.codigo || '-'}</Td>
-                  <Td>R$ {product.preco.toFixed(2)}</Td>
-                  <Td>
-                    <HStack>
-                      <Text>{product.estoque_atual}</Text>
-                      {product.estoque_minimo !== null && product.estoque_atual <= product.estoque_minimo && (
-                        <Badge colorScheme="red">Baixo</Badge>
-                      )}
-                    </HStack>
-                  </Td>
-                  <Td>
-                    <Badge colorScheme={product.status === 'active' ? 'green' : 'red'}>
-                      {product.status === 'active' ? 'Ativo' : 'Inativo'}
-                    </Badge>
-                  </Td>
-                  <Td>
-                    <HStack spacing={2}>
-                      <Button
-                        size="sm"
-                        leftIcon={<FiEdit2 />}
-                        onClick={() => {
-                          setSelectedProduct(product);
-                          onOpen();
-                        }}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        size="sm"
-                        colorScheme="red"
-                        leftIcon={<FiTrash2 />}
-                        onClick={() => handleDeleteProduct(product.id)}
-                      >
-                        Excluir
-                      </Button>
-                    </HStack>
-                  </Td>
+      {/* Content */}
+      <Box 
+        mt="125px"
+        px={6}
+      >
+        <Box maxW="1600px" mx="auto">
+          <Flex justify="space-between" align="center" wrap="wrap" gap={4} mb={4}>
+            <Text fontSize="2xl" fontWeight="bold">
+              Produtos
+            </Text>
+          </Flex>
+
+          <TableContainer>
+            <Table variant="simple">
+              <Thead>
+                <Tr>
+                  <Th>Nome</Th>
+                  <Th>Código</Th>
+                  <Th>Preço</Th>
+                  <Th>Estoque</Th>
+                  <Th>Status</Th>
+                  <Th>Ações</Th>
                 </Tr>
-              ))}
-            </Tbody>
-          </Table>
-        </TableContainer>
+              </Thead>
+              <Tbody>
+                {products.map((product) => (
+                  <Tr key={product.id}>
+                    <Td>{product.nome}</Td>
+                    <Td>{product.codigo || '-'}</Td>
+                    <Td>R$ {product.preco.toFixed(2)}</Td>
+                    <Td>
+                      <HStack>
+                        <Text>{product.estoque_atual}</Text>
+                        {product.estoque_minimo !== null && product.estoque_atual <= product.estoque_minimo && (
+                          <Badge colorScheme="red">Baixo</Badge>
+                        )}
+                      </HStack>
+                    </Td>
+                    <Td>
+                      <Badge colorScheme={product.status === 'active' ? 'green' : 'red'}>
+                        {product.status === 'active' ? 'Ativo' : 'Inativo'}
+                      </Badge>
+                    </Td>
+                    <Td>
+                      <HStack spacing={2}>
+                        <Button
+                          size="sm"
+                          leftIcon={<FiEdit2 />}
+                          onClick={() => {
+                            setSelectedProduct(product);
+                            onOpen();
+                          }}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          size="sm"
+                          colorScheme="red"
+                          leftIcon={<FiTrash2 />}
+                          onClick={() => handleDeleteProduct(product.id)}
+                        >
+                          Excluir
+                        </Button>
+                      </HStack>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </TableContainer>
+        </Box>
+      </Box>
 
-        {/* Modal de Produto */}
-        <Modal isOpen={isOpen} onClose={onClose} size="xl">
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>
-              {selectedProduct ? 'Editar Produto' : 'Novo Produto'}
-            </ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              <VStack spacing={4}>
-                <FormControl isRequired>
-                  <FormLabel>Nome</FormLabel>
-                  <Input
-                    defaultValue={selectedProduct?.nome ?? ''}
-                    placeholder="Nome do produto"
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Código</FormLabel>
-                  <Input
-                    defaultValue={selectedProduct?.codigo ?? ''}
-                    placeholder="Código do produto"
-                  />
-                </FormControl>
-                <FormControl isRequired>
-                  <FormLabel>Preço</FormLabel>
-                  <NumberInput
-                    defaultValue={selectedProduct?.preco ?? 0}
-                    min={0}
-                    precision={2}
-                    step={0.01}
-                  >
-                    <NumberInputField placeholder="Preço do produto" />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Descrição</FormLabel>
-                  <Input
-                    defaultValue={selectedProduct?.descricao ?? ''}
-                    placeholder="Descrição do produto"
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Estoque Atual</FormLabel>
-                  <NumberInput
-                    defaultValue={selectedProduct?.estoque_atual ?? 0}
-                    min={0}
-                    step={1}
-                  >
-                    <NumberInputField placeholder="Quantidade em estoque" />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Estoque Mínimo</FormLabel>
-                  <NumberInput
-                    defaultValue={selectedProduct?.estoque_minimo ?? 0}
-                    min={0}
-                    step={1}
-                  >
-                    <NumberInputField placeholder="Quantidade mínima" />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
-                </FormControl>
-              </VStack>
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="ghost" mr={3} onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button colorScheme="blue">
-                {selectedProduct ? 'Salvar' : 'Criar'}
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-      </Container>
+      {/* Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            {selectedProduct ? 'Editar Produto' : 'Novo Produto'}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4}>
+              <FormControl isRequired>
+                <FormLabel>Nome</FormLabel>
+                <Input
+                  defaultValue={selectedProduct?.nome ?? ''}
+                  placeholder="Nome do produto"
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Código</FormLabel>
+                <Input
+                  defaultValue={selectedProduct?.codigo ?? ''}
+                  placeholder="Código do produto"
+                />
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel>Preço</FormLabel>
+                <NumberInput
+                  defaultValue={selectedProduct?.preco ?? 0}
+                  min={0}
+                  precision={2}
+                  step={0.01}
+                >
+                  <NumberInputField placeholder="Preço do produto" />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+              </FormControl>
+              <FormControl>
+                <FormLabel>Descrição</FormLabel>
+                <Input
+                  defaultValue={selectedProduct?.descricao ?? ''}
+                  placeholder="Descrição do produto"
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Estoque Atual</FormLabel>
+                <NumberInput
+                  defaultValue={selectedProduct?.estoque_atual ?? 0}
+                  min={0}
+                  step={1}
+                >
+                  <NumberInputField placeholder="Quantidade em estoque" />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+              </FormControl>
+              <FormControl>
+                <FormLabel>Estoque Mínimo</FormLabel>
+                <NumberInput
+                  defaultValue={selectedProduct?.estoque_minimo ?? 0}
+                  min={0}
+                  step={1}
+                >
+                  <NumberInputField placeholder="Quantidade mínima" />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button colorScheme="blue">
+              {selectedProduct ? 'Salvar' : 'Criar'}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }

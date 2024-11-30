@@ -75,35 +75,51 @@ export function Settings() {
   }
 
   return (
-    <Container maxW="container.xl" py={8}>
-      <PageHeader title="Configurações" />
+    <Box w="100%">
+      <PageHeader 
+        title="Configurações"
+        subtitle="Gerencie as configurações do sistema"
+        breadcrumbs=[
+          { label: 'Configurações', href: '/configuracoes' }
+        ]
+      />
       
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6} mt={6}>
-        {settingCards.map((card) => (
-          <Card
-            key={card.href}
-            as={Link}
-            to={card.href}
-            _hover={{ transform: 'translateY(-2px)', shadow: 'lg' }}
-            transition="all 0.2s"
-            bg={cardBg}
-          >
-            <CardBody>
-              <VStack align="start" spacing={4}>
-                <Icon as={card.icon} boxSize={6} color="blue.500" />
-                <Box>
-                  <Text fontSize="lg" fontWeight="bold">
-                    {card.title}
-                  </Text>
-                  <Text color="gray.500" fontSize="sm">
-                    {card.description}
-                  </Text>
-                </Box>
-              </VStack>
-            </CardBody>
-          </Card>
-        ))}
-      </SimpleGrid>
-    </Container>
+      <Box 
+        mt="154px"  
+        px={6}
+      >
+        <Box maxW="1600px" mx="auto">
+          <Container maxW="container.xl" py={8}>
+            
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6} mt={6}>
+              {settingCards.map((card) => (
+                <Card
+                  key={card.href}
+                  as={Link}
+                  to={card.href}
+                  _hover={{ transform: 'translateY(-2px)', shadow: 'lg' }}
+                  transition="all 0.2s"
+                  bg={cardBg}
+                >
+                  <CardBody>
+                    <VStack align="start" spacing={4}>
+                      <Icon as={card.icon} boxSize={6} color="blue.500" />
+                      <Box>
+                        <Text fontSize="lg" fontWeight="bold">
+                          {card.title}
+                        </Text>
+                        <Text color="gray.500" fontSize="sm">
+                          {card.description}
+                        </Text>
+                      </Box>
+                    </VStack>
+                  </CardBody>
+                </Card>
+              ))}
+            </SimpleGrid>
+          </Container>
+        </Box>
+      </Box>
+    </Box>
   );
 }

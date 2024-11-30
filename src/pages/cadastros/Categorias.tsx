@@ -24,7 +24,7 @@ import {
   ModalFooter,
   useDisclosure,
 } from '@chakra-ui/react';
-import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiDownload } from 'react-icons/fi';
 import { useState } from 'react';
 import { PageHeader } from '../../components/PageHeader';
 
@@ -56,7 +56,7 @@ const categoriasIniciais: Categoria[] = [
   },
 ];
 
-export function Categorias() {
+export default function Categorias() {
   const [categorias, setCategorias] = useState<Categoria[]>(categoriasIniciais);
   const [novaCategoria, setNovaCategoria] = useState<Omit<Categoria, 'id' | 'dataCriacao'>>({
     nome: '',
@@ -151,58 +151,87 @@ export function Categorias() {
     });
   };
 
+  const handleExportCategories = () => {
+    // Implementar lógica de exportação de categorias
+  };
+
   return (
-    <Container maxW="container.xl">
-      <PageHeader title="Categorias" />
+    <Box w="100%">
+      <PageHeader
+        title="Categorias"
+        subtitle="Gerencie as categorias de produtos"
+        breadcrumbs={[
+          { label: 'Cadastros', href: '/cadastros' },
+          { label: 'Categorias', href: '/cadastros/categorias' }
+        ]}
+        rightContent={
+          <Box>
+            <Button
+              leftIcon={<FiDownload />}
+              colorScheme="gray"
+              variant="ghost"
+              mr={2}
+              onClick={handleExportCategories}
+            >
+              Exportar
+            </Button>
+            <Button
+              leftIcon={<FiPlus />}
+              colorScheme="blue"
+              onClick={onOpen}
+            >
+              Nova Categoria
+            </Button>
+          </Box>
+        }
+      />
 
-      <Box mb={4}>
-        <Button leftIcon={<FiPlus />} colorScheme="blue" onClick={onOpen}>
-          Nova Categoria
-        </Button>
-      </Box>
-
-      <Box bg="white" p={4} rounded="md" shadow="sm">
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th>ID</Th>
-              <Th>Nome</Th>
-              <Th>Descrição</Th>
-              <Th>Data de Criação</Th>
-              <Th>Ações</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {categorias.map((categoria) => (
-              <Tr key={categoria.id}>
-                <Td>{categoria.id}</Td>
-                <Td>{categoria.nome}</Td>
-                <Td>{categoria.descricao}</Td>
-                <Td>{categoria.dataCriacao}</Td>
-                <Td>
-                  <Flex gap={2}>
-                    <Button
-                      size="sm"
-                      colorScheme="blue"
-                      leftIcon={<FiEdit2 />}
-                      onClick={() => handleEditarCategoria(categoria)}
-                    >
-                      Editar
-                    </Button>
-                    <Button
-                      size="sm"
-                      colorScheme="red"
-                      leftIcon={<FiTrash2 />}
-                      onClick={() => handleExcluirCategoria(categoria.id)}
-                    >
-                      Excluir
-                    </Button>
-                  </Flex>
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
+      <Box mt="154px" px={6}>
+        <Box maxW="1600px" mx="auto">
+          <Box bg="white" p={4} rounded="md" shadow="sm">
+            <Table variant="simple">
+              <Thead>
+                <Tr>
+                  <Th>ID</Th>
+                  <Th>Nome</Th>
+                  <Th>Descrição</Th>
+                  <Th>Data de Criação</Th>
+                  <Th>Ações</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {categorias.map((categoria) => (
+                  <Tr key={categoria.id}>
+                    <Td>{categoria.id}</Td>
+                    <Td>{categoria.nome}</Td>
+                    <Td>{categoria.descricao}</Td>
+                    <Td>{categoria.dataCriacao}</Td>
+                    <Td>
+                      <Flex gap={2}>
+                        <Button
+                          size="sm"
+                          colorScheme="blue"
+                          leftIcon={<FiEdit2 />}
+                          onClick={() => handleEditarCategoria(categoria)}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          size="sm"
+                          colorScheme="red"
+                          leftIcon={<FiTrash2 />}
+                          onClick={() => handleExcluirCategoria(categoria.id)}
+                        >
+                          Excluir
+                        </Button>
+                      </Flex>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Box>
+        </Box>
       </Box>
 
       <Modal isOpen={isOpen} onClose={onClose}>
@@ -247,6 +276,6 @@ export function Categorias() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Container>
+    </Box>
   );
 }

@@ -134,179 +134,104 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, percentage, isI
   );
 };
 
-export function Dashboard() {
-  const { usuario } = useAuth();
-  const cardBg = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.100', 'gray.700');
-  const bgColor = useColorModeValue('gray.50', 'gray.900');
+export default function Dashboard() {
+  const { user } = useAuth();
+  const textColor = useColorModeValue('gray.600', 'gray.400');
+
+  // Stats cards data
+  const stats: StatCardProps[] = [
+    {
+      label: 'Clientes',
+      value: '1,254',
+      icon: FiUsers,
+      percentage: '12.5%',
+      isIncrease: true
+    },
+    {
+      label: 'Vendas',
+      value: 'R$ 86,420',
+      icon: FiShoppingBag,
+      percentage: '8.2%',
+      isIncrease: true
+    },
+    {
+      label: 'Pedidos',
+      value: '324',
+      icon: FiTruck,
+      percentage: '3.1%',
+      isIncrease: false
+    }
+  ];
 
   return (
-    <Box w="full" minH="100vh" bg={bgColor}>
-      <Container maxW="full" p={{ base: 4, lg: 8 }}>
-        <PageHeader
-          title="Dashboard"
-          subtitle={`Bem-vindo, ${usuario?.nome || 'Usuário'}!`}
-          breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' }
-          ]}
-        />
+    <Box w="100%">
+      <PageHeader 
+        title="Dashboard"
+        subtitle="Visão geral do seu negócio"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' }
+        ]}
+      />
 
-        <SimpleGrid 
-          columns={{ base: 1, md: 2, lg: 3 }} 
-          spacing={{ base: 4, lg: 8 }} 
-          mt={8}
-        >
-          <StatCard
-            label="Vendas (mês)"
-            value="R$ 45.670,00"
-            icon={FiShoppingBag}
-            percentage="23.36%"
-            isIncrease={true}
-          />
-          <StatCard
-            label="Clientes Ativos"
-            value="345"
-            icon={FiUsers}
-            percentage="12%"
-            isIncrease={true}
-          />
-          <StatCard
-            label="Pedidos Pendentes"
-            value="23"
-            icon={FiTruck}
-            percentage="5%"
-            isIncrease={false}
-          />
-        </SimpleGrid>
+      {/* Content */}
+      <Box 
+        mt="125px"
+        px={6}
+      >
+        <Box maxW="1600px" mx="auto">
+          {/* Stats Grid */}
+          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={5} mb={8}>
+            {stats.map((stat, index) => (
+              <StatCard key={index} {...stat} />
+            ))}
+          </SimpleGrid>
 
-        <Grid 
-          templateColumns={{ 
-            base: '1fr', 
-            lg: '2fr 1fr' 
-          }} 
-          gap={{ base: 4, lg: 8 }} 
-          mt={8}
-        >
-          <GridItem>
-            <Card
-              bg={cardBg}
-              shadow="xl"
-              rounded="xl"
-              borderWidth="1px"
-              borderColor={borderColor}
-              p={{ base: 4, lg: 6 }}
-              h="full"
-            >
-              <Heading size="md" mb={6}>Análise de Vendas</Heading>
-              <SimpleGrid 
-                columns={{ base: 1, sm: 2, md: 3, xl: 6 }} 
-                spacing={4}
-              >
-                {salesData.map((data, index) => (
-                  <SalesCard
-                    key={index}
-                    month={data.month}
-                    value={data.value}
-                    growth={data.growth}
-                  />
-                ))}
-              </SimpleGrid>
-            </Card>
-          </GridItem>
+          {/* Sales Grid */}
+          <Box mb={8}>
+            <Heading size="md" mb={4}>
+              Vendas Mensais
+            </Heading>
+            <SimpleGrid columns={{ base: 2, md: 3, lg: 6 }} spacing={4}>
+              {salesData.map((data, index) => (
+                <SalesCard key={index} {...data} />
+              ))}
+            </SimpleGrid>
+          </Box>
 
-          <GridItem>
-            <VStack spacing={{ base: 4, lg: 8 }}>
-              <Card
-                bg={cardBg}
-                shadow="xl"
-                rounded="xl"
-                borderWidth="1px"
-                borderColor={borderColor}
-                p={{ base: 4, lg: 6 }}
-                w="full"
-              >
-                <Heading size="md" mb={6}>Metas do Mês</Heading>
-                <VStack spacing={4} align="stretch">
-                  <Box>
-                    <Flex justify="space-between" mb={2}>
-                      <Text>Vendas</Text>
-                      <Text>85%</Text>
-                    </Flex>
-                    <Progress 
-                      value={85} 
-                      colorScheme="green" 
-                      rounded="full" 
-                      size="lg"
-                    />
-                  </Box>
-                  <Box>
-                    <Flex justify="space-between" mb={2}>
-                      <Text>Novos Clientes</Text>
-                      <Text>62%</Text>
-                    </Flex>
-                    <Progress 
-                      value={62} 
-                      colorScheme="blue" 
-                      rounded="full" 
-                      size="lg"
-                    />
-                  </Box>
-                  <Box>
-                    <Flex justify="space-between" mb={2}>
-                      <Text>Satisfação</Text>
-                      <Text>93%</Text>
-                    </Flex>
-                    <Progress 
-                      value={93} 
-                      colorScheme="purple" 
-                      rounded="full" 
-                      size="lg"
-                    />
-                  </Box>
-                </VStack>
-              </Card>
-
-              <Card
-                bg={cardBg}
-                shadow="xl"
-                rounded="xl"
-                borderWidth="1px"
-                borderColor={borderColor}
-                p={{ base: 4, lg: 6 }}
-                w="full"
-              >
-                <Heading size="md" mb={6}>Últimos Pedidos</Heading>
-                <Table variant="simple" size="sm">
-                  <Thead>
-                    <Tr>
-                      <Th>Pedido</Th>
-                      <Th>Cliente</Th>
-                      <Th>Status</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    <Tr>
-                      <Td fontWeight="medium">#1234</Td>
-                      <Td>João Silva</Td>
-                      <Td><Badge colorScheme="green" rounded="full" px={2}>Concluído</Badge></Td>
-                    </Tr>
-                    <Tr>
-                      <Td fontWeight="medium">#1233</Td>
-                      <Td>Maria Santos</Td>
-                      <Td><Badge colorScheme="yellow" rounded="full" px={2}>Em Processo</Badge></Td>
-                    </Tr>
-                    <Tr>
-                      <Td fontWeight="medium">#1232</Td>
-                      <Td>Pedro Oliveira</Td>
-                      <Td><Badge colorScheme="blue" rounded="full" px={2}>Em Entrega</Badge></Td>
-                    </Tr>
-                  </Tbody>
-                </Table>
-              </Card>
-            </VStack>
-          </GridItem>
-        </Grid>
-      </Container>
+          {/* Recent Activities */}
+          <Card>
+            <CardHeader>
+              <Heading size="md">Atividades Recentes</Heading>
+            </CardHeader>
+            <CardBody>
+              <Table variant="simple">
+                <Thead>
+                  <Tr>
+                    <Th>Ação</Th>
+                    <Th>Usuário</Th>
+                    <Th>Status</Th>
+                    <Th>Data</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  <Tr>
+                    <Td>Novo cliente cadastrado</Td>
+                    <Td>{user?.email}</Td>
+                    <Td><Badge colorScheme="green">Concluído</Badge></Td>
+                    <Td>{new Date().toLocaleDateString()}</Td>
+                  </Tr>
+                  <Tr>
+                    <Td>Pedido atualizado</Td>
+                    <Td>{user?.email}</Td>
+                    <Td><Badge colorScheme="blue">Em andamento</Badge></Td>
+                    <Td>{new Date().toLocaleDateString()}</Td>
+                  </Tr>
+                </Tbody>
+              </Table>
+            </CardBody>
+          </Card>
+        </Box>
+      </Box>
     </Box>
   );
 }

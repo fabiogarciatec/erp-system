@@ -32,7 +32,7 @@ import {
   useToast,
   Select,
 } from '@chakra-ui/react';
-import { FiPlus, FiEdit2, FiPackage } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiPackage, FiDownload } from 'react-icons/fi';
 import { useState } from 'react';
 
 interface InventoryItem {
@@ -108,75 +108,104 @@ export function Inventory() {
     onClose();
   };
 
+  const handleExportInventory = () => {
+    // Implement export functionality
+  };
+
   return (
-    <Container maxW="container.xl" py={8}>
-      <Box mb={4}>
-        <HStack justify="space-between" mb={4}>
-          <Text fontSize="2xl" fontWeight="bold">
-            Controle de Estoque
-          </Text>
-          <Button
-            leftIcon={<FiPlus />}
-            colorScheme="blue"
-            onClick={onOpen}
-          >
-            Ajustar Estoque
-          </Button>
-        </HStack>
+    <Box w="100%">
+      <PageHeader
+        title="Inventário"
+        subtitle="Gerencie seu estoque"
+        breadcrumbs={[
+          { label: 'Operações', href: '/operacoes' },
+          { label: 'Inventário', href: '/operacoes/inventario' }
+        ]}
+        rightContent={
+          <Box>
+            <Button
+              leftIcon={<FiDownload />}
+              colorScheme="gray"
+              variant="ghost"
+              mr={2}
+              onClick={handleExportInventory}
+            >
+              Exportar
+            </Button>
+            <Button
+              leftIcon={<FiPlus />}
+              colorScheme="blue"
+              onClick={onOpen}
+            >
+              Novo Item
+            </Button>
+          </Box>
+        }
+      />
+
+      <Box mt="154px" px={6}>
+        <Box maxW="1600px" mx="auto">
+          <Box mb={4}>
+            <HStack justify="space-between" mb={4}>
+              <Text fontSize="2xl" fontWeight="bold">
+                Controle de Estoque
+              </Text>
+            </HStack>
+          </Box>
+
+          <Box overflowX="auto">
+            <Table variant="simple">
+              <Thead>
+                <Tr>
+                  <Th>Produto</Th>
+                  <Th>SKU</Th>
+                  <Th isNumeric>Quantidade</Th>
+                  <Th isNumeric>Mínimo</Th>
+                  <Th>Localização</Th>
+                  <Th>Status</Th>
+                  <Th>Ações</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {inventory.map((item) => (
+                  <Tr key={item.id}>
+                    <Td>{item.product_name}</Td>
+                    <Td>{item.sku}</Td>
+                    <Td isNumeric>{item.quantity}</Td>
+                    <Td isNumeric>{item.min_quantity}</Td>
+                    <Td>{item.location}</Td>
+                    <Td>
+                      <Badge colorScheme={getStatusColor(item.status)}>
+                        {getStatusText(item.status)}
+                      </Badge>
+                    </Td>
+                    <Td>
+                      <HStack spacing={2}>
+                        <IconButton
+                          aria-label="Ajustar estoque"
+                          icon={<FiEdit2 />}
+                          size="sm"
+                          colorScheme="blue"
+                          variant="ghost"
+                          onClick={onOpen}
+                        />
+                        <IconButton
+                          aria-label="Ver movimentações"
+                          icon={<FiPackage />}
+                          size="sm"
+                          colorScheme="green"
+                          variant="ghost"
+                        />
+                      </HStack>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Box>
+        </Box>
       </Box>
 
-      <Box overflowX="auto">
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th>Produto</Th>
-              <Th>SKU</Th>
-              <Th isNumeric>Quantidade</Th>
-              <Th isNumeric>Mínimo</Th>
-              <Th>Localização</Th>
-              <Th>Status</Th>
-              <Th>Ações</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {inventory.map((item) => (
-              <Tr key={item.id}>
-                <Td>{item.product_name}</Td>
-                <Td>{item.sku}</Td>
-                <Td isNumeric>{item.quantity}</Td>
-                <Td isNumeric>{item.min_quantity}</Td>
-                <Td>{item.location}</Td>
-                <Td>
-                  <Badge colorScheme={getStatusColor(item.status)}>
-                    {getStatusText(item.status)}
-                  </Badge>
-                </Td>
-                <Td>
-                  <HStack spacing={2}>
-                    <IconButton
-                      aria-label="Ajustar estoque"
-                      icon={<FiEdit2 />}
-                      size="sm"
-                      colorScheme="blue"
-                      variant="ghost"
-                      onClick={onOpen}
-                    />
-                    <IconButton
-                      aria-label="Ver movimentações"
-                      icon={<FiPackage />}
-                      size="sm"
-                      colorScheme="green"
-                      variant="ghost"
-                    />
-                  </HStack>
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </Box>
-
-      {/* Modal de Ajuste de Estoque */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent>
@@ -233,6 +262,6 @@ export function Inventory() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Container>
+    </Box>
   );
 }

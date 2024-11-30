@@ -1,0 +1,284 @@
+{
+  "success": true,
+  "data": {
+    "pagina": 1,
+    "total_de_paginas": 87,
+    "registros": 5,
+    "total_de_registros": 434,
+    "clientes_cadastro": [
+      {
+        "bairro": "PEDREIRA",
+        "bloquear_faturamento": "N",
+        "cep": "66085026",
+        "cidade": "BELEM (PA)",
+        "cidade_ibge": "1501402",
+        "cnpj_cpf": "867.355.432-20",
+        "codigo_cliente_integracao": "",
+        "codigo_cliente_omie": 3570682515,
+        "codigo_pais": "1058",
+        "complemento": "AP 5",
+        "dadosBancarios": {
+          "agencia": "",
+          "cChavePix": "",
+          "codigo_banco": "",
+          "conta_corrente": "",
+          "doc_titular": "",
+          "nome_titular": "",
+          "transf_padrao": "N"
+        },
+        "email": "rodolfomendes.alm@gmail.com,rodolfomendes.alm.@gmail.com",
+        "endereco": "AVENIDA PEDRO MIRANDA",
+        "enderecoEntrega": {},
+        "endereco_numero": "2768",
+        "estado": "PA",
+        "exterior": "N",
+        "fax_ddd": "91",
+        "fax_numero": "37372208",
+        "inativo": "N",
+        "info": {
+          "cImpAPI": "N",
+          "dAlt": "18/09/2024",
+          "dInc": "12/08/2024",
+          "hAlt": "08:42:26",
+          "hInc": "14:55:28",
+          "uAlt": "P000919382",
+          "uInc": "P000589703"
+        },
+        "inscricao_estadual": "",
+        "inscricao_municipal": "",
+        "nome_fantasia": "RODOLFO MORAES MENDES",
+        "pessoa_fisica": "S",
+        "razao_social": "RODOLFO MORAES MENDES",
+        "recomendacoes": {
+          "gerar_boletos": "N",
+          "tipo_assinante": "6"
+        },
+        "tags": [
+          {
+            "tag": "Cliente"
+          },
+          {
+            "tag": "Fornecedor"
+          }
+        ],
+        "telefone1_ddd": "91",
+        "telefone1_numero": "981266576",
+        "telefone2_ddd": "91",
+        "telefone2_numero": "33513641"
+      },
+      {
+        "bairro": "MARCO",
+        "bloquear_faturamento": "N",
+        "cep": "66093047",
+        "cidade": "BELEM (PA)",
+        "cidade_ibge": "1501402",
+        "cnpj_cpf": "011.685.192-92",
+        "codigo_cliente_integracao": "",
+        "codigo_cliente_omie": 3570700782,
+        "codigo_pais": "1058",
+        "complemento": "APTO 102",
+        "dadosBancarios": {
+          "agencia": "",
+          "cChavePix": "01168519292",
+          "codigo_banco": "036",
+          "conta_corrente": "",
+          "doc_titular": "011.685.192-92",
+          "nome_titular": "ANA FLAVIA BITENCOURT DIAS",
+          "transf_padrao": "S"
+        },
+        "email": "afbdiass@gmail.com",
+        "endereco": "TRAVESSA HUMAITA",
+        "enderecoEntrega": {},
+        "endereco_numero": "2708",
+        "estado": "PA",
+        "exterior": "N",
+        "inativo": "N",
+        "info": {
+          "cImpAPI": "N",
+          "dAlt": "05/09/2024",
+          "dInc": "12/08/2024",
+          "hAlt": "12:48:23",
+          "hInc": "16:10:00",
+          "uAlt": "P000890338",
+          "uInc": "P000890338"
+        },
+        "inscricao_estadual": "",
+        "inscricao_municipal": "",
+        "nome_fantasia": "ANA FLAVIA BITTENCOURT DIAS",
+        "pessoa_fisica": "S",
+        "razao_social": "ANA FLAVIA BITTENCOURT DIAS",
+        "recomendacoes": {
+          "gerar_boletos": "N",
+          "tipo_assinante": "6"
+        },
+        "tags": [
+          {
+            "tag": "Funcionário"
+          }
+        ],
+        "telefone1_ddd": "91",
+        "telefone1_numero": "980324742",
+        "telefone2_ddd": "91",
+        "telefone2_numero": "980324742"
+      },
+      {
+        "bairro": "GUAMA",
+        "bloquear_faturamento": "N",
+        "cep": "66065112",
+        "cidade": "BELEM (PA)",
+        "cidade_ibge": "1501402",
+        "cnpj_cpf": "22.763.502/0059-23",
+        "codigo_cliente_integracao": "",
+        "codigo_cliente_omie": 3570723056,
+        "complemento": "",
+        "dadosBancarios": {
+          "agencia": "",
+          "cChavePix": "",
+          "codigo_banco": "",
+          "conta_corrente": "",
+          "doc_titular": "",
+          "nome_titular": "",
+          "transf_padrao": "N"
+        },
+        "endereco": "AV JOSE BONIFACIO",
+        "enderecoEntrega": {},
+        "endereco_numero": "2628",
+        "estado": "PA",
+        "exterior": "N",
+        "inativo": "N",
+        "info": {
+          "cImpAPI": "N",
+          "dAlt": "12/08/2024",
+          "dInc": "12/08/2024",
+          "hAlt": "16:40:19",
+          "hInc": "16:40:19",
+          "uAlt": "P000890338",
+          "uInc": "P000890338"
+        },
+        "inscricao_estadual": "157072541",
+        "inscricao_municipal": "",
+        "nome_fantasia": "PMZ DISTRIBUIDORA S.A",
+        "pessoa_fisica": "N",
+        "razao_social": "PMZ DISTRIBUIDORA S.A",
+        "recomendacoes": {
+          "gerar_boletos": "N"
+        },
+        "tags": [
+          {
+            "tag": "Fornecedor"
+          }
+        ],
+        "telefone1_numero": "3213-8600"
+      },
+      {
+        "bairro": "JARDIM ROSINHA",
+        "bloquear_faturamento": "N",
+        "cep": "05274020",
+        "cidade": "SAO PAULO (SP)",
+        "cidade_ibge": "3550308",
+        "cnpj_cpf": "464.431.918-03",
+        "codigo_cliente_integracao": "",
+        "codigo_cliente_omie": 3573858894,
+        "codigo_pais": "1058",
+        "complemento": "COMPL. C/2.",
+        "dadosBancarios": {
+          "agencia": "",
+          "cChavePix": "+5511984710260",
+          "codigo_banco": "340",
+          "conta_corrente": "",
+          "doc_titular": "",
+          "nome_titular": "",
+          "transf_padrao": "N"
+        },
+        "endereco": "RUA OTINGA COMPL. C/2.",
+        "enderecoEntrega": {},
+        "endereco_numero": "97",
+        "estado": "SP",
+        "exterior": "N",
+        "inativo": "N",
+        "info": {
+          "cImpAPI": "N",
+          "dAlt": "22/08/2024",
+          "dInc": "22/08/2024",
+          "hAlt": "16:40:38",
+          "hInc": "16:34:33",
+          "uAlt": "P000890338",
+          "uInc": "P000890338"
+        },
+        "inscricao_estadual": "",
+        "inscricao_municipal": "",
+        "nome_fantasia": "ALAN LEME DOS SANTOS RIBEIRO",
+        "pessoa_fisica": "S",
+        "razao_social": "ALAN LEME DOS SANTOS RIBEIRO",
+        "recomendacoes": {
+          "gerar_boletos": "N",
+          "tipo_assinante": "6"
+        },
+        "tags": [
+          {
+            "tag": "Funcionário"
+          }
+        ],
+        "telefone1_ddd": "11",
+        "telefone1_numero": "984710260"
+      },
+      {
+        "bairro": "PENHA FRANCA",
+        "bloquear_faturamento": "N",
+        "cep": "03701010",
+        "cidade": "SAO PAULO (SP)",
+        "cidade_ibge": "3550308",
+        "cnpj_cpf": "456.408.308-24",
+        "codigo_cliente_integracao": "",
+        "codigo_cliente_omie": 3573861547,
+        "codigo_pais": "1058",
+        "complemento": "",
+        "dadosBancarios": {
+          "agencia": "",
+          "cChavePix": "45640830824",
+          "codigo_banco": "336",
+          "conta_corrente": "",
+          "doc_titular": "",
+          "nome_titular": "",
+          "transf_padrao": "N"
+        },
+        "email": "alexandrerponteli@hotmail.com",
+        "endereco": "AVENIDA GABRIELA MISTRA",
+        "enderecoEntrega": {},
+        "endereco_numero": "453",
+        "estado": "SP",
+        "exterior": "N",
+        "fax_ddd": "11",
+        "fax_numero": "22924080",
+        "inativo": "N",
+        "info": {
+          "cImpAPI": "N",
+          "dAlt": "22/08/2024",
+          "dInc": "22/08/2024",
+          "hAlt": "16:46:14",
+          "hInc": "16:43:18",
+          "uAlt": "P000890338",
+          "uInc": "P000890338"
+        },
+        "inscricao_estadual": "",
+        "inscricao_municipal": "",
+        "nome_fantasia": "ALEXANDER BRUNO BITTENCOURT PONTELI",
+        "pessoa_fisica": "S",
+        "razao_social": "ALEXANDER BRUNO BITTENCOURT PONTELI",
+        "recomendacoes": {
+          "gerar_boletos": "N",
+          "tipo_assinante": "6"
+        },
+        "tags": [
+          {
+            "tag": "Funcionário"
+          }
+        ],
+        "telefone1_ddd": "11",
+        "telefone1_numero": "949024033",
+        "telefone2_ddd": "11",
+        "telefone2_numero": "949024033"
+      }
+    ]
+  }
+}

@@ -1,23 +1,28 @@
-import {
-  Box,
-  Flex,
-  HStack,
-  IconButton,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  Avatar,
-  Text,
-  useColorMode,
-  useColorModeValue,
-} from '@chakra-ui/react';
-import { FiMoon, FiSun, FiBell, FiUser } from 'react-icons/fi';
+import { Box, Flex, HStack, IconButton, Menu, MenuButton, MenuItem, MenuList, Text, useColorMode, useColorModeValue, Avatar, VStack, MenuDivider, Portal } from '@chakra-ui/react';
+import { FiBell, FiMoon, FiSun, FiUser, FiLogOut } from 'react-icons/fi';
+import { useProfile } from '../hooks/useProfile';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Profile } from '../types/profile';
+import { supabase } from '../lib/supabase';
 
 function Header() {
   const { colorMode, toggleColorMode } = useColorMode();
-  const bgColor = useColorModeValue('white', 'gray.800');
+  const bgColor = useColorModeValue('white', 'gray.900');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const textColor = useColorModeValue('gray.800', 'white');
+  const emailColor = useColorModeValue('blue.500', 'blue.300');
+  const { profile } = useProfile();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate('/login');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
 
   return (
     <Box
@@ -48,24 +53,41 @@ function Header() {
 
           <Menu>
             <MenuButton>
-              <HStack>
+              <HStack spacing="3">
                 <Avatar
                   size="sm"
-                  name="Usuário"
-                  icon={<FiUser />}
-                  bg="blue.500"
-                  color="white"
+                  name={profile?.full_name || 'User'}
+                  src={profile?.avatar_url || undefined}
                 />
-                <Text display={{ base: 'none', md: 'block' }}>
-                  Usuário
-                </Text>
+                <VStack
+                  display={{ base: 'none', md: 'flex' }}
+                  alignItems="flex-start"
+                  spacing="1px"
+                  ml="2"
+                >
+                  <Text fontSize="sm" fontWeight="medium" color={textColor}>
+                    {profile?.full_name || 'User'}
+                  </Text>
+                  <Text fontSize="xs" color={emailColor}>
+                    {profile?.email}
+                  </Text>
+                </VStack>
               </HStack>
             </MenuButton>
-            <MenuList>
-              <MenuItem as="a" href="/configuracoes">
-                Configurações
-              </MenuItem>
-            </MenuList>
+            <Portal>
+              <MenuList zIndex={1500}>
+                <MenuItem as={RouterLink} to="/profile" icon={<FiUser />}>
+                  Profile
+                </MenuItem>
+                <MenuItem as={RouterLink} to="/settings">
+                  Settings
+                </MenuItem>
+                <MenuDivider />
+                <MenuItem onClick={handleLogout} icon={<FiLogOut />}>
+                  Logout
+                </MenuItem>
+              </MenuList>
+            </Portal>
           </Menu>
         </HStack>
       </Flex>

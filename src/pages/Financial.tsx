@@ -31,8 +31,12 @@ import {
   Select,
   NumberInput,
   NumberInputField,
+  PageHeader,
+  SimpleGrid,
+  Stack,
+  TableContainer,
 } from '@chakra-ui/react';
-import { FiPlus } from 'react-icons/fi';
+import { FiPlus, FiDownload } from 'react-icons/fi';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -74,7 +78,7 @@ export function Financial({ type }: FinancialProps) {
   const params = useParams();
   const currentType = type || params.type || 'receivables';
 
-  const filteredTransactions = transactions.filter(transaction => {
+  const filteredTransactions = transactions.filter((transaction) => {
     if (currentType === 'receivables') return transaction.type === 'receivable';
     if (currentType === 'payables') return transaction.type === 'payable';
     return true;
@@ -106,92 +110,86 @@ export function Financial({ type }: FinancialProps) {
     }
   };
 
+  const handleExportData = () => {
+    // Implement export data logic here
+  };
+
   return (
-    <Container maxW="container.xl" py={8}>
-      <Box mb={4}>
-        <HStack justify="space-between" mb={4}>
-          <Text fontSize="2xl" fontWeight="bold">
-            Financeiro
-          </Text>
-          <Button
-            leftIcon={<FiPlus />}
-            colorScheme="blue"
-            onClick={onOpen}
-          >
-            {currentType === 'receivables' ? 'Novo Recebimento' : 'Novo Pagamento'}
-          </Button>
-        </HStack>
+    <Box w="100%">
+      <PageHeader
+        title="Financeiro"
+        subtitle="Gerencie as finanças da sua empresa"
+        breadcrumbs={[
+          { label: 'Financeiro', href: '/financeiro' },
+        ]}
+        rightContent={
+          <Box>
+            <Button
+              leftIcon={<FiDownload />}
+              colorScheme="gray"
+              variant="ghost"
+              mr={2}
+              onClick={handleExportData}
+            >
+              Exportar
+            </Button>
+            <Button
+              leftIcon={<FiPlus />}
+              colorScheme="blue"
+              onClick={onOpen}
+            >
+              Nova Transação
+            </Button>
+          </Box>
+        }
+      />
+
+      {/* Content */}
+      <Box mt="154px" px={6}>
+        <Box maxW="1600px" mx="auto">
+          <Stack spacing={6}>
+            {/* Summary Cards */}
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6}>
+              {/* Add summary cards here */}
+            </SimpleGrid>
+
+            {/* Filters */}
+            <HStack spacing={4}>
+              {/* Add filters here */}
+            </HStack>
+
+            {/* Transactions Table */}
+            <TableContainer>
+              <Table variant="simple">
+                <Thead>
+                  <Tr>
+                    <Th>Descrição</Th>
+                    <Th>Vencimento</Th>
+                    <Th isNumeric>Valor</Th>
+                    <Th>Status</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {filteredTransactions.map((transaction) => (
+                    <Tr key={transaction.id}>
+                      <Td>{transaction.description}</Td>
+                      <Td>{new Date(transaction.due_date).toLocaleDateString()}</Td>
+                      <Td isNumeric>R$ {transaction.amount.toFixed(2)}</Td>
+                      <Td>
+                        <Badge colorScheme={getStatusColor(transaction.status)}>
+                          {getStatusText(transaction.status)}
+                        </Badge>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            </TableContainer>
+          </Stack>
+        </Box>
       </Box>
 
-      <Tabs index={currentType === 'receivables' ? 0 : currentType === 'payables' ? 1 : 2}>
-        <TabList>
-          <Tab>Contas a Receber</Tab>
-          <Tab>Contas a Pagar</Tab>
-          <Tab>Fluxo de Caixa</Tab>
-        </TabList>
-
-        <TabPanels>
-          <TabPanel>
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Descrição</Th>
-                  <Th>Vencimento</Th>
-                  <Th isNumeric>Valor</Th>
-                  <Th>Status</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {filteredTransactions.map((transaction) => (
-                  <Tr key={transaction.id}>
-                    <Td>{transaction.description}</Td>
-                    <Td>{new Date(transaction.due_date).toLocaleDateString()}</Td>
-                    <Td isNumeric>R$ {transaction.amount.toFixed(2)}</Td>
-                    <Td>
-                      <Badge colorScheme={getStatusColor(transaction.status)}>
-                        {getStatusText(transaction.status)}
-                      </Badge>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </TabPanel>
-
-          <TabPanel>
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Descrição</Th>
-                  <Th>Vencimento</Th>
-                  <Th isNumeric>Valor</Th>
-                  <Th>Status</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {filteredTransactions.map((transaction) => (
-                  <Tr key={transaction.id}>
-                    <Td>{transaction.description}</Td>
-                    <Td>{new Date(transaction.due_date).toLocaleDateString()}</Td>
-                    <Td isNumeric>R$ {transaction.amount.toFixed(2)}</Td>
-                    <Td>
-                      <Badge colorScheme={getStatusColor(transaction.status)}>
-                        {getStatusText(transaction.status)}
-                      </Badge>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </TabPanel>
-
-          <TabPanel>
-            <Text>Em desenvolvimento...</Text>
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
-
-      {/* Modal de Nova Transação */}
+      {/* Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent>
@@ -243,6 +241,6 @@ export function Financial({ type }: FinancialProps) {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Container>
+    </Box>
   );
 }

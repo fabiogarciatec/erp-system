@@ -1,338 +1,249 @@
+import { useState, useEffect } from 'react'
 import {
   Box,
-  Button,
-  Container,
-  FormControl,
-  FormLabel,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
   Input,
+  Select,
+  Flex,
+  Button,
+  useToast,
+  Spinner,
+  Text,
   Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
   ModalBody,
   ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  useDisclosure,
-  useToast,
-  VStack,
-  HStack,
-  Text,
-  Badge,
-  Flex,
-  Stack,
-  InputGroup,
-  InputLeftElement,
-  Icon,
-  TableContainer,
-  Select,
-  ButtonGroup,
-  Textarea,
-} from '@chakra-ui/react';
-import { FiPlus, FiEdit2, FiTrash2, FiSearch } from 'react-icons/fi';
-import { useState, useEffect } from 'react';
-import { Customer } from '../types/supabase';
-import { useAuth } from '../contexts/AuthContext';
-import { customerService } from '../services/api';
+  PageHeader,
+} from '@chakra-ui/react'
+import { omieService, type OmieCustomer } from '@/services/api/omie'
+import { FiDownload, FiPlus } from 'react-icons/fi'
 
-export function Customers() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const toast = useToast();
-  const { usuario } = useAuth();
+export default function Customers() {
+  const [customers, setCustomers] = useState<OmieCustomer[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedState, setSelectedState] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [selectedCustomer, setSelectedCustomer] = useState<OmieCustomer | null>(null)
+  const toast = useToast()
 
-  const loadCustomers = async () => {
-    setLoading(true);
+  const fetchCustomers = async (page: number) => {
+    setLoading(true)
     try {
-      const data = await customerService.getRecords();
-      setCustomers(data);
+      const response = await omieService.listCustomers(page)
+      if (response.success && response.data) {
+        setCustomers(response.data.clientes_cadastro)
+        setTotalPages(response.data.total_de_paginas)
+      } else {
+        throw new Error(response.error || 'Erro ao carregar clientes')
+      }
     } catch (error) {
-      console.error('Erro ao carregar clientes:', error);
-      toast({
-        title: 'Erro ao carregar clientes',
-        description: 'Não foi possível carregar a lista de clientes.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateCustomer = async (data: any) => {
-    if (!usuario?.empresa_id) {
       toast({
         title: 'Erro',
-        description: 'ID da empresa não encontrado',
+        description: error.message,
         status: 'error',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
-      });
-      return;
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSearch = async () => {
+    if (!searchQuery) {
+      fetchCustomers(1)
+      return
     }
 
+    setLoading(true)
     try {
-      const newCustomer: Omit<Customer, 'id' | 'created_at' | 'updated_at'> = {
-        nome: data.nome || '',
-        email: data.email || null,
-        telefone: data.telefone || null,
-        cpf_cnpj: data.cpf_cnpj || null,
-        endereco: data.endereco || {},
-        status: (data.status as 'active' | 'inactive' | 'suspended') || 'active',
-        tipo: (data.tipo as 'individual' | 'corporate') || 'individual',
-        empresa_id: usuario.empresa_id,
-        observacoes: data.observacoes || null,
-        ultima_compra: null,
-        created_by: usuario.id
-      };
-
-      const result = await customerService.create(newCustomer);
-      
-      if ('error' in result) {
-        throw result.error;
+      const response = await omieService.searchCustomers(searchQuery)
+      if (response.success && response.data) {
+        setCustomers(response.data.clientes_cadastro)
+        setTotalPages(response.data.total_de_paginas)
+        setCurrentPage(1)
+      } else {
+        throw new Error(response.error || 'Erro ao buscar clientes')
       }
-
-      loadCustomers();
-      onClose();
-      toast({
-        title: 'Cliente criado com sucesso!',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
     } catch (error) {
-      console.error('Erro ao criar cliente:', error);
       toast({
-        title: 'Erro ao criar cliente',
-        description: 'Ocorreu um erro ao criar o cliente. Tente novamente.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  const handleUpdateCustomer = async (id: string, formData: Partial<Customer>) => {
-    try {
-      await customerService.update(id, formData);
-      toast({
-        title: 'Cliente atualizado',
-        description: 'O cliente foi atualizado com sucesso.',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
-      loadCustomers();
-      onClose();
-    } catch (error) {
-      console.error('Erro ao atualizar cliente:', error);
-      toast({
-        title: 'Erro ao atualizar cliente',
-        description: 'Não foi possível atualizar o cliente.',
+        title: 'Erro',
+        description: error.message,
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
+    } finally {
+      setLoading(false)
     }
-  };
-
-  const handleDeleteCustomer = async (id: string) => {
-    if (!window.confirm('Tem certeza que deseja excluir este cliente?')) return;
-
-    try {
-      await customerService.delete(id);
-      toast({
-        title: 'Cliente excluído',
-        description: 'O cliente foi excluído com sucesso.',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
-      loadCustomers();
-    } catch (error) {
-      console.error('Erro ao excluir cliente:', error);
-      toast({
-        title: 'Erro ao excluir cliente',
-        description: 'Não foi possível excluir o cliente.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    }
-  };
+  }
 
   useEffect(() => {
-    loadCustomers();
-  }, []);
+    fetchCustomers(currentPage)
+  }, [currentPage])
+
+  const filteredCustomers = selectedState
+    ? customers.filter(customer => customer.estado === selectedState)
+    : customers
+
+  const estados = [...new Set(customers.map(customer => customer.estado))].sort()
+
+  const handleExportCustomers = () => {
+    // Implement export customers logic here
+  }
+
+  const onOpen = () => {
+    // Implement open modal logic here
+  }
 
   return (
-    <Box w="full" minH="100vh" bg="gray.100">
-      <Container maxW="full" p={{ base: 4, lg: 8 }}>
-        <Flex justify="space-between" align="center" wrap="wrap" gap={4} mb={4}>
-          <Text fontSize="2xl" fontWeight="bold">
-            Clientes
-          </Text>
-          <Button
-            leftIcon={<FiPlus />}
-            colorScheme="blue"
-            onClick={() => {
-              setSelectedCustomer(null);
-              onOpen();
-            }}
-          >
-            Novo Cliente
-          </Button>
-        </Flex>
+    <Box w="100%">
+      <PageHeader 
+        title="Clientes"
+        subtitle="Gerencie sua base de clientes"
+        breadcrumbs={[
+          { label: 'Cadastros', href: '/cadastros' },
+          { label: 'Clientes', href: '/cadastros/clientes' }
+        ]}
+        rightContent={
+          <Box>
+            <Button
+              leftIcon={<FiDownload />}
+              colorScheme="gray"
+              variant="ghost"
+              mr={2}
+              onClick={handleExportCustomers}
+            >
+              Exportar
+            </Button>
+            <Button
+              leftIcon={<FiPlus />}
+              colorScheme="blue"
+              onClick={onOpen}
+            >
+              Novo Cliente
+            </Button>
+          </Box>
+        }
+      />
 
-        <TableContainer>
-          <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>Nome</Th>
-                <Th>Email</Th>
-                <Th>Telefone</Th>
-                <Th>Tipo</Th>
-                <Th>Status</Th>
-                <Th>Ações</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {customers.map((customer) => (
-                <Tr key={customer.id}>
-                  <Td>{customer.nome}</Td>
-                  <Td>{customer.email}</Td>
-                  <Td>{customer.telefone}</Td>
-                  <Td>
-                    <Badge colorScheme={customer.tipo === 'individual' ? 'green' : 'blue'}>
-                      {customer.tipo === 'individual' ? 'Pessoa Física' : 'Pessoa Jurídica'}
-                    </Badge>
-                  </Td>
-                  <Td>
-                    <Badge colorScheme={customer.status === 'active' ? 'green' : 'red'}>
-                      {customer.status === 'active' ? 'Ativo' : 'Inativo'}
-                    </Badge>
-                  </Td>
-                  <Td>
-                    <HStack spacing={2}>
-                      <Button
-                        size="sm"
-                        leftIcon={<FiEdit2 />}
-                        onClick={() => {
-                          setSelectedCustomer(customer);
-                          onOpen();
-                        }}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        size="sm"
-                        colorScheme="red"
-                        leftIcon={<FiTrash2 />}
-                        onClick={() => handleDeleteCustomer(customer.id)}
-                      >
-                        Excluir
-                      </Button>
-                    </HStack>
-                  </Td>
-                </Tr>
+      <Box 
+        mt="125px"
+        px={6}
+      >
+        <Box maxW="1600px" mx="auto">
+          <Flex mb={4} gap={4}>
+            <Input
+              placeholder="Buscar por nome, CPF/CNPJ ou cidade"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <Select
+              placeholder="Filtrar por estado"
+              value={selectedState}
+              onChange={(e) => setSelectedState(e.target.value)}
+            >
+              {estados.map(estado => (
+                <option key={estado} value={estado}>{estado}</option>
               ))}
-            </Tbody>
-          </Table>
-        </TableContainer>
+            </Select>
+            <Button colorScheme="blue" onClick={handleSearch}>
+              Buscar
+            </Button>
+          </Flex>
 
-        {/* Modal de Cliente */}
-        <Modal isOpen={isOpen} onClose={onClose} size="xl">
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>
-              {selectedCustomer ? 'Editar Cliente' : 'Novo Cliente'}
-            </ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              <VStack spacing={4}>
-                <FormControl isRequired>
-                  <FormLabel>Nome</FormLabel>
-                  <Input
-                    name="nome"
-                    defaultValue={selectedCustomer?.nome ?? ''}
-                    placeholder="Nome do cliente"
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Email</FormLabel>
-                  <Input
-                    name="email"
-                    type="email"
-                    defaultValue={selectedCustomer?.email ?? ''}
-                    placeholder="Email do cliente"
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Telefone</FormLabel>
-                  <Input
-                    name="telefone"
-                    defaultValue={selectedCustomer?.telefone ?? ''}
-                    placeholder="Telefone do cliente"
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>CPF/CNPJ</FormLabel>
-                  <Input
-                    name="cpf_cnpj"
-                    defaultValue={selectedCustomer?.cpf_cnpj ?? ''}
-                    placeholder="CPF ou CNPJ do cliente"
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Tipo</FormLabel>
-                  <Select
-                    name="tipo"
-                    defaultValue={selectedCustomer?.tipo ?? 'individual'}
-                  >
-                    <option value="individual">Pessoa Física</option>
-                    <option value="corporate">Pessoa Jurídica</option>
-                  </Select>
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Status</FormLabel>
-                  <Select
-                    name="status"
-                    defaultValue={selectedCustomer?.status ?? 'active'}
-                  >
-                    <option value="active">Ativo</option>
-                    <option value="inactive">Inativo</option>
-                    <option value="suspended">Suspenso</option>
-                  </Select>
-                </FormControl>
-                <FormControl>
-                  <FormLabel>Observações</FormLabel>
-                  <Textarea
-                    name="observacoes"
-                    defaultValue={selectedCustomer?.observacoes ?? ''}
-                    placeholder="Observações sobre o cliente"
-                  />
-                </FormControl>
-              </VStack>
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="ghost" mr={3} onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button colorScheme="blue" onClick={() => handleCreateCustomer({})}>
-                {selectedCustomer ? 'Salvar' : 'Criar'}
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-      </Container>
+          {loading ? (
+            <Flex justify="center" align="center" h="200px">
+              <Spinner />
+            </Flex>
+          ) : (
+            <>
+              <Table variant="simple">
+                <Thead>
+                  <Tr>
+                    <Th>Razão Social</Th>
+                    <Th>CPF/CNPJ</Th>
+                    <Th>Cidade</Th>
+                    <Th>Estado</Th>
+                    <Th>Ações</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {filteredCustomers.map((customer) => (
+                    <Tr key={customer.codigo_cliente_omie}>
+                      <Td>{customer.razao_social}</Td>
+                      <Td>{customer.cnpj_cpf}</Td>
+                      <Td>{customer.cidade}</Td>
+                      <Td>{customer.estado}</Td>
+                      <Td>
+                        <Button
+                          size="sm"
+                          onClick={() => setSelectedCustomer(customer)}
+                        >
+                          Detalhes
+                        </Button>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+
+              <Flex mt={4} justify="center" gap={2}>
+                <Button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => p - 1)}
+                >
+                  Anterior
+                </Button>
+                <Text alignSelf="center">
+                  Página {currentPage} de {totalPages}
+                </Text>
+                <Button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(p => p + 1)}
+                >
+                  Próxima
+                </Button>
+              </Flex>
+            </>
+          )}
+        </Box>
+      </Box>
+
+      <Modal
+        isOpen={!!selectedCustomer}
+        onClose={() => setSelectedCustomer(null)}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Detalhes do Cliente</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            {selectedCustomer && (
+              <Box>
+                <Text><strong>Razão Social:</strong> {selectedCustomer.razao_social}</Text>
+                <Text><strong>CPF/CNPJ:</strong> {selectedCustomer.cnpj_cpf}</Text>
+                <Text><strong>Email:</strong> {selectedCustomer.email}</Text>
+                <Text><strong>Telefone:</strong> ({selectedCustomer.telefone1_ddd}) {selectedCustomer.telefone1_numero}</Text>
+                <Text><strong>Cidade:</strong> {selectedCustomer.cidade}</Text>
+                <Text><strong>Estado:</strong> {selectedCustomer.estado}</Text>
+                <Text><strong>Código Omie:</strong> {selectedCustomer.codigo_cliente_omie}</Text>
+                <Text><strong>Status:</strong> {selectedCustomer.status_cliente}</Text>
+              </Box>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
-  );
+  )
 }

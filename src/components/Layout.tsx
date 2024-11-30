@@ -1,4 +1,4 @@
-import { Box, Flex } from '@chakra-ui/react';
+import { Box, Flex, useColorModeValue } from '@chakra-ui/react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
@@ -7,12 +7,41 @@ interface LayoutProps {
 }
 
 function Layout({ children }: LayoutProps) {
+  const bgColor = useColorModeValue('gray.50', 'gray.800');
+
   return (
-    <Flex h="100vh">
+    <Flex h="100vh" bg={bgColor}>
+      {/* Menu Lateral */}
       <Sidebar />
-      <Box flex="1" ml="60">
-        <Header />
-        <Box as="main" p="4">
+      
+      {/* Área Principal */}
+      <Box 
+        flex="1" 
+        ml="240px" // Largura do menu lateral
+        minH="100vh"
+        bg={bgColor}
+        position="relative"
+      >
+        {/* Header fixo no topo */}
+        <Box
+          position="fixed"
+          top={0}
+          right={0}
+          left="240px" // Mesma largura do menu lateral
+          bg={bgColor}
+          zIndex={2}
+        >
+          <Header />
+        </Box>
+
+        {/* Conteúdo principal com padding-top para compensar o header fixo */}
+        <Box 
+          bg={bgColor}
+          as="main"
+          pt="64px" // Altura do header
+          minH="calc(100vh - 64px)"
+          overflowY="auto"
+        >
           {children}
         </Box>
       </Box>

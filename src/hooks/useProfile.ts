@@ -2,14 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-
-export interface Profile {
-  id: string;
-  email: string;
-  full_name?: string;
-  avatar_url?: string;
-  updated_at?: string;
-}
+import { Profile } from '../types/profile';
 
 export function useProfile() {
   const [profile, setProfile] = useState<Profile | null>(null);
