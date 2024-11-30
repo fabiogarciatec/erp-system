@@ -22,6 +22,10 @@ interface Company {
   updated_at: string;
 }
 
+interface CompanyResponse {
+  companies: Company | Company[];
+}
+
 export function useCompanyData() {
   const { user } = useAuth();
   const toast = useToast();
@@ -39,13 +43,42 @@ export function useCompanyData() {
       if (!user) return;
 
       const { data: companyData, error } = await supabase
-        .from('companies')
-        .select('*')
+        .from('user_companies')
+        .select(`
+          companies (
+            id,
+            name,
+            email,
+            phone,
+            address,
+            city,
+            state_id,
+            postal_code,
+            created_at,
+            updated_at
+          )
+        `)
+        .eq('user_id', user.id)
         .single();
 
       if (error) throw error;
 
-      setCompany(companyData);
+      console.log('Dados retornados do Supabase:', companyData);
+
+      // Se não houver dados, retorna null
+      if (!companyData?.companies) {
+        setCompany(null);
+        return;
+      }
+
+      // Pega o primeiro item do array de empresas
+      const companyInfo = Array.isArray(companyData.companies) 
+        ? companyData.companies[0] 
+        : companyData.companies;
+
+      console.log('Dados da empresa:', companyInfo);
+      
+      setCompany(companyInfo as Company);
     } catch (error: any) {
       console.error('Error fetching company data:', error.message);
       toast({
@@ -89,13 +122,44 @@ export function useCompanyData() {
 
   const handleSave = async () => {
     try {
-      if (!company) return;
+      if (!company || !user) return;
 
-      const { error } = await supabase
+      // Primeiro, atualiza os dados da empresa
+      const { error: companyError } = await supabase
         .from('companies')
-        .upsert([company]);
+        .upsert([{
+          id: company.id,
+          name: company.name,
+          email: company.email,
+          phone: company.phone,
+          address: company.address,
+          city: company.city,
+          state_id: company.state_id,
+          postal_code: company.postal_code
+        }]);
 
-      if (error) throw error;
+      if (companyError) throw companyError;
+
+      // Se for uma nova empresa, cria a relação user_companies
+      if (!company.id) {
+        const { data: newCompany } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('email', company.email)
+          .single();
+
+        if (newCompany) {
+          const { error: relationError } = await supabase
+            .from('user_companies')
+            .insert([{
+              user_id: user.id,
+              company_id: newCompany.id,
+              is_owner: true
+            }]);
+
+          if (relationError) throw relationError;
+        }
+      }
 
       toast({
         title: 'Sucesso!',
@@ -105,7 +169,8 @@ export function useCompanyData() {
         isClosable: true,
       });
 
-      fetchCompanyData(); // Recarrega os dados atualizados
+      // Recarrega os dados atualizados
+      await fetchCompanyData();
     } catch (error: any) {
       console.error('Error saving company data:', error.message);
       toast({
