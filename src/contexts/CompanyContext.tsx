@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../services/supabase';
+import supabase from '@/lib/supabase';
 import { useAuth } from './AuthContext';
 import { BaseRecord, GetRecordsOptions } from '../types';
 import { useToast } from '@chakra-ui/react';

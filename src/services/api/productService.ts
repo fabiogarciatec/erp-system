@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import supabase from '../../lib/supabase';
 import { Product, ProductInsert, ProductUpdate } from '../../types/supabase';
 
 class ProductService {

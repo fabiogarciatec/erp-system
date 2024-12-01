@@ -1,51 +1,71 @@
-import { Box, Text, useColorModeValue } from '@chakra-ui/react';
-import { css, keyframes } from '@emotion/react';
-
-const glowAnimation = keyframes`
-  0% {
-    box-shadow: 0 0 5px rgba(255, 165, 0, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(255, 165, 0, 0.7);
-  }
-  100% {
-    box-shadow: 0 0 5px rgba(255, 165, 0, 0.5);
-  }
-`;
+import { Box, useColorModeValue } from '@chakra-ui/react';
 
 export function Logo() {
-  const bgGradient = useColorModeValue(
-    'linear(to-r, orange.400, yellow.400)',
-    'linear(to-r, orange.200, yellow.200)'
-  );
-  const textColor = useColorModeValue('white', 'gray.800');
+  const logoColor = useColorModeValue('#0066cc', '#4299E1');
+  const subtitleColor = useColorModeValue('#666666', '#A0AEC0');
 
   return (
-    <Box
-      maxW="180px"
-      px="3"
-      py="1.5"
-      borderRadius="md"
-      bgGradient={bgGradient}
-      position="relative"
-      transform="translateZ(5px)"
-      css={css`
-        animation: ${glowAnimation} 2s infinite;
-        &:hover {
-          animation: none;
-          box-shadow: 0 0 20px rgba(255, 165, 0, 0.7);
-        }
-      `}
-    >
-      <Text
-        fontSize="xl"
-        fontWeight="bold"
-        color={textColor}
-        textAlign="center"
-        textShadow="1px 1px 2px rgba(0, 0, 0, 0.2)"
+    <Box maxW="360px" w="100%" position="relative">
+      <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 300 80"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="xMidYMid meet"
       >
-        FATEC ERP
-      </Text>
+        <g transform="translate(35, 20)">
+          {/* FATEC */}
+          <text
+            x="0"
+            y="25"
+            fill={logoColor}
+            style={{ 
+              fontSize: '41px', 
+              fontWeight: 'bold', 
+              fontFamily: 'Arial',
+              letterSpacing: '1px'
+            }}
+          >
+            FATEC
+          </text>
+
+          {/* Seta característica */}
+          <path
+            d="M132 8 L145 8 L145 -2 L165 18 L145 35 L145 25 L132 25 Z"
+            fill={logoColor}
+          />
+
+          {/* ERP */}
+          <text
+            x="155"
+            y="25"
+            fill={subtitleColor}
+            style={{ 
+              fontSize: '41px', 
+              fontWeight: 'bold', 
+              fontFamily: 'Arial'
+            }}
+          >
+            ERP
+          </text>
+        </g>
+
+        {/* Subtítulo */}
+        <text
+          x="150"
+          y="65"
+          textAnchor="middle"
+          fill={subtitleColor}
+          style={{ 
+            fontSize: '17px', 
+            fontFamily: 'Arial',
+            letterSpacing: '0.5px'
+          }}
+        >
+          Gestão Empresarial Inteligente
+        </text>
+      </svg>
     </Box>
   );
 }

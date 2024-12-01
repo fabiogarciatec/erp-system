@@ -25,6 +25,8 @@ import NotasFiscais from '@/pages/operacoes/NotasFiscais';
 import Perfil from '@/pages/configuracoes/Perfil';
 import Empresa from '@/pages/configuracoes/Empresa';
 
+import { routerConfig } from './router.config';
+
 const theme = extendTheme({
   config: {
     initialColorMode: 'system',
@@ -60,7 +62,7 @@ function App() {
   return (
     <ChakraProvider theme={theme}>
       <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-      <BrowserRouter>
+      <BrowserRouter future={routerConfig.future}>
         <AuthProvider>
           <Routes>
             {/* Public routes */}

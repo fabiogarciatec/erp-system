@@ -1,15 +1,9 @@
-import { supabase } from './supabase';
+import supabase from '@/lib/supabase';
+import { Database } from '@/types/supabase';
 
-export interface Customer {
-  id?: number;
-  name: string;
-  email: string;
-  phone: string;
-  status: 'active' | 'inactive';
-  created_at?: string;
-  last_purchase?: string | null;
-  company_id?: number | null;
-}
+type Customer = Database['public']['Tables']['customers']['Row'];
+type CustomerInsert = Database['public']['Tables']['customers']['Insert'];
+type CustomerUpdate = Database['public']['Tables']['customers']['Update'];
 
 export async function getCustomers() {
   const { data, error } = await supabase
@@ -25,13 +19,10 @@ export async function getCustomers() {
   return data;
 }
 
-export async function createCustomer(customerData: Omit<Customer, 'id' | 'created_at'>) {
-  // Remover campos opcionais do objeto antes de enviar
-  const { last_purchase, company_id, ...customer } = customerData;
-  
+export async function createCustomer(customerData: CustomerInsert) {
   const { data, error } = await supabase
     .from('customers')
-    .insert([{ ...customer, company_id: null }])
+    .insert([customerData])
     .select()
     .single();
 
@@ -43,7 +34,22 @@ export async function createCustomer(customerData: Omit<Customer, 'id' | 'create
   return data;
 }
 
-export async function updateCustomer(id: number, customer: Partial<Customer>) {
+export async function searchCustomers(query: string) {
+  const { data, error } = await supabase
+    .from('customers')
+    .select('*')
+    .or(`nome.ilike.%${query}%,email.ilike.%${query}%,telefone.ilike.%${query}%`)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Erro completo:', error);
+    throw new Error('Erro ao buscar clientes: ' + error.message);
+  }
+
+  return data;
+}
+
+export async function updateCustomer(id: string, customer: CustomerUpdate) {
   const { data, error } = await supabase
     .from('customers')
     .update(customer)
@@ -59,7 +65,7 @@ export async function updateCustomer(id: number, customer: Partial<Customer>) {
   return data;
 }
 
-export async function deleteCustomer(id: number) {
+export async function deleteCustomer(id: string) {
   const { error } = await supabase
     .from('customers')
     .delete()
@@ -71,17 +77,4 @@ export async function deleteCustomer(id: number) {
   }
 }
 
-export async function searchCustomers(query: string) {
-  const { data, error } = await supabase
-    .from('customers')
-    .select('*')
-    .or(`name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%`)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Erro completo:', error);
-    throw new Error('Erro ao buscar clientes: ' + error.message);
-  }
-
-  return data;
-}
+export type { Customer, CustomerInsert, CustomerUpdate };

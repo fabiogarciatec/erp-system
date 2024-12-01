@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import supabase from '@/lib/supabase';
 import { useToast } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { Profile } from '../types/profile';

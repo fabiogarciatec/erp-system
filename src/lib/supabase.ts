@@ -4,17 +4,16 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase URL and Anon Key são necessários.');
+  throw new Error('Missing Supabase environment variables');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// Criar uma única instância do cliente Supabase
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     storageKey: 'erp-auth-token',
     storage: window.localStorage,
-    autoRefreshToken: true,
   },
 });
 
-// Exporta uma única instância
 export default supabase;

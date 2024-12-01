@@ -3,7 +3,7 @@ import { FiBell, FiMoon, FiSun, FiUser, FiLogOut } from 'react-icons/fi';
 import { useProfile } from '../hooks/useProfile';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Profile } from '../types/profile';
-import { supabase } from '../lib/supabase';
+import supabase from '../lib/supabase';
 
 function Header() {
   const { colorMode, toggleColorMode } = useColorMode();

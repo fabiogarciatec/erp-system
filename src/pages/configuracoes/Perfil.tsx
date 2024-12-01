@@ -24,7 +24,7 @@ import {
 } from '@chakra-ui/react';
 import { FiCamera, FiSave } from 'react-icons/fi';
 import { useEffect, useState } from 'react';
-import { supabase } from '@/services/supabase';
+import supabase from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/PageHeader';
 

@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import supabase from '@/lib/supabase';
 
 export interface UserPermission {
   id: number
@@ -28,6 +28,8 @@ export interface User {
   permissions: UserPermission[]
   companies: Company[]
   currentCompany?: Company
+  empresa_id?: string
+  auth_id?: string
 }
 
 export interface RegisterData {

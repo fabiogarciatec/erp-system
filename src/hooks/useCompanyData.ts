@@ -1,25 +1,13 @@
 import { useState, useEffect } from 'react';
+import supabase from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@chakra-ui/react';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../services/supabase';
+import { Company } from '@/types/company';
 
 interface State {
   id: number;
   name: string;
   uf: string;
-}
-
-interface Company {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  state_id: number;
-  postal_code: string;
-  created_at: string;
-  updated_at: string;
 }
 
 interface CompanyResponse {
@@ -32,11 +20,8 @@ export function useCompanyData() {
   const [company, setCompany] = useState<Company | null>(null);
   const [states, setStates] = useState<State[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetchCompanyData();
-    fetchStates();
-  }, [user]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchCompanyData = async () => {
     try {
@@ -48,14 +33,20 @@ export function useCompanyData() {
           companies (
             id,
             name,
+            document,
             email,
             phone,
             address,
+            address_number,
+            address_complement,
+            neighborhood,
             city,
             state_id,
             postal_code,
             created_at,
-            updated_at
+            updated_at,
+            latitude,
+            longitude
           )
         `)
         .eq('user_id', user.id)
@@ -63,104 +54,148 @@ export function useCompanyData() {
 
       if (error) throw error;
 
-      console.log('Dados retornados do Supabase:', companyData);
+      if (companyData?.companies) {
+        // Garantindo que os dados correspondam à interface Company
+        const companyInfo = Array.isArray(companyData.companies)
+          ? companyData.companies[0]
+          : companyData.companies;
 
-      // Se não houver dados, retorna null
-      if (!companyData?.companies) {
-        setCompany(null);
-        return;
+        const company: Company = {
+          id: companyInfo.id,
+          name: companyInfo.name,
+          document: companyInfo.document,
+          email: companyInfo.email,
+          phone: companyInfo.phone,
+          address: companyInfo.address || '',
+          address_number: companyInfo.address_number || '',
+          address_complement: companyInfo.address_complement || '',
+          neighborhood: companyInfo.neighborhood || '',
+          city: companyInfo.city || '',
+          state_id: companyInfo.state_id,
+          postal_code: companyInfo.postal_code || '',
+          created_at: companyInfo.created_at,
+          updated_at: companyInfo.updated_at,
+          latitude: companyInfo.latitude || null,
+          longitude: companyInfo.longitude || null
+        };
+
+        setCompany(company);
       }
-
-      // Pega o primeiro item do array de empresas
-      const companyInfo = Array.isArray(companyData.companies) 
-        ? companyData.companies[0] 
-        : companyData.companies;
-
-      console.log('Dados da empresa:', companyInfo);
-      
-      setCompany(companyInfo as Company);
     } catch (error: any) {
-      console.error('Error fetching company data:', error.message);
-      toast({
-        title: 'Erro ao carregar dados da empresa',
-        description: error.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      console.error('Error fetching company data:', error);
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchCompanyData();
+    fetchStates();
+  }, [user]);
+
   const fetchStates = async () => {
     try {
-      const { data: statesData, error } = await supabase
+      const { data: states } = await supabase
         .from('states')
         .select('*')
         .order('name');
-
-      if (error) throw error;
-
-      setStates(statesData || []);
-    } catch (error: any) {
-      console.error('Error fetching states:', error.message);
-      toast({
-        title: 'Erro ao carregar estados',
-        description: error.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      if (states) setStates(states);
+    } catch (error) {
+      console.error('Error fetching states:', error);
     }
   };
 
-  const handleInputChange = (field: keyof Company, value: string | number) => {
-    if (!company) return;
-    setCompany({ ...company, [field]: value });
-  };
-
-  const handleSave = async () => {
+  const saveCompany = async () => {
     try {
       if (!company || !user) return;
 
-      // Primeiro, atualiza os dados da empresa
       const { error: companyError } = await supabase
         .from('companies')
         .upsert([{
           id: company.id,
           name: company.name,
+          document: company.document,
           email: company.email,
           phone: company.phone,
           address: company.address,
+          address_number: company.address_number,
+          address_complement: company.address_complement,
+          neighborhood: company.neighborhood,
           city: company.city,
           state_id: company.state_id,
-          postal_code: company.postal_code
+          postal_code: company.postal_code,
+          latitude: company.latitude,
+          longitude: company.longitude
         }]);
 
       if (companyError) throw companyError;
 
-      // Se for uma nova empresa, cria a relação user_companies
-      if (!company.id) {
-        const { data: newCompany } = await supabase
-          .from('companies')
-          .select('id')
-          .eq('email', company.email)
-          .single();
+      return true;
+    } catch (error) {
+      console.error('Error saving company:', error);
+      throw error;
+    }
+  };
 
-        if (newCompany) {
-          const { error: relationError } = await supabase
-            .from('user_companies')
-            .insert([{
-              user_id: user.id,
-              company_id: newCompany.id,
-              is_owner: true
-            }]);
+  const updateCompanyData = async (field: keyof Company, value: any) => {
+    if (!company) return;
 
-          if (relationError) throw relationError;
-        }
+    try {
+      const { error } = await supabase
+        .from('companies')
+        .update({ [field]: value })
+        .eq('id', company.id);
+
+      if (error) throw error;
+
+      setCompany({
+        ...company,
+        [field]: value
+      });
+    } catch (error) {
+      console.error('Error updating company data:', error);
+      setError('Erro ao atualizar dados da empresa');
+    }
+  };
+
+  const handleInputChange = async (field: keyof Company, value: string | number) => {
+    if (!company) return;
+
+    try {
+      // Converte valores vazios para campos numéricos em 0
+      const finalValue = (field === 'latitude' || field === 'longitude' || field === 'state_id') && value === ''
+        ? 0
+        : value;
+
+      // Atualiza o estado local primeiro
+      setCompany({ ...company, [field]: finalValue });
+
+      // Atualiza o banco de dados
+      const { error } = await supabase
+        .from('companies')
+        .update({ [field]: finalValue })
+        .eq('id', company.id);
+
+      if (error) {
+        throw error;
       }
+    } catch (error) {
+      console.error('Error updating company data:', error);
+      toast({
+        title: 'Erro!',
+        description: 'Erro ao atualizar dados da empresa.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await saveCompany();
       toast({
         title: 'Sucesso!',
         description: 'Dados da empresa atualizados com sucesso.',
@@ -168,18 +203,18 @@ export function useCompanyData() {
         duration: 5000,
         isClosable: true,
       });
-
-      // Recarrega os dados atualizados
       await fetchCompanyData();
-    } catch (error: any) {
-      console.error('Error saving company data:', error.message);
+    } catch (error) {
+      console.error('Error saving company:', error);
       toast({
-        title: 'Erro ao salvar',
-        description: error.message,
+        title: 'Erro!',
+        description: 'Erro ao salvar dados da empresa.',
         status: 'error',
         duration: 5000,
         isClosable: true,
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -187,7 +222,10 @@ export function useCompanyData() {
     company,
     states,
     isLoading,
+    isSaving,
+    error,
     handleInputChange,
     handleSave,
+    fetchCompanyData,
   };
 }

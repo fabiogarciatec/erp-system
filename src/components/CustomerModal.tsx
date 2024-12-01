@@ -16,7 +16,7 @@ import {
   Textarea,
   useToast,
 } from '@chakra-ui/react';
-import { supabase } from '../lib/supabase';
+import supabase from '../lib/supabase';
 import { Customer, CustomerInsert, CustomerUpdate } from '../types/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -35,7 +35,7 @@ export function CustomerModal({ isOpen, onClose, customer, onSuccess }: Customer
   const [tipo, setTipo] = useState<'individual' | 'corporate' | null>(null);
   const [observacoes, setObservacoes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { usuario } = useAuth();
+  const { user } = useAuth();
   const toast = useToast();
 
   useEffect(() => {
@@ -89,17 +89,18 @@ export function CustomerModal({ isOpen, onClose, customer, onSuccess }: Customer
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    try {
-      if (!usuario?.empresa_id) {
-        toast({
-          title: 'Erro',
-          description: 'Usuário não está associado a uma empresa',
-          status: 'error',
-          duration: 5000,
-        });
-        return;
-      }
+    if (!user || !user.currentCompany) {
+      toast({
+        title: 'Erro',
+        description: 'Usuário não está associado a uma empresa',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
 
+    try {
       setIsLoading(true);
       const phoneNumbers = telefone.replace(/\D/g, '');
       const cleanCpfCnpj = cpfCnpj.replace(/\D/g, '');
@@ -108,12 +109,12 @@ export function CustomerModal({ isOpen, onClose, customer, onSuccess }: Customer
         nome,
         email: email || null,
         telefone: phoneNumbers || null,
-        empresa_id: usuario.empresa_id,
+        empresa_id: user.currentCompany.id,
         cpf_cnpj: cleanCpfCnpj || null,
         tipo: tipo || 'individual',
         observacoes: observacoes || null,
-        status: 'active',
-        created_by: usuario.auth_id,
+        created_at: new Date().toISOString(),
+        created_by: user.id,
         updated_at: new Date().toISOString(),
       };
 
