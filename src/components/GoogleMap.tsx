@@ -1,5 +1,5 @@
 /// <reference types="google.maps" />
-import { Box, Text, Spinner, Center, useToast } from '@chakra-ui/react';
+import { Box, Text, Spinner, Center, useToast, useColorMode } from '@chakra-ui/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GoogleMap as GoogleMapComponent, MarkerF, useLoadScript } from '@react-google-maps/api';
 import { Company } from '../types/company';
@@ -26,6 +26,88 @@ interface MapCoordinates {
 const DEFAULT_ZOOM = 15;
 const DEFAULT_CENTER: MapCoordinates = { lat: -1.4557, lng: -48.4902 }; // Belém
 
+// Estilo dark para o mapa
+const darkModeStyle: google.maps.MapTypeStyle[] = [
+  { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+  {
+    featureType: "administrative.locality",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#d59563" }],
+  },
+  {
+    featureType: "poi",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#d59563" }],
+  },
+  {
+    featureType: "poi.park",
+    elementType: "geometry",
+    stylers: [{ color: "#263c3f" }],
+  },
+  {
+    featureType: "poi.park",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#6b9a76" }],
+  },
+  {
+    featureType: "road",
+    elementType: "geometry",
+    stylers: [{ color: "#38414e" }],
+  },
+  {
+    featureType: "road",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#212a37" }],
+  },
+  {
+    featureType: "road",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#9ca5b3" }],
+  },
+  {
+    featureType: "road.highway",
+    elementType: "geometry",
+    stylers: [{ color: "#746855" }],
+  },
+  {
+    featureType: "road.highway",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#1f2835" }],
+  },
+  {
+    featureType: "road.highway",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#f3d19c" }],
+  },
+  {
+    featureType: "transit",
+    elementType: "geometry",
+    stylers: [{ color: "#2f3948" }],
+  },
+  {
+    featureType: "transit.station",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#d59563" }],
+  },
+  {
+    featureType: "water",
+    elementType: "geometry",
+    stylers: [{ color: "#17263c" }],
+  },
+  {
+    featureType: "water",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#515c6d" }],
+  },
+  {
+    featureType: "water",
+    elementType: "labels.text.stroke",
+    stylers: [{ color: "#17263c" }],
+  },
+];
+
 const mapOptions: google.maps.MapOptions = {
   disableDefaultUI: false,
   clickableIcons: true,
@@ -39,6 +121,7 @@ const mapOptions: google.maps.MapOptions = {
 };
 
 export function GoogleMap({ company, height = '400px', states, latitude, longitude, onMapClick }: GoogleMapProps) {
+  const { colorMode } = useColorMode();
   const [center, setCenter] = useState<MapCoordinates>(DEFAULT_CENTER);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -215,7 +298,10 @@ export function GoogleMap({ company, height = '400px', states, latitude, longitu
           mapContainerStyle={{ width: '100%', height: '100%' }}
           zoom={DEFAULT_ZOOM}
           center={center}
-          options={mapOptions}
+          options={{
+            ...mapOptions,
+            styles: colorMode === 'dark' ? darkModeStyle : undefined
+          }}
           onClick={handleMapClick}
           onLoad={onLoad}
           onUnmount={onUnmount}

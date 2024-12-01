@@ -76,15 +76,12 @@ function Header() {
             </MenuButton>
             <Portal>
               <MenuList zIndex={1500}>
-                <MenuItem as={RouterLink} to="/profile" icon={<FiUser />}>
-                  Profile
-                </MenuItem>
-                <MenuItem as={RouterLink} to="/settings">
-                  Settings
+                <MenuItem as={RouterLink} to="/configuracoes/perfil" icon={<FiUser />}>
+                  Perfil
                 </MenuItem>
                 <MenuDivider />
                 <MenuItem onClick={handleLogout} icon={<FiLogOut />}>
-                  Logout
+                  Sair
                 </MenuItem>
               </MenuList>
             </Portal>

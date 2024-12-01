@@ -19,6 +19,7 @@ import {
   Icon,
   Flex,
   Stack,
+  InputGroup,
 } from '@chakra-ui/react';
 import { FiSave, FiSearch } from 'react-icons/fi';
 import { useCep } from '../../hooks/useCep';
@@ -26,6 +27,7 @@ import { useCompanyData } from '../../hooks/useCompanyData';
 import { GoogleMap } from '../../components/GoogleMap';
 import { Company } from '../../types/company';
 import { PageHeader } from '@/components/PageHeader';
+import InputMask from 'react-input-mask';
 
 interface StyleProps {
   textColor: string;
@@ -56,22 +58,30 @@ function CompanyCard({ company, handleInputChange, styles }: CompanyCardProps) {
       <GridItem>
         <FormControl isRequired>
           <FormLabel>CNPJ</FormLabel>
-          <Input
-            value={company.document}
-            onChange={(e) => handleInputChange('document', e.target.value)}
-            placeholder="00.000.000/0000-00"
-          />
+          <InputGroup>
+            <Input
+              as={InputMask}
+              mask="99.999.999/9999-99"
+              value={company.document}
+              onChange={(e) => handleInputChange('document', e.target.value)}
+              placeholder="00.000.000/0000-00"
+            />
+          </InputGroup>
         </FormControl>
       </GridItem>
 
       <GridItem>
         <FormControl>
           <FormLabel>Telefone</FormLabel>
-          <Input
-            value={company.phone}
-            onChange={(e) => handleInputChange('phone', e.target.value)}
-            placeholder="(00) 0000-0000"
-          />
+          <InputGroup>
+            <Input
+              as={InputMask}
+              mask="(99) 99999-9999"
+              value={company.phone}
+              onChange={(e) => handleInputChange('phone', e.target.value)}
+              placeholder="(00) 00000-0000"
+            />
+          </InputGroup>
         </FormControl>
       </GridItem>
 
@@ -175,7 +185,7 @@ function AddressCard({ company, states, handleInputChange, styles }: AddressCard
 }
 
 export default function Empresa() {
-  const { company, states, isLoading, handleInputChange, handleSave, fetchCompanyData, isSaving } = useCompanyData();
+  const { company, states, isLoading, handleInputChange: baseHandleInputChange, handleSave, fetchCompanyData, isSaving } = useCompanyData();
   const toast = useToast();
   const [addressUpdated, setAddressUpdated] = useState(false);
 
@@ -238,11 +248,26 @@ export default function Empresa() {
     }
   });
 
+  // Função para remover máscaras
+  const removeMask = (value: string) => value.replace(/\D/g, '');
+
+  // Wrapper para handleInputChange que remove máscaras quando necessário
+  const handleInputChange = (field: keyof Company, value: any) => {
+    if (field === 'phone' || field === 'document' || field === 'postal_code') {
+      baseHandleInputChange(field, removeMask(value));
+    } else {
+      baseHandleInputChange(field, value);
+    }
+  };
+
   const styles: StyleProps = {
     textColor: useColorModeValue('gray.800', 'white'),
     dividerColor: useColorModeValue('gray.200', 'gray.600'),
     iconColor: useColorModeValue('gray.600', 'gray.400'),
   };
+
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   const titleGradient = useColorModeValue(
     'linear(to-r, blue.400, blue.600)',
@@ -274,20 +299,16 @@ export default function Empresa() {
           { label: 'Empresa', href: '/configuracoes/empresa' }
         ]}
       />
-
-      <Box 
-        display="flex" 
-        justifyContent="center" 
-        w="full" 
-        p={6} 
-        gap={6} 
-        minH="100vh"
-        mt="100px"
+      <Box
+        display="flex"
+        gap={8}
+        pt="100px"
+        px={8}
+        flexDirection={{ base: "column", xl: "row" }}
       >
-        {/* Container do Formulário */}
-        <VStack spacing={6} align="stretch" maxW="900px" w="full">
-          {/* Cabeçalho */}
-          <Box borderWidth="2px" borderRadius="lg" p={6} bg="white">
+        <VStack flex="1" spacing={6} align="stretch">
+          {/* Seção: Dados da Empresa */}
+          <Box borderWidth="2px" borderRadius="lg" p={6} bg={cardBg} borderColor={borderColor}>
             <VStack spacing={4} align="stretch">
               <Heading 
                 size="lg" 
@@ -320,11 +341,15 @@ export default function Empresa() {
 
                   <FormControl isRequired>
                     <FormLabel>CNPJ</FormLabel>
-                    <Input
-                      value={company.document}
-                      onChange={(e) => handleInputChange('document', e.target.value)}
-                      placeholder="00.000.000/0000-00"
-                    />
+                    <InputGroup>
+                      <Input
+                        as={InputMask}
+                        mask="99.999.999/9999-99"
+                        value={company.document}
+                        onChange={(e) => handleInputChange('document', e.target.value)}
+                        placeholder="00.000.000/0000-00"
+                      />
+                    </InputGroup>
                   </FormControl>
                 </SimpleGrid>
 
@@ -341,11 +366,15 @@ export default function Empresa() {
 
                   <FormControl isRequired>
                     <FormLabel>Telefone</FormLabel>
-                    <Input
-                      value={company.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="(00) 0000-0000"
-                    />
+                    <InputGroup>
+                      <Input
+                        as={InputMask}
+                        mask="(99) 99999-9999"
+                        value={company.phone}
+                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        placeholder="(00) 00000-0000"
+                      />
+                    </InputGroup>
                   </FormControl>
                 </SimpleGrid>
               </VStack>
@@ -353,7 +382,7 @@ export default function Empresa() {
           </Box>
 
           {/* Seção: Endereço */}
-          <Box borderWidth="2px" borderRadius="lg" p={6} bg="white">
+          <Box borderWidth="2px" borderRadius="lg" p={6} bg={cardBg} borderColor={borderColor}>
             <VStack spacing={4} align="stretch">
               <Heading 
                 size="md"
@@ -367,17 +396,19 @@ export default function Empresa() {
                 <FormControl>
                   <FormLabel>CEP</FormLabel>
                   <HStack>
-                    <Input
-                      value={company.postal_code}
-                      onChange={(e) => handleInputChange('postal_code', e.target.value)}
-                      maxLength={8}
-                      placeholder="00000-000"
-                    />
+                    <InputGroup>
+                      <Input
+                        as={InputMask}
+                        mask="99999-999"
+                        value={company.postal_code}
+                        onChange={(e) => handleInputChange('postal_code', e.target.value)}
+                        placeholder="00000-000"
+                      />
+                    </InputGroup>
                     <Button
                       onClick={() => {
                         if (!company.postal_code) return;
-                        const cleanCep = company.postal_code.replace(/\D/g, '');
-                        handleCepLookup(cleanCep);
+                        handleCepLookup(company.postal_code);
                       }}
                       isLoading={cepLoading}
                       colorScheme="blue"
@@ -458,7 +489,7 @@ export default function Empresa() {
           </Box>
 
           {/* Botões de Ação */}
-          <Box borderWidth="2px" borderRadius="lg" p={6} bg="white">
+          <Box borderWidth="2px" borderRadius="lg" p={6} bg={cardBg} borderColor={borderColor}>
             <VStack spacing={4} align="stretch">
               <HStack spacing={4} justify="center">
                 <Button
@@ -483,7 +514,8 @@ export default function Empresa() {
           h="805px"
           position="sticky"
           top="24px"
-          bg="white"
+          bg={cardBg}
+          borderColor={borderColor}
           p={4}
         >
           <VStack spacing={4} align="stretch" h="full">
@@ -494,7 +526,7 @@ export default function Empresa() {
             >
               Localização no Mapa
             </Heading>
-            <Text fontSize="sm" color="gray.600">
+            <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
               Clique no mapa ou arraste o marcador para atualizar a localização
             </Text>
             {company && (

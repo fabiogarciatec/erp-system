@@ -63,6 +63,9 @@ const NavItem = ({ icon, children, subItems, ...rest }: NavItemProps) => {
   const { isOpen, onToggle } = useDisclosure();
   const location = useLocation();
 
+  // Verifica se algum submenu está ativo
+  const isSubMenuActive = subItems?.some(item => location.pathname === item.href);
+
   return (
     <Box>
       <Flex
@@ -73,6 +76,7 @@ const NavItem = ({ icon, children, subItems, ...rest }: NavItemProps) => {
         role="group"
         onClick={onToggle}
         color={useColorModeValue('gray.600', 'gray.400')}
+        bg={isSubMenuActive ? useColorModeValue('blue.50', 'rgba(66, 153, 225, 0.1)') : 'transparent'}
         _hover={{
           bg: useColorModeValue('gray.100', 'gray.700'),
           color: useColorModeValue('gray.900', 'white'),
@@ -84,9 +88,10 @@ const NavItem = ({ icon, children, subItems, ...rest }: NavItemProps) => {
             mr="4"
             fontSize="16"
             as={icon}
+            color={isSubMenuActive ? 'blue.500' : 'inherit'}
           />
         )}
-        <Text flex="1">{children}</Text>
+        <Text flex="1" color={isSubMenuActive ? 'blue.500' : 'inherit'}>{children}</Text>
         {subItems && (
           <Icon
             as={FiChevronDown}
@@ -94,30 +99,35 @@ const NavItem = ({ icon, children, subItems, ...rest }: NavItemProps) => {
             transform={isOpen ? 'rotate(180deg)' : ''}
             w={6}
             h={6}
+            color={isSubMenuActive ? 'blue.500' : 'inherit'}
           />
         )}
       </Flex>
       {subItems && (
         <Collapse in={isOpen} animateOpacity>
           <Stack pl="12" mt="2">
-            {subItems.map((item) => (
-              <Link key={item.href} to={item.href} style={{ textDecoration: 'none' }}>
-                <Flex
-                  align="center"
-                  py="2"
-                  px="4"
-                  rounded="md"
-                  color={location.pathname === item.href ? 'blue.500' : useColorModeValue('gray.600', 'gray.400')}
-                  _hover={{
-                    bg: useColorModeValue('gray.100', 'gray.700'),
-                    color: useColorModeValue('gray.900', 'white'),
-                  }}
-                >
-                  {item.icon && <Icon as={item.icon} mr="3" fontSize="14" />}
-                  <Text fontSize="sm">{item.label}</Text>
-                </Flex>
-              </Link>
-            ))}
+            {subItems.map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <Link key={item.href} to={item.href} style={{ textDecoration: 'none' }}>
+                  <Flex
+                    align="center"
+                    py="2"
+                    px="4"
+                    rounded="md"
+                    bg={isActive ? useColorModeValue('blue.50', 'rgba(66, 153, 225, 0.1)') : 'transparent'}
+                    color={isActive ? 'blue.500' : useColorModeValue('gray.600', 'gray.400')}
+                    _hover={{
+                      bg: useColorModeValue('gray.100', 'gray.700'),
+                      color: useColorModeValue('gray.900', 'white'),
+                    }}
+                  >
+                    {item.icon && <Icon as={item.icon} mr="3" fontSize="14" />}
+                    <Text fontSize="sm">{item.label}</Text>
+                  </Flex>
+                </Link>
+              );
+            })}
           </Stack>
         </Collapse>
       )}
@@ -178,9 +188,9 @@ function Sidebar(props: FlexProps) {
 
   const configuracoesSubItems = [
     { label: 'Perfil', href: '/configuracoes/perfil', icon: FiUser },
+    { label: 'Empresa', href: '/configuracoes/empresa', icon: FiUsers },
     { label: 'Geral', href: '/configuracoes/geral', icon: FiSettings },
     { label: 'Segurança', href: '/configuracoes/seguranca', icon: FiShield },
-    { label: 'Empresa', href: '/configuracoes/empresa', icon: FiUsers },
     { label: 'Notificações', href: '/configuracoes/notificacoes', icon: FiBell },
     { label: 'Integrações', href: '/configuracoes/integracoes', icon: FiLink },
     { label: 'Backup', href: '/configuracoes/backup', icon: FiDatabase },

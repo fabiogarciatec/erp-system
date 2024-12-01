@@ -2,7 +2,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { NewLogin } from '../pages/NewLogin';
 import { HelloWorld } from '../pages/HelloWorld';
 import { useAuth } from '../contexts/AuthContext';
-import { Spinner, Center, Box, Text } from '@chakra-ui/react';
+import { Spinner, Center } from '@chakra-ui/react';
+import { Profile2 } from '../pages/Profile';
 
 function LoadingScreen() {
   return (
@@ -13,13 +14,13 @@ function LoadingScreen() {
 }
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { usuario, loading } = useAuth();
+  const { user, loading } = useAuth();
   
   if (loading) {
     return <LoadingScreen />;
   }
   
-  if (!usuario) {
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
   
@@ -27,13 +28,13 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { usuario, loading } = useAuth();
+  const { user, loading } = useAuth();
   
   if (loading) {
     return <LoadingScreen />;
   }
   
-  if (usuario) {
+  if (user) {
     return <Navigate to="/hello" replace />;
   }
   
@@ -41,13 +42,13 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 }
 
 function RootRoute() {
-  const { usuario, loading } = useAuth();
+  const { user, loading } = useAuth();
   
   if (loading) {
     return <LoadingScreen />;
   }
   
-  if (usuario) {
+  if (user) {
     return <Navigate to="/hello" replace />;
   }
   
@@ -71,6 +72,15 @@ export function AppRoutes() {
         element={
           <PrivateRoute>
             <HelloWorld />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <PrivateRoute>
+            <Profile2 />
           </PrivateRoute>
         }
       />

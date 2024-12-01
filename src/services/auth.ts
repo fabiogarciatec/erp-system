@@ -19,6 +19,7 @@ export interface Company {
   document: string
   email: string
   phone: string
+  avatar_url?: string | null
 }
 
 export interface User {
@@ -39,6 +40,83 @@ export interface RegisterData {
   companyDocument: string
   companyEmail?: string
   companyPhone?: string
+}
+
+// Raw Supabase data types
+interface RawSupabasePermission {
+  id: number;
+  name: string;
+  description: string;
+}
+
+interface RawSupabaseRolePermission {
+  permission: RawSupabasePermission;
+}
+
+interface RawSupabaseRole {
+  id: number;
+  name: string;
+  description: string;
+  permissions: RawSupabaseRolePermission[];
+}
+
+interface RawSupabaseRoleWrapper {
+  role: {
+    id: number;
+    name: string;
+    description: string;
+    permissions: {
+      permission: RawSupabasePermission;
+    }[];
+  };
+}
+
+interface RawSupabaseCompanyWrapper {
+  company: {
+    id: string;
+    name: string;
+    document: string;
+    email: string;
+    phone: string;
+    avatar_url?: string | null;
+  };
+}
+
+// Funções de transformação segura
+function transformRoleData(rawData: any): UserRole {
+  if (!rawData?.role) {
+    throw new Error('Invalid role data structure');
+  }
+
+  const { role } = rawData;
+  
+  return {
+    id: role.id,
+    name: role.name,
+    description: role.description,
+    permissions: (role.permissions || []).map((p: any) => ({
+      id: p.permission.id,
+      name: p.permission.name,
+      description: p.permission.description
+    }))
+  };
+}
+
+function transformCompanyData(rawData: any): Company {
+  if (!rawData?.company) {
+    throw new Error('Invalid company data structure');
+  }
+
+  const { company } = rawData;
+  
+  return {
+    id: company.id,
+    name: company.name,
+    document: company.document,
+    email: company.email,
+    phone: company.phone,
+    avatar_url: company.avatar_url
+  };
 }
 
 export const authService = {
@@ -172,26 +250,39 @@ export const authService = {
 
       if (rolesError) throw rolesError
 
-      // Transform roles data
-      const userRoles = roles.map(({ role }) => ({
-        id: role.id,
-        name: role.name,
-        description: role.description,
-        permissions: role.permissions.map(p => p.permission)
-      }))
-
-      // Combine all permissions
-      const userPermissions = userRoles.reduce((acc, role) => {
-        role.permissions.forEach(permission => {
-          if (!acc.find(p => p.id === permission.id)) {
-            acc.push(permission)
+      // Transform roles data safely
+      const userRoles: UserRole[] = roles
+        .map(data => {
+          try {
+            return transformRoleData(data);
+          } catch (error) {
+            console.error('Error transforming role:', error);
+            return null;
           }
         })
-        return acc
-      }, [] as UserPermission[])
+        .filter((role): role is UserRole => role !== null);
 
-      // Transform companies data
-      const userCompanies = companies.map(({ company }) => company)
+      // Combine all permissions
+      const userPermissions: UserPermission[] = userRoles.reduce((acc, role) => {
+        role.permissions.forEach((permission) => {
+          if (!acc.find(p => p.id === permission.id)) {
+            acc.push(permission);
+          }
+        });
+        return acc;
+      }, [] as UserPermission[]);
+
+      // Transform companies data safely
+      const userCompanies: Company[] = companies
+        .map(data => {
+          try {
+            return transformCompanyData(data);
+          } catch (error) {
+            console.error('Error transforming company:', error);
+            return null;
+          }
+        })
+        .filter((company): company is Company => company !== null);
 
       return {
         user: {
@@ -249,26 +340,39 @@ export const authService = {
 
     if (rolesError) throw rolesError
 
-    // Transform roles data
-    const userRoles = roles.map(({ role }) => ({
-      id: role.id,
-      name: role.name,
-      description: role.description,
-      permissions: role.permissions.map(p => p.permission)
-    }))
-
-    // Combine all permissions
-    const userPermissions = userRoles.reduce((acc, role) => {
-      role.permissions.forEach(permission => {
-        if (!acc.find(p => p.id === permission.id)) {
-          acc.push(permission)
+    // Transform roles data safely
+    const userRoles: UserRole[] = roles
+      .map(data => {
+        try {
+          return transformRoleData(data);
+        } catch (error) {
+          console.error('Error transforming role:', error);
+          return null;
         }
       })
-      return acc
-    }, [] as UserPermission[])
+      .filter((role): role is UserRole => role !== null);
 
-    // Transform companies data
-    const userCompanies = companies.map(({ company }) => company)
+    // Combine all permissions
+    const userPermissions: UserPermission[] = userRoles.reduce((acc, role) => {
+      role.permissions.forEach((permission) => {
+        if (!acc.find(p => p.id === permission.id)) {
+          acc.push(permission);
+        }
+      });
+      return acc;
+    }, [] as UserPermission[]);
+
+    // Transform companies data safely
+    const userCompanies: Company[] = companies
+      .map(data => {
+        try {
+          return transformCompanyData(data);
+        } catch (error) {
+          console.error('Error transforming company:', error);
+          return null;
+        }
+      })
+      .filter((company): company is Company => company !== null);
 
     return {
       id: user.id,
