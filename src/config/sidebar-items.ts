@@ -52,16 +52,16 @@ export const sidebarItems: SidebarItem[] = [
   },
   {
     name: 'Configurações',
-    path: '/settings',
+    path: '/configuracoes',
     icon: FiSettings,
     subItems: [
       {
-        name: 'Perfil',
-        path: '/settings/profile'
+        name: 'Profile',
+        path: '/configuracoes/profile'
       },
       {
-        name: 'Empresa',
-        path: '/settings/company'
+        name: 'Company',
+        path: '/configuracoes/company'
       }
     ]
   }

@@ -1,20 +1,21 @@
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
-import Customers from './pages/Customers';
-import { Products } from './pages/Products';
-import { Sales } from './pages/Sales';
-import { Financial } from './pages/Financial';
-import { Reports } from './pages/Reports';
-import { Settings } from './pages/Settings';
-import { Profile2 } from './pages/Profile';
-import { Users } from './pages/Users';
-import { Inventory } from './pages/Inventory';
-import { GeneralSettings } from './pages/settings/General';
-import { IntegrationsSettings } from './pages/settings/Integrations';
-import { Security } from './pages/settings/Security';
-import { Notifications } from './pages/settings/Notifications';
-import { Backup } from './pages/settings/Backup';
+import Customers from './pages/cadastros/clientes';
+import { Products } from './pages/cadastros/produtos';
+import { Sales } from './pages/operacoes/vendas';
+import { Financial } from './pages/financeiro/Financial';
+import { Reports } from './pages/relatorios/Reports';
+import { Settings } from './pages/configuracoes';
+import { Profile } from './pages/configuracoes/Profile';
+import { Company } from './pages/configuracoes/Company';
+import { Users } from './pages/usuarios/Users';
+import { Inventory } from './pages/estoque/Inventory';
+import { GeneralSettings } from './pages/configuracoes/General';
+import { IntegrationsSettings } from './pages/configuracoes/Integrations';
+import { Security } from './pages/configuracoes/Security';
+import { Notifications } from './pages/configuracoes/Notifications';
+import { Backup } from './pages/configuracoes/Backup';
 import Categorias from './pages/cadastros/Categorias';
 import Empresa from './pages/empresa';
 
@@ -62,8 +63,8 @@ function AppRoutes() {
           {/* Configurações */}
           <Route path="configuracoes">
             <Route index element={<Settings />} />
-            <Route path="perfil" element={<Profile2 />} />
-            <Route path="empresa" element={<Empresa />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="company" element={<Company />} />
             <Route path="geral" element={<GeneralSettings />} />
             <Route path="integracoes" element={<IntegrationsSettings />} />
             <Route path="seguranca" element={<Security />} />

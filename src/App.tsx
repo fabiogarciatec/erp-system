@@ -1,29 +1,29 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ChakraProvider, ColorModeScript, extendTheme } from '@chakra-ui/react';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { PrivateRoute } from '@/components/PrivateRoute';
-import Layout from '@/components/Layout';
-import Login from '@/pages/Login';
-import Dashboard from '@/pages/Dashboard';
-import Customers from '@/pages/Customers';
-import NotFound from '@/pages/NotFound';
-import Unauthorized from '@/pages/Unauthorized';
+import { AuthProvider } from './contexts/AuthContext';
+import { PrivateRoute } from './components/PrivateRoute';
+import Layout from './components/Layout';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Customers from './pages/Customers';
+import NotFound from './pages/NotFound';
+import Unauthorized from './pages/Unauthorized';
 
 // Importando as páginas de cadastro
-import Clientes from '@/pages/cadastros/Clientes';
-import Produtos from '@/pages/cadastros/Produtos';
-import Fornecedores from '@/pages/cadastros/Fornecedores';
-import Categorias from '@/pages/cadastros/Categorias';
+import Clientes from './pages/cadastros/Clientes';
+import Produtos from './pages/cadastros/Produtos';
+import Fornecedores from './pages/cadastros/Fornecedores';
+import Categorias from './pages/cadastros/Categorias';
 
 // Importando as páginas de operações
-import Vendas from '@/pages/operacoes/Vendas';
-import Orcamentos from '@/pages/operacoes/Orcamentos';
-import Pedidos from '@/pages/operacoes/Pedidos';
-import NotasFiscais from '@/pages/operacoes/NotasFiscais';
+import Vendas from './pages/operacoes/Vendas';
+import Orcamentos from './pages/operacoes/Orcamentos';
+import Pedidos from './pages/operacoes/Pedidos';
+import NotasFiscais from './pages/operacoes/NotasFiscais';
 
 // Importando as páginas de configurações
-import Perfil from '@/pages/configuracoes/Perfil';
-import Empresa from '@/pages/configuracoes/Empresa';
+import Profile from './pages/configuracoes/Profile';
+import Company from './pages/configuracoes/Company';
 
 import { routerConfig } from './router.config';
 
@@ -180,7 +180,7 @@ function App() {
               element={
                 <PrivateRoute>
                   <Layout>
-                    <Perfil />
+                    <Profile />
                   </Layout>
                 </PrivateRoute>
               }
@@ -191,7 +191,7 @@ function App() {
               element={
                 <PrivateRoute>
                   <Layout>
-                    <Empresa />
+                    <Company />
                   </Layout>
                 </PrivateRoute>
               }
