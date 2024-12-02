@@ -1,4 +1,4 @@
-import supabase from '@/lib/supabase';
+import { supabase } from '@/lib/supabaseClient';
 
 export interface UserPermission {
   id: number
@@ -122,7 +122,7 @@ function transformCompanyData(rawData: any): Company {
 export const authService = {
   async register({ email, password, companyName, companyDocument, companyEmail, companyPhone }: RegisterData) {
     try {
-      // Step 1: Create the user
+      // Step 1: Create the user in Auth
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -133,78 +133,79 @@ export const authService = {
 
       if (signUpError) {
         console.error('Signup error:', signUpError)
+        if (signUpError.message.includes('User already registered')) {
+          throw new Error('Este e-mail já está registrado. Por favor, faça login.')
+        }
         throw signUpError
       }
 
       if (!authData.user) {
-        throw new Error('No user data returned')
+        throw new Error('Erro ao criar usuário. Por favor, tente novamente.')
       }
 
-      // Step 2: Create the company
-      const { data: company, error: companyError } = await supabase
-        .from('companies')
-        .insert([
-          {
-            name: companyName,
-            document: companyDocument,
-            email: companyEmail || null,
-            phone: companyPhone || null,
-          },
-        ])
-        .select()
-        .single()
-
-      if (companyError) {
-        console.error('Company creation error:', companyError)
-        throw companyError
+      // Step 2: Tentar limpar dados existentes
+      try {
+        const { error: cleanError } = await supabase.rpc('clean_user_data', {
+          p_user_id: authData.user.id
+        })
+        
+        if (cleanError) {
+          console.warn('Error cleaning user data:', cleanError)
+          // Continuar mesmo se falhar a limpeza
+        }
+      } catch (cleanError) {
+        console.warn('Error cleaning user data:', cleanError)
+        // Continuar mesmo se falhar a limpeza
       }
 
-      // Step 3: Create user-company relationship
-      const { error: userCompanyError } = await supabase
-        .from('user_companies')
-        .insert([
-          {
-            user_id: authData.user.id,
-            company_id: company.id,
-            is_owner: true,
-          },
-        ])
+      // Step 3: Create user profile and related records
+      const { data: result, error: transactionError } = await supabase.rpc('create_user_complete', {
+        p_user_id: authData.user.id,
+        p_email: email,
+        p_company_name: companyName,
+        p_company_document: companyDocument,
+        p_company_email: companyEmail || null,
+        p_company_phone: companyPhone || null
+      })
 
-      if (userCompanyError) {
-        console.error('User-company relationship error:', userCompanyError)
-        throw userCompanyError
+      if (transactionError) {
+        console.error('Transaction error:', transactionError)
+        // Tentar remover o usuário do auth se falhar a criação do perfil
+        await supabase.auth.signOut()
+        throw new Error('Erro ao criar perfil de usuário. Por favor, tente novamente.')
       }
 
-      // Step 4: Assign default role
-      const { data: defaultRole, error: roleError } = await supabase
-        .from('roles')
-        .select('id')
-        .eq('name', 'user')
-        .single()
-
-      if (roleError) {
-        console.error('Role fetch error:', roleError)
-        throw roleError
+      if (!result?.success) {
+        console.error('Database operation failed:', result)
+        if (result?.debug_info) {
+          console.log('Debug info:', result.debug_info)
+        }
+        
+        // Tentar remover o usuário do auth se falhar a criação do perfil
+        await supabase.auth.signOut()
+        
+        if (result?.error_detail === 'PROFILE_EXISTS') {
+          throw new Error('Este usuário já está registrado. Por favor, faça login.')
+        } else if (result?.error_detail === 'ROLE_NOT_FOUND') {
+          throw new Error('Erro de configuração: Papel de usuário não encontrado. Entre em contato com o suporte.')
+        }
+        
+        throw new Error(result?.error || 'Erro ao criar perfil de usuário. Por favor, tente novamente.')
       }
 
-      const { error: userRoleError } = await supabase
-        .from('user_roles')
-        .insert([
-          {
-            user_id: authData.user.id,
-            role_id: defaultRole.id,
-          },
-        ])
-
-      if (userRoleError) {
-        console.error('User role assignment error:', userRoleError)
-        throw userRoleError
-      }
-
-      return authData
-    } catch (error) {
+      return { user: authData.user }
+    } catch (error: any) {
       console.error('Registration error:', error)
-      throw error
+      
+      // Se o erro já tiver uma mensagem formatada, repassar
+      if (error.message.includes('já está registrado') || 
+          error.message.includes('Erro ao criar') ||
+          error.message.includes('Erro de configuração')) {
+        throw error
+      }
+      
+      // Erro genérico
+      throw new Error('Ocorreu um erro durante o registro. Por favor, tente novamente.')
     }
   },
 
