@@ -25,71 +25,47 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ title, subtitle, description, breadcrumbs, rightContent }: PageHeaderProps) {
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.100', 'gray.700');
-  const breadcrumbColor = useColorModeValue('gray.500', 'gray.400');
-  const titleGradient = useColorModeValue(
-    'linear(to-r, blue.400, blue.600)',
-    'linear(to-r, blue.200, blue.400)'
-  );
-  const subtitleColor = useColorModeValue('gray.500', 'gray.400');
+  const bgColor = useColorModeValue('white', 'gray.800')
+  const borderColor = useColorModeValue('gray.200', 'gray.700')
+  const subtitleColor = useColorModeValue('gray.600', 'gray.400')
+  const breadcrumbColor = useColorModeValue('gray.500', 'gray.400')
+  const separatorColor = useColorModeValue('gray.300', 'gray.600')
 
   return (
     <>
       <Box
-        position="fixed"
-        top="56px"
-        right={0}
-        left="240px"
-        height="4px"
+        as="header"
         bg={bgColor}
         borderBottom="1px"
         borderColor={borderColor}
-        zIndex={2}
-      />
-      <Box 
-        position="fixed"
-        top="60px"
-        right={0}
-        left="240px"
-        bg={bgColor}
-        borderBottom="1px"
-        borderColor={borderColor}
-        zIndex={2}
-        h="90px"
-        display="flex"
-        alignItems="center"
-        backdropFilter="blur(10px)"
-        backgroundColor={useColorModeValue('rgba(255, 255, 255, 0.9)', 'rgba(26, 32, 44, 0.9)')}
-        boxShadow="sm"
+        mb={8}
+        py={4}
+        px={0}
       >
-        <Box 
-          w="100%"
-          px={6}
-        >
-          <Flex direction="column" h="100%" justify="center">
-            {breadcrumbs && (
-              <Breadcrumb 
-                fontSize="sm" 
-                color={breadcrumbColor} 
-                mb={1.5}
-                spacing={2}
-                separator={<Icon as={FiChevronRight} color={breadcrumbColor} />}
+        <Box maxW="7xl" mx="auto" px={[4, 6, 8]}>
+          <Flex direction="column">
+            {breadcrumbs && breadcrumbs.length > 0 && (
+              <Breadcrumb
+                mb={2}
+                fontSize="sm"
+                separator={
+                  <Icon
+                    as={FiChevronRight}
+                    color={separatorColor}
+                    fontSize="1em"
+                    mt={1}
+                  />
+                }
               >
-                <BreadcrumbItem>
-                  <BreadcrumbLink 
-                    as={Link} 
-                    to="/"
-                    _hover={{ color: 'blue.500', textDecoration: 'none' }}
-                  >
-                    Home
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
                 {breadcrumbs.map((item, index) => (
-                  <BreadcrumbItem key={index} isCurrentPage={index === breadcrumbs.length - 1}>
-                    <BreadcrumbLink 
-                      as={Link} 
+                  <BreadcrumbItem
+                    key={index}
+                    isCurrentPage={index === breadcrumbs.length - 1}
+                  >
+                    <BreadcrumbLink
+                      as={Link}
                       to={item.href}
+                      color={breadcrumbColor}
                       _hover={{ color: 'blue.500', textDecoration: 'none' }}
                     >
                       {item.label}
@@ -98,26 +74,26 @@ export function PageHeader({ title, subtitle, description, breadcrumbs, rightCon
                 ))}
               </Breadcrumb>
             )}
-            
-            <HStack justify="space-between" align="center" spacing={4}>
-              <Box>
+
+            <HStack spacing={4} justify="space-between" align="flex-start">
+              <Box flex="1">
                 <Box>
-                  <Heading 
+                  <Heading
                     as="h1"
-                    size="lg"
-                    bgGradient={titleGradient}
-                    bgClip="text"
+                    fontSize={{ base: '2xl', sm: '3xl' }}
+                    fontWeight="bold"
+                    color="inherit"
+                    mb={description ? 1 : 0}
                   >
                     {title}
                   </Heading>
+
                   {description && (
-                    <Text 
-                      color={subtitleColor} 
-                      mt={1}
-                    >
+                    <Text color={subtitleColor} mt={1}>
                       {description}
                     </Text>
                   )}
+
                   {subtitle && (
                     <Text 
                       color={subtitleColor} 

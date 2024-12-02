@@ -184,7 +184,7 @@ function AddressCard({ company, states, handleInputChange, styles }: AddressCard
   );
 }
 
-export default function Empresa() {
+function CompanyPage() {
   const { company, states, isLoading, handleInputChange: baseHandleInputChange, handleSave, fetchCompanyData, isSaving } = useCompanyData();
   const toast = useToast();
   const [addressUpdated, setAddressUpdated] = useState(false);
@@ -568,3 +568,5 @@ export default function Empresa() {
     </Box>
   );
 }
+
+export { CompanyPage as Company };

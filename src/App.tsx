@@ -5,7 +5,6 @@ import { PrivateRoute } from './components/PrivateRoute';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Customers from './pages/Customers';
 import NotFound from './pages/NotFound';
 import Unauthorized from './pages/Unauthorized';
 
@@ -22,8 +21,15 @@ import Pedidos from './pages/operacoes/Pedidos';
 import NotasFiscais from './pages/operacoes/NotasFiscais';
 
 // Importando as páginas de configurações
+import { Settings } from './pages/configuracoes/Settings';
 import Profile from './pages/configuracoes/Profile';
-import Company from './pages/configuracoes/Company';
+import { Company } from './pages/configuracoes/company';
+import { GeneralSettings } from './pages/configuracoes/General';
+import { IntegrationsSettings } from './pages/configuracoes/Integrations';
+import { Security } from './pages/configuracoes/Security';
+import { Notifications } from './pages/configuracoes/Notifications';
+import { Backup } from './pages/configuracoes/Backup';
+import Users from './pages/configuracoes/Users';
 
 import { routerConfig } from './router.config';
 
@@ -176,26 +182,24 @@ function App() {
 
             {/* Configurações */}
             <Route
-              path="/configuracoes/perfil"
+              path="/configuracoes/*"
               element={
                 <PrivateRoute>
                   <Layout>
-                    <Profile />
+                    <Settings />
                   </Layout>
                 </PrivateRoute>
               }
-            />
-
-            <Route
-              path="/configuracoes/empresa"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <Company />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
+            >
+              <Route path="perfil" element={<Profile />} />
+              <Route path="empresa" element={<Company />} />
+              <Route path="gerais" element={<GeneralSettings />} />
+              <Route path="integracoes" element={<IntegrationsSettings />} />
+              <Route path="seguranca" element={<Security />} />
+              <Route path="notificacoes" element={<Notifications />} />
+              <Route path="backup" element={<Backup />} />
+              <Route path="usuarios" element={<Users />} />
+            </Route>
 
             {/* 404 route */}
             <Route path="*" element={<NotFound />} />

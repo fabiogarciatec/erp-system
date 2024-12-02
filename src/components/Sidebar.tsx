@@ -148,7 +148,7 @@ function Sidebar(props: FlexProps) {
     { label: 'Categorias', href: '/cadastros/categorias', icon: FiGrid },
     { label: 'Serviços', href: '/cadastros/servicos', icon: FiTool },
     { label: 'Marcas', href: '/cadastros/marcas', icon: FiTag },
-    { label: 'Unidades', href: '/cadastros/unidades', icon: FiBox },
+    { label: 'Unidades', href: '/cadastros/unidades', icon: FiBox }
   ];
 
   const operacoesSubItems = [
@@ -188,14 +188,48 @@ function Sidebar(props: FlexProps) {
 
   const configuracoesSubItems = [
     { label: 'Perfil', href: '/configuracoes/perfil', icon: FiUser },
-    { label: 'Empresa', href: '/configuracoes/empresa', icon: FiUsers },
-    { label: 'Geral', href: '/configuracoes/geral', icon: FiSettings },
+    { label: 'Empresa', href: '/configuracoes/empresa', icon: FiGrid },
+    { label: 'Geral', href: '/configuracoes/gerais', icon: FiTool },
+    { label: 'Usuários', href: '/configuracoes/usuarios', icon: FiUsers },
     { label: 'Segurança', href: '/configuracoes/seguranca', icon: FiShield },
     { label: 'Notificações', href: '/configuracoes/notificacoes', icon: FiBell },
     { label: 'Integrações', href: '/configuracoes/integracoes', icon: FiLink },
-    { label: 'Backup', href: '/configuracoes/backup', icon: FiDatabase },
-    { label: 'Usuários', href: '/configuracoes/usuarios', icon: FiUsers },
+    { label: 'Backup', href: '/configuracoes/backup', icon: FiRefreshCw },
     { label: 'Permissões', href: '/configuracoes/permissoes', icon: FiShield },
+  ];
+
+  const SidebarConfig = [
+    { label: 'Dashboard', icon: FiHome, href: '/dashboard' },
+    {
+      label: 'Cadastros',
+      icon: FiDatabase,
+      subItems: cadastrosSubItems,
+    },
+    {
+      label: 'Operações',
+      icon: FiShoppingCart,
+      subItems: operacoesSubItems,
+    },
+    {
+      label: 'Financeiro',
+      icon: FiDollarSign,
+      subItems: financeiroSubItems,
+    },
+    {
+      label: 'Estoque',
+      icon: FiPackage,
+      subItems: estoqueSubItems,
+    },
+    {
+      label: 'Relatórios',
+      icon: FiBarChart2,
+      subItems: relatoriosSubItems,
+    },
+    {
+      label: 'Configurações',
+      icon: FiSettings,
+      subItems: configuracoesSubItems,
+    },
   ];
 
   const logoutBg = useColorModeValue('red.50', 'rgba(254, 178, 178, 0.12)');
@@ -224,34 +258,21 @@ function Sidebar(props: FlexProps) {
       </Flex>
 
       <Flex direction="column" flex="1">
-        <Link to="/" style={{ textDecoration: 'none' }}>
-          <NavItem icon={FiHome}>Dashboard</NavItem>
-        </Link>
-
-        <NavItem icon={FiUsers} subItems={cadastrosSubItems}>
-          Cadastros
-        </NavItem>
-
-        <NavItem icon={FiShoppingCart} subItems={operacoesSubItems}>
-          Operações
-        </NavItem>
-
-        <NavItem icon={FiDollarSign} subItems={financeiroSubItems}>
-          Financeiro
-        </NavItem>
-
-        <NavItem icon={FiPackage} subItems={estoqueSubItems}>
-          Estoque
-        </NavItem>
-
-        <NavItem icon={FiBarChart2} subItems={relatoriosSubItems}>
-          Relatórios
-        </NavItem>
-
-        <NavItem icon={FiSettings} subItems={configuracoesSubItems}>
-          Configurações
-        </NavItem>
-
+        {SidebarConfig.map((item) => {
+          if (item.subItems) {
+            return (
+              <NavItem key={item.label} icon={item.icon} subItems={item.subItems}>
+                {item.label}
+              </NavItem>
+            );
+          } else {
+            return (
+              <Link key={item.href} to={item.href} style={{ textDecoration: 'none' }}>
+                <NavItem icon={item.icon}>{item.label}</NavItem>
+              </Link>
+            );
+          }
+        })}
         <Box mt="auto" pt={8} mb={4}>
           <Button
             onClick={logout}

@@ -3,15 +3,15 @@ import {
   Container,
   Text,
   VStack,
+  SimpleGrid,
   Card,
   CardBody,
   Icon,
-  SimpleGrid,
   useColorModeValue,
 } from '@chakra-ui/react';
 import { FiUser, FiUsers, FiSettings, FiDatabase, FiLink, FiBell, FiShield } from 'react-icons/fi';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { PageHeader } from '../components/PageHeader';
+import { PageHeader } from '../../components/PageHeader';
 
 interface SettingCard {
   title: string;
@@ -25,50 +25,56 @@ const settingCards: SettingCard[] = [
     title: 'Perfil',
     description: 'Gerencie suas informações pessoais e preferências',
     icon: FiUser,
-    href: '/settings/profile',
-  },
-  {
-    title: 'Geral',
-    description: 'Configurações gerais do sistema',
-    icon: FiSettings,
-    href: '/settings/general',
-  },
-  {
-    title: 'Segurança',
-    description: 'Configure opções de segurança e autenticação',
-    icon: FiShield,
-    href: '/settings/security',
+    href: '/configuracoes/perfil',
   },
   {
     title: 'Empresa',
     description: 'Gerencie informações da empresa',
     icon: FiUsers,
-    href: '/settings/company',
+    href: '/configuracoes/empresa',
+  },
+  {
+    title: 'Geral',
+    description: 'Configurações gerais do sistema',
+    icon: FiSettings,
+    href: '/configuracoes/gerais',
+  },
+  {
+    title: 'Usuários',
+    description: 'Gerencie usuários e permissões',
+    icon: FiUsers,
+    href: '/configuracoes/usuarios',
+  },
+  {
+    title: 'Segurança',
+    description: 'Configure opções de segurança e autenticação',
+    icon: FiShield,
+    href: '/configuracoes/seguranca',
   },
   {
     title: 'Notificações',
     description: 'Configure suas preferências de notificação',
     icon: FiBell,
-    href: '/settings/notifications',
+    href: '/configuracoes/notificacoes',
   },
   {
     title: 'Integrações',
     description: 'Gerencie integrações com outros sistemas',
     icon: FiLink,
-    href: '/settings/integrations',
+    href: '/configuracoes/integracoes',
   },
   {
     title: 'Backup',
     description: 'Configure e gerencie backups do sistema',
     icon: FiDatabase,
-    href: '/settings/backup',
+    href: '/configuracoes/backup',
   },
 ];
 
 export function Settings() {
   const location = useLocation();
   const cardBg = useColorModeValue('white', 'gray.700');
-  const isRoot = location.pathname === '/settings';
+  const isRoot = location.pathname === '/configuracoes' || location.pathname === '/configuracoes/';
 
   if (!isRoot) {
     return <Outlet />;
@@ -79,9 +85,9 @@ export function Settings() {
       <PageHeader 
         title="Configurações"
         subtitle="Gerencie as configurações do sistema"
-        breadcrumbs=[
+        breadcrumbs={[
           { label: 'Configurações', href: '/configuracoes' }
-        ]
+        ]}
       />
       
       <Box 
@@ -123,3 +129,5 @@ export function Settings() {
     </Box>
   );
 }
+
+export default Settings;
