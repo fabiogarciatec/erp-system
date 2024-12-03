@@ -27,11 +27,10 @@ import {
   Flex,
 } from '@chakra-ui/react';
 import { FiUser, FiMail, FiPhone, FiBriefcase, FiEdit, FiCamera, FiTrash2, FiSave } from 'react-icons/fi';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import supabase from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/PageHeader';
-import InputMask from 'react-input-mask';
 
 interface UserProfile {
   id: string;
@@ -118,6 +117,8 @@ export default function Perfil() {
     }
     return numbers;
   };
+
+  const phoneInputRef = useRef<HTMLInputElement>(null);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
@@ -505,23 +506,18 @@ export default function Perfil() {
                         <Text>Telefone</Text>
                       </HStack>
                     </FormLabel>
-                    <InputMask
-                      mask="(99) 99999-9999"
+                    <Input
+                      ref={phoneInputRef}
+                      type="tel"
                       value={formatPhoneForDisplay(profile.phone)}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                    >
-                      {(inputProps: any) => (
-                        <Input
-                          {...inputProps}
-                          placeholder="(00) 00000-0000"
-                          bg={inputBg}
-                          borderColor={borderColor}
-                          _hover={{
-                            borderColor: hoverBorderColor
-                          }}
-                        />
-                      )}
-                    </InputMask>
+                      placeholder="(00) 00000-0000"
+                      bg={inputBg}
+                      borderColor={borderColor}
+                      _hover={{
+                        borderColor: hoverBorderColor
+                      }}
+                    />
                   </FormControl>
                 </SimpleGrid>
 

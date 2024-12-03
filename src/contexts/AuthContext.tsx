@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string) => Promise<void>
+  register: (data: { email: string, password: string, companyName: string, companyDocument: string, companyEmail?: string, companyPhone?: string }) => Promise<void>
   logout: () => Promise<void>
   hasPermission: (permission: string) => boolean
   hasRole: (role: string) => boolean
@@ -36,18 +36,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      setLoading(true);
       const { user } = await authService.login(email, password)
       setUser(user)
       navigate('/dashboard')
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === 'Invalid login credentials') {
+        throw new Error('Email ou senha inválidos. Se você acabou de criar sua conta, confirme seu email antes de fazer login.');
+      }
       console.error('Login error:', error)
       throw error
+    } finally {
+      setLoading(false)
     }
   }
 
-  const register = async (email: string, password: string) => {
+  const register = async (data: { 
+    email: string, 
+    password: string, 
+    companyName: string, 
+    companyDocument: string, 
+    companyEmail?: string, 
+    companyPhone?: string 
+  }) => {
     try {
-      await authService.register(email, password)
+      await authService.register(data)
     } catch (error) {
       console.error('Register error:', error)
       throw error

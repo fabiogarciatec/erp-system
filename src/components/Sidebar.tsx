@@ -63,6 +63,13 @@ const NavItem = ({ icon, children, subItems, ...rest }: NavItemProps) => {
   const { isOpen, onToggle } = useDisclosure();
   const location = useLocation();
 
+  // Movendo todos os useColorModeValue para o topo do componente
+  const textColor = useColorModeValue('gray.600', 'gray.400');
+  const activeTextColor = 'blue.500';
+  const hoverBgColor = useColorModeValue('gray.100', 'gray.700');
+  const hoverTextColor = useColorModeValue('gray.900', 'white');
+  const activeBgColor = useColorModeValue('blue.50', 'rgba(66, 153, 225, 0.1)');
+
   // Verifica se algum submenu está ativo
   const isSubMenuActive = subItems?.some(item => location.pathname === item.href);
 
@@ -75,11 +82,11 @@ const NavItem = ({ icon, children, subItems, ...rest }: NavItemProps) => {
         cursor="pointer"
         role="group"
         onClick={onToggle}
-        color={useColorModeValue('gray.600', 'gray.400')}
-        bg={isSubMenuActive ? useColorModeValue('blue.50', 'rgba(66, 153, 225, 0.1)') : 'transparent'}
+        color={textColor}
+        bg={isSubMenuActive ? activeBgColor : 'transparent'}
         _hover={{
-          bg: useColorModeValue('gray.100', 'gray.700'),
-          color: useColorModeValue('gray.900', 'white'),
+          bg: hoverBgColor,
+          color: hoverTextColor,
         }}
         {...rest}
       >
@@ -88,10 +95,10 @@ const NavItem = ({ icon, children, subItems, ...rest }: NavItemProps) => {
             mr="4"
             fontSize="16"
             as={icon}
-            color={isSubMenuActive ? 'blue.500' : 'inherit'}
+            color={isSubMenuActive ? activeTextColor : 'inherit'}
           />
         )}
-        <Text flex="1" color={isSubMenuActive ? 'blue.500' : 'inherit'}>{children}</Text>
+        <Text flex="1" color={isSubMenuActive ? activeTextColor : 'inherit'}>{children}</Text>
         {subItems && (
           <Icon
             as={FiChevronDown}
@@ -99,7 +106,7 @@ const NavItem = ({ icon, children, subItems, ...rest }: NavItemProps) => {
             transform={isOpen ? 'rotate(180deg)' : ''}
             w={6}
             h={6}
-            color={isSubMenuActive ? 'blue.500' : 'inherit'}
+            color={isSubMenuActive ? activeTextColor : 'inherit'}
           />
         )}
       </Flex>
@@ -115,11 +122,11 @@ const NavItem = ({ icon, children, subItems, ...rest }: NavItemProps) => {
                     py="2"
                     px="4"
                     rounded="md"
-                    bg={isActive ? useColorModeValue('blue.50', 'rgba(66, 153, 225, 0.1)') : 'transparent'}
-                    color={isActive ? 'blue.500' : useColorModeValue('gray.600', 'gray.400')}
+                    bg={isActive ? activeBgColor : 'transparent'}
+                    color={isActive ? activeTextColor : textColor}
                     _hover={{
-                      bg: useColorModeValue('gray.100', 'gray.700'),
-                      color: useColorModeValue('gray.900', 'white'),
+                      bg: hoverBgColor,
+                      color: hoverTextColor,
                     }}
                   >
                     {item.icon && <Icon as={item.icon} mr="3" fontSize="14" />}
@@ -138,6 +145,16 @@ const NavItem = ({ icon, children, subItems, ...rest }: NavItemProps) => {
 function Sidebar(props: FlexProps) {
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const textColor = useColorModeValue('gray.600', 'gray.400');
+  const activeTextColor = 'blue.500';
+  const hoverBgColor = useColorModeValue('gray.100', 'gray.700');
+  const hoverTextColor = useColorModeValue('gray.900', 'white');
+  const activeBgColor = useColorModeValue('blue.50', 'rgba(66, 153, 225, 0.1)');
+  const logoutBg = useColorModeValue('red.50', 'rgba(254, 178, 178, 0.12)');
+  const logoutColor = useColorModeValue('red.500', 'red.300');
+  const logoutHoverBg = useColorModeValue('red.100', 'rgba(254, 178, 178, 0.24)');
+  const logoutHoverColor = useColorModeValue('red.500', 'red.300');
+
   const { logout } = useAuth();
   const location = useLocation();
 
@@ -231,11 +248,6 @@ function Sidebar(props: FlexProps) {
       subItems: configuracoesSubItems,
     },
   ];
-
-  const logoutBg = useColorModeValue('red.50', 'rgba(254, 178, 178, 0.12)');
-  const logoutColor = useColorModeValue('red.500', 'red.300');
-  const logoutHoverBg = useColorModeValue('red.100', 'rgba(254, 178, 178, 0.24)');
-  const logoutHoverColor = useColorModeValue('red.500', 'red.300');
 
   return (
     <Box

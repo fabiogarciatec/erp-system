@@ -24,140 +24,58 @@ import {
   Input,
   Select,
   VStack,
-  HStack,
   Badge,
-  Text,
   useToast,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  Tooltip,
-  InputGroup,
-  InputLeftElement,
-  Checkbox,
-  Stack,
-  Tag,
-  TagLabel,
   useColorModeValue,
-  Divider,
 } from '@chakra-ui/react';
-import { useState } from 'react';
-import {
-  FiPlus,
-  FiEdit2,
-  FiTrash2,
-  FiMoreVertical,
-  FiSearch,
-  FiMail,
-  FiLock,
-  FiUser,
-  FiUsers,
-  FiShield,
-  FiAlertCircle,
-  FiCheck,
-} from 'react-icons/fi';
-
-interface Permission {
-  id: string;
-  name: string;
-  description: string;
-}
-
-interface Role {
-  id: string;
-  name: string;
-  description: string;
-  permissions: Permission[];
-}
+import { useState, useEffect } from 'react';
+import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface User {
   id: string;
-  name: string;
   email: string;
-  role: Role;
-  status: 'active' | 'inactive';
-  lastLogin?: string;
-  avatar?: string;
-  department?: string;
-  phone?: string;
+  full_name: string | null;
+  role: string;
+  created_at: string;
+  company_id: string;
 }
-
-// Mock data
-const mockPermissions: Permission[] = [
-  { id: '1', name: 'read:users', description: 'Ver usuários' },
-  { id: '2', name: 'write:users', description: 'Criar/Editar usuários' },
-  { id: '3', name: 'delete:users', description: 'Remover usuários' },
-  { id: '4', name: 'read:financial', description: 'Ver dados financeiros' },
-  { id: '5', name: 'write:financial', description: 'Gerenciar dados financeiros' },
-  { id: '6', name: 'read:inventory', description: 'Ver estoque' },
-  { id: '7', name: 'write:inventory', description: 'Gerenciar estoque' },
-  { id: '8', name: 'read:reports', description: 'Ver relatórios' },
-  { id: '9', name: 'manage:settings', description: 'Gerenciar configurações' },
-];
-
-const mockRoles: Role[] = [
-  {
-    id: '1',
-    name: 'Administrador',
-    description: 'Acesso total ao sistema',
-    permissions: mockPermissions,
-  },
-  {
-    id: '2',
-    name: 'Gerente',
-    description: 'Acesso gerencial com algumas restrições',
-    permissions: mockPermissions.filter((p) => !p.name.includes('delete')),
-  },
-  {
-    id: '3',
-    name: 'Usuário',
-    description: 'Acesso básico ao sistema',
-    permissions: mockPermissions.filter((p) => p.name.startsWith('read')),
-  },
-];
-
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'Admin User',
-    email: 'admin@example.com',
-    role: mockRoles[0],
-    status: 'active',
-    lastLogin: '2024-01-20 15:30',
-    department: 'TI',
-    phone: '(11) 99999-9999',
-  },
-  {
-    id: '2',
-    name: 'John Doe',
-    email: 'john@example.com',
-    role: mockRoles[1],
-    status: 'active',
-    lastLogin: '2024-01-19 10:15',
-    department: 'Vendas',
-    phone: '(11) 98888-8888',
-  },
-  {
-    id: '3',
-    name: 'Jane Smith',
-    email: 'jane@example.com',
-    role: mockRoles[2],
-    status: 'inactive',
-    lastLogin: '2024-01-15 08:45',
-    department: 'Financeiro',
-    phone: '(11) 97777-7777',
-  },
-];
 
 function Users() {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
   const toast = useToast();
+  const { user: currentUser } = useAuth();
   const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
+
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('company_id', currentUser?.currentCompany?.id);
+
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao carregar usuários',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, [currentUser?.currentCompany?.id]);
 
   const handleAddUser = () => {
     setSelectedUser(null);
@@ -169,275 +87,273 @@ function Users() {
     onOpen();
   };
 
-  const handleDeleteUser = (userId: string) => {
-    // Em produção, aqui seria feita a chamada à API
-    setUsers(users.filter((user) => user.id !== userId));
-    toast({
-      title: 'Usuário removido',
-      description: 'O usuário foi removido com sucesso.',
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Usuário removido',
+        description: 'O usuário foi removido com sucesso.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao remover usuário',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
-  const handleSaveUser = () => {
-    // Em produção, aqui seria feita a chamada à API
-    toast({
-      title: selectedUser ? 'Usuário atualizado' : 'Usuário criado',
-      description: selectedUser
-        ? 'As alterações foram salvas com sucesso.'
-        : 'O novo usuário foi criado com sucesso.',
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
-    onClose();
-  };
+  const handleSaveUser = async (formData: any) => {
+    try {
+      if (selectedUser) {
+        // Update existing user
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            full_name: formData.full_name,
+            role: formData.role,
+          })
+          .eq('id', selectedUser.id);
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.department?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+        if (error) throw error;
+
+        toast({
+          title: 'Usuário atualizado',
+          description: 'As alterações foram salvas com sucesso.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        // Create new user
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            data: {
+              full_name: formData.full_name,
+              role: formData.role,
+              company_id: currentUser?.currentCompany?.id,
+            }
+          }
+        });
+
+        if (signUpError) throw signUpError;
+        if (!authData.user) throw new Error('Erro ao criar usuário');
+
+        // Aguarda um momento para garantir que o trigger do Supabase criou o perfil
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        try {
+          // Cria a relação entre usuário e empresa
+          const { error: userCompanyError } = await supabase
+            .from('user_companies')
+            .insert([{
+              user_id: authData.user.id,
+              company_id: currentUser?.currentCompany?.id,
+              is_owner: false,
+              created_at: new Date().toISOString()
+            }]);
+
+          if (userCompanyError) throw userCompanyError;
+
+          // Atribui a role padrão ao usuário
+          const { data: defaultRole, error: roleError } = await supabase
+            .from('roles')
+            .select('id')
+            .eq('name', 'user')
+            .single();
+
+          if (roleError) throw roleError;
+
+          const { error: userRoleError } = await supabase
+            .from('user_roles')
+            .insert([{
+              user_id: authData.user.id,
+              role_id: defaultRole.id,
+              created_at: new Date().toISOString()
+            }]);
+
+          if (userRoleError) throw userRoleError;
+
+          // Atualiza o perfil
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: authData.user.id,
+              email: formData.email,
+              full_name: formData.full_name,
+              role: formData.role,
+              company_id: currentUser?.currentCompany?.id,
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'id'
+            });
+
+          if (profileError) throw profileError;
+
+          toast({
+            title: 'Usuário criado com sucesso',
+            description: 'Um email de confirmação foi enviado para ' + formData.email + '. O usuário precisa confirmar o email antes de fazer login.',
+            status: 'success',
+            duration: 5000,
+            isClosable: true,
+          });
+
+        } catch (error: any) {
+          // Log do erro para diagnóstico
+          console.error('Erro ao criar relações do usuário:', error);
+          throw error;
+        }
+      }
+
+      onClose();
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Erro completo:', error);
+      toast({
+        title: 'Erro ao salvar usuário',
+        description: error.message || 'Ocorreu um erro ao salvar o usuário',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
   return (
-    <Box height="100vh" overflow="hidden">
-      <Flex direction="column" h="full">
-        {/* Header */}
-        <Box p={6} borderBottomWidth="1px" borderColor={borderColor} bg={bgColor}>
-          <Flex justify="space-between" align="center">
-            <Box>
-              <Heading size="lg">Usuários</Heading>
-              <Text color="gray.500" mt={1}>
-                Gerencie os usuários e suas permissões
-              </Text>
-            </Box>
-            <Button
-              leftIcon={<FiPlus />}
-              colorScheme="blue"
-              onClick={handleAddUser}
-              size="lg"
-            >
-              Novo Usuário
-            </Button>
-          </Flex>
-
-          {/* Search Bar */}
-          <InputGroup maxW="600px" mt={6}>
-            <InputLeftElement pointerEvents="none">
-              <FiSearch color="gray.300" />
-            </InputLeftElement>
-            <Input
-              placeholder="Buscar por nome, email ou departamento..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </InputGroup>
-        </Box>
-
-        {/* Table Container */}
-        <Box overflowY="auto" flex="1" p={6}>
-          <Table variant="simple" bg={bgColor} rounded="lg" shadow="sm">
-            <Thead>
-              <Tr>
-                <Th>Usuário</Th>
-                <Th>Cargo</Th>
-                <Th>Departamento</Th>
-                <Th>Status</Th>
-                <Th>Último Acesso</Th>
-                <Th>Ações</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {filteredUsers.map((user) => (
-                <Tr key={user.id}>
-                  <Td>
-                    <HStack spacing={3}>
-                      <Box
-                        bg="gray.100"
-                        w="40px"
-                        h="40px"
-                        rounded="full"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                      >
-                        <FiUser size="20px" color="gray.600" />
-                      </Box>
-                      <Box>
-                        <Text fontWeight="medium">{user.name}</Text>
-                        <Text fontSize="sm" color="gray.500">
-                          {user.email}
-                        </Text>
-                      </Box>
-                    </HStack>
-                  </Td>
-                  <Td>
-                    <Tag colorScheme="purple" size="md">
-                      <TagLabel>{user.role.name}</TagLabel>
-                    </Tag>
-                  </Td>
-                  <Td>{user.department}</Td>
-                  <Td>
-                    <Badge
-                      colorScheme={user.status === 'active' ? 'green' : 'red'}
-                      px={2}
-                      py={1}
-                      rounded="full"
-                    >
-                      {user.status === 'active' ? 'Ativo' : 'Inativo'}
-                    </Badge>
-                  </Td>
-                  <Td>
-                    <Text fontSize="sm" color="gray.500">
-                      {user.lastLogin}
-                    </Text>
-                  </Td>
-                  <Td>
-                    <Menu>
-                      <MenuButton
-                        as={IconButton}
-                        icon={<FiMoreVertical />}
-                        variant="ghost"
-                        size="sm"
-                      />
-                      <MenuList>
-                        <MenuItem
-                          icon={<FiEdit2 />}
-                          onClick={() => handleEditUser(user)}
-                        >
-                          Editar
-                        </MenuItem>
-                        <MenuItem
-                          icon={<FiTrash2 />}
-                          onClick={() => handleDeleteUser(user.id)}
-                          color="red.500"
-                        >
-                          Remover
-                        </MenuItem>
-                      </MenuList>
-                    </Menu>
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
-        </Box>
+    <Container maxW="container.xl" py={5}>
+      <Flex justify="space-between" align="center" mb={5}>
+        <Heading size="lg">Usuários</Heading>
+        <Button leftIcon={<FiPlus />} colorScheme="blue" onClick={handleAddUser}>
+          Novo Usuário
+        </Button>
       </Flex>
 
-      {/* Add/Edit User Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="xl">
+      <Box bg={bgColor} rounded="lg" shadow="sm" overflow="hidden">
+        <Table variant="simple">
+          <Thead>
+            <Tr>
+              <Th>Nome</Th>
+              <Th>Email</Th>
+              <Th>Função</Th>
+              <Th>Data de Criação</Th>
+              <Th>Ações</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {users.map((user) => (
+              <Tr key={user.id}>
+                <Td>{user.full_name || '-'}</Td>
+                <Td>{user.email}</Td>
+                <Td>
+                  <Badge colorScheme={user.role === 'admin' ? 'red' : 'blue'}>
+                    {user.role}
+                  </Badge>
+                </Td>
+                <Td>{new Date(user.created_at).toLocaleDateString()}</Td>
+                <Td>
+                  <IconButton
+                    aria-label="Editar usuário"
+                    icon={<FiEdit2 />}
+                    size="sm"
+                    colorScheme="blue"
+                    variant="ghost"
+                    mr={2}
+                    onClick={() => handleEditUser(user)}
+                  />
+                  <IconButton
+                    aria-label="Remover usuário"
+                    icon={<FiTrash2 />}
+                    size="sm"
+                    colorScheme="red"
+                    variant="ghost"
+                    onClick={() => handleDeleteUser(user.id)}
+                  />
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </Box>
+
+      <Modal isOpen={isOpen} onClose={onClose} size="md">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>
-            {selectedUser ? 'Editar Usuário' : 'Novo Usuário'}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={4}>
-              <FormControl isRequired>
-                <FormLabel>Nome</FormLabel>
-                <Input
-                  placeholder="Digite o nome completo"
-                  defaultValue={selectedUser?.name}
-                />
-              </FormControl>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              handleSaveUser(Object.fromEntries(formData));
+            }}
+          >
+            <ModalHeader>
+              {selectedUser ? 'Editar Usuário' : 'Novo Usuário'}
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <VStack spacing={4}>
+                <FormControl isRequired>
+                  <FormLabel>Nome Completo</FormLabel>
+                  <Input
+                    name="full_name"
+                    defaultValue={selectedUser?.full_name || ''}
+                  />
+                </FormControl>
 
-              <FormControl isRequired>
-                <FormLabel>E-mail</FormLabel>
-                <Input
-                  type="email"
-                  placeholder="Digite o e-mail"
-                  defaultValue={selectedUser?.email}
-                />
-              </FormControl>
+                {!selectedUser && (
+                  <>
+                    <FormControl isRequired>
+                      <FormLabel>Email</FormLabel>
+                      <Input name="email" type="email" />
+                    </FormControl>
 
-              <FormControl>
-                <FormLabel>Telefone</FormLabel>
-                <Input
-                  placeholder="Digite o telefone"
-                  defaultValue={selectedUser?.phone}
-                />
-              </FormControl>
+                    <FormControl isRequired>
+                      <FormLabel>Senha</FormLabel>
+                      <Input name="password" type="password" />
+                    </FormControl>
+                  </>
+                )}
 
-              <FormControl>
-                <FormLabel>Departamento</FormLabel>
-                <Input
-                  placeholder="Digite o departamento"
-                  defaultValue={selectedUser?.department}
-                />
-              </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Função</FormLabel>
+                  <Select
+                    name="role"
+                    defaultValue={selectedUser?.role || 'user'}
+                  >
+                    <option value="user">Usuário</option>
+                    <option value="admin">Administrador</option>
+                    <option value="manager">Gerente</option>
+                  </Select>
+                </FormControl>
+              </VStack>
+            </ModalBody>
 
-              <FormControl isRequired>
-                <FormLabel>Cargo</FormLabel>
-                <Select
-                  placeholder="Selecione o cargo"
-                  defaultValue={selectedUser?.role.id}
-                >
-                  {mockRoles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.name}
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel>Status</FormLabel>
-                <Select
-                  placeholder="Selecione o status"
-                  defaultValue={selectedUser?.status}
-                >
-                  <option value="active">Ativo</option>
-                  <option value="inactive">Inativo</option>
-                </Select>
-              </FormControl>
-
-              <Box w="full">
-                <FormLabel>Permissões</FormLabel>
-                <Box
-                  maxH="200px"
-                  overflowY="auto"
-                  borderWidth="1px"
-                  borderColor={borderColor}
-                  rounded="md"
-                  p={4}
-                >
-                  <Stack spacing={3}>
-                    {mockPermissions.map((permission) => (
-                      <Checkbox
-                        key={permission.id}
-                        defaultChecked={selectedUser?.role.permissions.some(
-                          (p) => p.id === permission.id
-                        )}
-                      >
-                        <Box>
-                          <Text fontWeight="medium">{permission.description}</Text>
-                          <Text fontSize="sm" color="gray.500">
-                            {permission.name}
-                          </Text>
-                        </Box>
-                      </Checkbox>
-                    ))}
-                  </Stack>
-                </Box>
-              </Box>
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button colorScheme="blue" onClick={handleSaveUser}>
-              {selectedUser ? 'Salvar' : 'Criar'}
-            </Button>
-          </ModalFooter>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button type="submit" colorScheme="blue">
+                Salvar
+              </Button>
+            </ModalFooter>
+          </form>
         </ModalContent>
       </Modal>
-    </Box>
+    </Container>
   );
 }
 

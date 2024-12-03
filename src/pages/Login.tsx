@@ -1,41 +1,64 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
   Button,
-  FormControl,
-  FormLabel,
-  Input,
-  VStack,
-  useToast,
-  Text,
-  Heading,
-  Container,
   Card,
   CardBody,
-  Divider,
+  Container,
   Flex,
-  Stack,
+  FormControl,
+  FormLabel,
+  Heading,
   Hide,
-  Show
+  Input,
+  Show,
+  Stack,
+  Text,
+  useToast,
+  useColorMode,
+  VStack,
 } from '@chakra-ui/react'
 import { useAuth } from '@/contexts/AuthContext'
 
+interface LoginFormProps {
+  isRegistering: boolean
+  setIsRegistering: (value: boolean) => void
+  handleSubmit: (event: React.FormEvent) => Promise<void>
+  isLoading: boolean
+  email: string
+  setEmail: (value: string) => void
+  password: string
+  setPassword: (value: string) => void
+  companyName: string
+  setCompanyName: (value: string) => void
+  companyDocument: string
+  setCompanyDocument: (value: string) => void
+  companyEmail: string
+  setCompanyEmail: (value: string) => void
+  companyPhone: string
+  setCompanyPhone: (value: string) => void
+  error: string
+}
+
 export default function Login() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [companyName, setCompanyName] = useState('')
-  const [companyDocument, setCompanyDocument] = useState('')
-  const [companyEmail, setCompanyEmail] = useState('')
-  const [companyPhone, setCompanyPhone] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [isRegistering, setIsRegistering] = useState(false)
+  const [email, setEmail] = useState<string>('')
+  const [password, setPassword] = useState<string>('')
+  const [companyName, setCompanyName] = useState<string>('')
+  const [companyDocument, setCompanyDocument] = useState<string>('')
+  const [companyEmail, setCompanyEmail] = useState<string>('')
+  const [companyPhone, setCompanyPhone] = useState<string>('')
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isRegistering, setIsRegistering] = useState<boolean>(false)
+  const [error, setError] = useState<string>('')
   const { login, register } = useAuth()
   const navigate = useNavigate()
   const toast = useToast()
+  const { colorMode } = useColorMode()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setError('')
     setIsLoading(true)
 
     try {
@@ -50,12 +73,11 @@ export default function Login() {
           companyName,
           companyDocument,
           companyEmail,
-          companyPhone,
+          companyPhone
         })
-        
         toast({
-          title: 'Conta criada com sucesso!',
-          description: 'Agora você pode fazer login.',
+          title: 'Registro realizado com sucesso!',
+          description: 'Por favor, verifique seu e-mail para confirmar o cadastro.',
           status: 'success',
           duration: 5000,
           isClosable: true,
@@ -65,10 +87,11 @@ export default function Login() {
         await login(email, password)
         navigate('/dashboard')
       }
-    } catch (error) {
+    } catch (error: any) {
+      setError(error.message)
       toast({
         title: 'Erro',
-        description: error instanceof Error ? error.message : 'Ocorreu um erro',
+        description: error.message || 'Ocorreu um erro. Tente novamente.',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -84,7 +107,10 @@ export default function Login() {
       w="100vw"
       m="0"
       p="0"
-      bg="linear-gradient(135deg, #0396FF 0%, #ABDCFF 100%)"
+      bg={colorMode === 'dark' 
+        ? 'linear-gradient(135deg, #1A365D 0%, #2D3748 100%)'
+        : 'linear-gradient(135deg, #0396FF 0%, #ABDCFF 100%)'
+      }
       display="flex"
       alignItems="center"
       justifyContent="center"
@@ -109,25 +135,34 @@ export default function Login() {
         >
           <Box
             flex="1"
-            bg="linear-gradient(135deg, #f8faff 0%, #ffffff 100%)"
+            bg={colorMode === 'dark'
+              ? 'linear-gradient(135deg, #2D3748 0%, #1A365D 100%)'
+              : 'linear-gradient(135deg, #f8faff 0%, #ffffff 100%)'
+            }
             p={8}
             display="flex"
             alignItems="center"
             justifyContent="center"
             borderRadius="xl"
-            boxShadow="inset 0 0 20px rgba(74, 144, 226, 0.1)"
+            boxShadow={colorMode === 'dark'
+              ? 'inset 0 0 20px rgba(0, 0, 0, 0.3)'
+              : 'inset 0 0 20px rgba(74, 144, 226, 0.1)'
+            }
           >
             <Flex
               direction={{ base: 'row', md: 'column' }}
               align="center"
               justify="center"
-              spacing={{ base: 4, md: 0 }}
+              gap={{ base: 4, md: 8 }}
             >
               <Heading
                 fontSize={'4xl'}
                 textAlign={{ base: 'left', md: 'center' }}
                 mb={{ base: 0, md: 4 }}
                 mr={{ base: 4, md: 0 }}
+                color={colorMode === 'dark' ? '#CBD5E0' : '#666'}
+                position="relative"
+                top="35px"
               >
                 {isRegistering ? 'Criar Conta' : 'Login'}
               </Heading>
@@ -149,13 +184,20 @@ export default function Login() {
                   {/* Gradientes */}
                   <defs>
                     <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" style={{ stopColor: '#0066cc' }} />
-                      <stop offset="100%" style={{ stopColor: '#0099ff' }} />
+                      <stop offset="0%" style={{ stopColor: colorMode === 'dark' ? '#4299E1' : '#0066cc' }} />
+                      <stop offset="100%" style={{ stopColor: colorMode === 'dark' ? '#63B3ED' : '#0099ff' }} />
                     </linearGradient>
                     <linearGradient id="arrowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" style={{ stopColor: '#0066cc' }} />
-                      <stop offset="100%" style={{ stopColor: '#0099ff' }} />
+                      <stop offset="0%" style={{ stopColor: colorMode === 'dark' ? '#4299E1' : '#0066cc' }} />
+                      <stop offset="100%" style={{ stopColor: colorMode === 'dark' ? '#63B3ED' : '#0099ff' }} />
                     </linearGradient>
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                      <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
                   </defs>
 
                   {/* Logo FATEC com Seta */}
@@ -164,6 +206,7 @@ export default function Login() {
                       x="0"
                       y="25"
                       fill="url(#logoGradient)"
+                      filter={colorMode === 'dark' ? 'url(#glow)' : 'none'}
                       style={{ 
                         fontSize: '28px', 
                         fontWeight: 'bold', 
@@ -176,7 +219,7 @@ export default function Login() {
                     <text
                       x="110"
                       y="25"
-                      fill="#666"
+                      fill={colorMode === 'dark' ? '#FC8181' : '#E53E3E'}
                       style={{ 
                         fontSize: '28px', 
                         fontWeight: 'bold', 
@@ -196,7 +239,7 @@ export default function Login() {
                     x="200"
                     y="78"
                     textAnchor="middle"
-                    fill="#666"
+                    fill={colorMode === 'dark' ? '#CBD5E0' : '#666'}
                     style={{ 
                       fontSize: '13px', 
                       fontFamily: 'Arial',
@@ -318,7 +361,7 @@ export default function Login() {
                     x="200"
                     y="270"
                     textAnchor="middle"
-                    fill="#666"
+                    fill={colorMode === 'dark' ? '#CBD5E0' : '#666'}
                     style={{ 
                       fontSize: '12px', 
                       fontFamily: 'Arial',
@@ -332,7 +375,7 @@ export default function Login() {
             </Flex>
           </Box>
 
-          <CardBody flex="1" p={8}>
+          <CardBody flex="1" p={8} bg={colorMode === 'dark' ? 'gray.700' : 'white'} boxShadow="inset 0 0 20px rgba(74, 144, 226, 0.1)">
             <LoginForm 
               isRegistering={isRegistering}
               setIsRegistering={setIsRegistering}
@@ -350,6 +393,7 @@ export default function Login() {
               setCompanyEmail={setCompanyEmail}
               companyPhone={companyPhone}
               setCompanyPhone={setCompanyPhone}
+              error={error}
             />
           </CardBody>
         </Card>
@@ -357,72 +401,242 @@ export default function Login() {
 
       {/* Layout Mobile */}
       <Show below='md'>
-        <Box
-          w="100%"
-          minH="100vh"
-          bg="linear-gradient(135deg, #0396FF 0%, #ABDCFF 100%)"
-          overflowY="auto"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          py={{ base: 20, sm: 16 }}
-        >
-          <VStack
-            w="100%"
-            spacing={{ base: 4, sm: 6 }}
-            px={4}
-            align="center"
-          >
-            <Box
-              w="100%"
-              maxW="450px"
-              bg="white"
-              borderRadius="xl"
-              p={{ base: 4, sm: 6 }}
-              boxShadow="lg"
-              overflowY="visible"
-            >
-              <VStack spacing={{ base: 4, sm: 6 }} align="center" w="100%">
-                <Heading
-                  fontSize={{ base: "2xl", sm: "3xl" }}
-                  color="gray.700"
-                  alignSelf="flex-start"
-                  mb={{ base: 2, sm: 0 }}
+        <Container maxW="container.xl" py={10}>
+          <Card>
+            <CardBody p={8} bg={colorMode === 'dark' ? 'gray.700' : 'white'} boxShadow="inset 0 0 20px rgba(74, 144, 226, 0.1)">
+              <Stack
+                direction={{ base: 'column', md: 'row' }}
+                align="center"
+                justify="center"
+                gap={{ base: 4, md: 8 }}
+              >
+                <Box
+                  w={{ base: '150px', md: '400px' }}
+                  h={{ base: '100px', md: 'auto' }}
+                  ml={{ base: 'auto', md: 0 }}
                 >
-                  {isRegistering ? 'Criar Conta' : 'Login'}
-                </Heading>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 400 300"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      maxWidth: '400px',
+                      objectFit: 'contain'
+                    }}
+                  >
+                    {/* Gradientes */}
+                    <defs>
+                      <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style={{ stopColor: colorMode === 'dark' ? '#4299E1' : '#0066cc' }} />
+                        <stop offset="100%" style={{ stopColor: colorMode === 'dark' ? '#63B3ED' : '#0099ff' }} />
+                      </linearGradient>
+                      <linearGradient id="arrowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style={{ stopColor: colorMode === 'dark' ? '#4299E1' : '#0066cc' }} />
+                        <stop offset="100%" style={{ stopColor: colorMode === 'dark' ? '#63B3ED' : '#0099ff' }} />
+                      </linearGradient>
+                    </defs>
 
-                <Box w="100%">
-                  <LoginForm 
-                    isRegistering={isRegistering}
-                    setIsRegistering={setIsRegistering}
-                    handleSubmit={handleSubmit}
-                    isLoading={isLoading}
-                    email={email}
-                    setEmail={setEmail}
-                    password={password}
-                    setPassword={setPassword}
-                    companyName={companyName}
-                    setCompanyName={setCompanyName}
-                    companyDocument={companyDocument}
-                    setCompanyDocument={setCompanyDocument}
-                    companyEmail={companyEmail}
-                    setCompanyEmail={setCompanyEmail}
-                    companyPhone={companyPhone}
-                    setCompanyPhone={setCompanyPhone}
-                  />
+                    {/* Logo FATEC com Seta */}
+                    <g transform="translate(120, 30)">
+                      <text
+                        x="0"
+                        y="25"
+                        fill="url(#logoGradient)"
+                        style={{ 
+                          fontSize: '28px', 
+                          fontWeight: 'bold', 
+                          fontFamily: 'Arial',
+                          letterSpacing: '1px'
+                        }}
+                      >
+                        FATEC
+                      </text>
+                      <text
+                        x="110"
+                        y="25"
+                        fill={colorMode === 'dark' ? '#FC8181' : '#E53E3E'}
+                        style={{ 
+                          fontSize: '28px', 
+                          fontWeight: 'bold', 
+                          fontFamily: 'Arial'
+                        }}
+                      >
+                        ERP
+                      </text>
+                      {/* Seta característica da FATEC */}
+                      <path
+                        d="M85 15 L100 15 L100 5 L120 20 L100 35 L100 25 L85 25 Z"
+                        fill="url(#arrowGradient)"
+                      />
+                    </g>
+
+                    <text
+                      x="200"
+                      y="78"
+                      textAnchor="middle"
+                      fill={colorMode === 'dark' ? '#CBD5E0' : '#666'}
+                      style={{ 
+                        fontSize: '13px', 
+                        fontFamily: 'Arial',
+                        letterSpacing: '0.5px'
+                      }}
+                    >
+                      Gestão Empresarial Inteligente
+                    </text>
+
+                    {/* Monitor com Dashboard */}
+                    <rect
+                      x="120"
+                      y="90"
+                      width="160"
+                      height="120"
+                      rx="8"
+                      fill="#ffffff"
+                      stroke="url(#logoGradient)"
+                      strokeWidth="2"
+                      filter="url(#shadow)"
+                    />
+
+                    {/* Gráficos e Elementos do Dashboard */}
+                    <g transform="translate(130, 100)">
+                      {/* Gráfico de Barras */}
+                      <rect x="10" y="10" width="15" height="40" fill="url(#logoGradient)" rx="2" />
+                      <rect x="30" y="20" width="15" height="30" fill="url(#logoGradient)" rx="2" />
+                      <rect x="50" y="15" width="15" height="35" fill="url(#logoGradient)" rx="2" />
+                      
+                      {/* Linha de Tendência */}
+                      <path
+                        d="M10 70 Q40 40 80 60"
+                        stroke="url(#logoGradient)"
+                        strokeWidth="2"
+                        fill="none"
+                        strokeLinecap="round"
+                      />
+
+                      {/* Círculo de Progresso */}
+                      <circle
+                        cx="120"
+                        cy="40"
+                        r="25"
+                        fill="none"
+                        stroke="url(#logoGradient)"
+                        strokeWidth="4"
+                        strokeDasharray="110,40"
+                      />
+                    </g>
+
+                    {/* Base do Monitor */}
+                    <rect
+                      x="140"
+                      y="210"
+                      width="120"
+                      height="10"
+                      rx="5"
+                      fill="url(#logoGradient)"
+                    />
+                    <rect
+                      x="180"
+                      y="220"
+                      width="40"
+                      height="5"
+                      rx="2.5"
+                      fill="url(#logoGradient)"
+                    />
+
+                    {/* Ícones Laterais */}
+                    <g>
+                      {/* Módulos do Sistema */}
+                      <g transform="translate(80, 120)">
+                        {[0, 40, 80].map((y, i) => (
+                          <rect
+                            key={i}
+                            x="0"
+                            y={y}
+                            width="30"
+                            height="30"
+                            rx="6"
+                            fill="#f8faff"
+                            stroke="url(#logoGradient)"
+                            strokeWidth="2"
+                          />
+                        ))}
+                      </g>
+
+                      <g transform="translate(290, 120)">
+                        {[0, 40, 80].map((y, i) => (
+                          <rect
+                            key={i}
+                            x="0"
+                            y={y}
+                            width="30"
+                            height="30"
+                            rx="6"
+                            fill="#f8faff"
+                            stroke="url(#logoGradient)"
+                            strokeWidth="2"
+                          />
+                        ))}
+                      </g>
+                    </g>
+
+                    {/* Linhas de Conexão */}
+                    <g stroke="url(#logoGradient)" strokeWidth="1" strokeDasharray="3,3">
+                      <path d="M110 135 h10 M280 135 h10" />
+                      <path d="M110 175 h10 M280 175 h10" />
+                      <path d="M110 215 h10 M280 215 h10" />
+                    </g>
+
+                    {/* Elementos Decorativos */}
+                    <circle cx="80" cy="90" r="4" fill="url(#logoGradient)" />
+                    <circle cx="320" cy="90" r="4" fill="url(#logoGradient)" />
+                    <circle cx="200" cy="250" r="4" fill="url(#logoGradient)" />
+
+                    {/* Texto de Copyright */}
+                    <text
+                      x="200"
+                      y="270"
+                      textAnchor="middle"
+                      fill={colorMode === 'dark' ? '#CBD5E0' : '#666'}
+                      style={{ 
+                        fontSize: '12px', 
+                        fontFamily: 'Arial',
+                        letterSpacing: '0.5px'
+                      }}
+                    >
+                      FatecInfo Tecnologia®
+                    </text>
+                  </svg>
                 </Box>
-              </VStack>
-            </Box>
-          </VStack>
-        </Box>
+              </Stack>
+              <LoginForm 
+                isRegistering={isRegistering}
+                setIsRegistering={setIsRegistering}
+                handleSubmit={handleSubmit}
+                isLoading={isLoading}
+                email={email}
+                setEmail={setEmail}
+                password={password}
+                setPassword={setPassword}
+                companyName={companyName}
+                setCompanyName={setCompanyName}
+                companyDocument={companyDocument}
+                setCompanyDocument={setCompanyDocument}
+                companyEmail={companyEmail}
+                setCompanyEmail={setCompanyEmail}
+                companyPhone={companyPhone}
+                setCompanyPhone={setCompanyPhone}
+                error={error}
+              />
+            </CardBody>
+          </Card>
+        </Container>
       </Show>
     </Box>
   )
 }
 
-// Componente do formulário para evitar duplicação de código
-const LoginForm = ({
+const LoginForm: React.FC<LoginFormProps> = ({
   isRegistering,
   setIsRegistering,
   handleSubmit,
@@ -438,28 +652,39 @@ const LoginForm = ({
   companyEmail,
   setCompanyEmail,
   companyPhone,
-  setCompanyPhone
+  setCompanyPhone,
+  error
 }) => {
+  const { colorMode } = useColorMode()
+
   return (
     <form onSubmit={handleSubmit} style={{ width: '100%' }}>
       <VStack spacing={4} align="stretch">
         <FormControl isRequired mb={4}>
-          <FormLabel>Email</FormLabel>
+          <FormLabel color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>Email</FormLabel>
           <Input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             size={{ base: "md", sm: "lg" }}
+            bg={colorMode === 'dark' ? 'gray.700' : 'white'}
+            borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
+            _hover={{ borderColor: colorMode === 'dark' ? 'gray.500' : 'gray.300' }}
+            color={colorMode === 'dark' ? 'white' : 'black'}
           />
         </FormControl>
 
         <FormControl isRequired mb={4}>
-          <FormLabel>Senha</FormLabel>
+          <FormLabel color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>Senha</FormLabel>
           <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             size={{ base: "md", sm: "lg" }}
+            bg={colorMode === 'dark' ? 'gray.700' : 'white'}
+            borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
+            _hover={{ borderColor: colorMode === 'dark' ? 'gray.500' : 'gray.300' }}
+            color={colorMode === 'dark' ? 'white' : 'black'}
           />
         </FormControl>
 
@@ -468,7 +693,7 @@ const LoginForm = ({
             <Text
               fontSize={{ base: "lg", sm: "xl" }}
               fontWeight="medium"
-              color="gray.700"
+              color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}
               mb={4}
             >
               Dados da Empresa
@@ -476,43 +701,69 @@ const LoginForm = ({
 
             <VStack spacing={{ base: 3, sm: 4 }} align="stretch">
               <FormControl isRequired>
-                <FormLabel>Nome da Empresa</FormLabel>
+                <FormLabel color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>Nome da Empresa</FormLabel>
                 <Input
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   size={{ base: "md", sm: "lg" }}
+                  bg={colorMode === 'dark' ? 'gray.700' : 'white'}
+                  borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
+                  _hover={{ borderColor: colorMode === 'dark' ? 'gray.500' : 'gray.300' }}
+                  color={colorMode === 'dark' ? 'white' : 'black'}
                 />
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel>CNPJ</FormLabel>
+                <FormLabel color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>CNPJ</FormLabel>
                 <Input
                   value={companyDocument}
                   onChange={(e) => setCompanyDocument(e.target.value)}
                   size={{ base: "md", sm: "lg" }}
+                  bg={colorMode === 'dark' ? 'gray.700' : 'white'}
+                  borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
+                  _hover={{ borderColor: colorMode === 'dark' ? 'gray.500' : 'gray.300' }}
+                  color={colorMode === 'dark' ? 'white' : 'black'}
                 />
               </FormControl>
 
               <FormControl>
-                <FormLabel>Email da Empresa</FormLabel>
+                <FormLabel color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>Email da Empresa</FormLabel>
                 <Input
                   type="email"
                   value={companyEmail}
                   onChange={(e) => setCompanyEmail(e.target.value)}
                   size={{ base: "md", sm: "lg" }}
+                  bg={colorMode === 'dark' ? 'gray.700' : 'white'}
+                  borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
+                  _hover={{ borderColor: colorMode === 'dark' ? 'gray.500' : 'gray.300' }}
+                  color={colorMode === 'dark' ? 'white' : 'black'}
                 />
               </FormControl>
 
               <FormControl>
-                <FormLabel>Telefone da Empresa</FormLabel>
+                <FormLabel color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>Telefone da Empresa</FormLabel>
                 <Input
                   value={companyPhone}
                   onChange={(e) => setCompanyPhone(e.target.value)}
                   size={{ base: "md", sm: "lg" }}
+                  bg={colorMode === 'dark' ? 'gray.700' : 'white'}
+                  borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
+                  _hover={{ borderColor: colorMode === 'dark' ? 'gray.500' : 'gray.300' }}
+                  color={colorMode === 'dark' ? 'white' : 'black'}
                 />
               </FormControl>
             </VStack>
           </Box>
+        )}
+
+        {error && (
+          <Text
+            fontSize={{ base: "sm", sm: "md" }}
+            color={colorMode === 'dark' ? 'red.500' : 'red.500'}
+            mb={4}
+          >
+            {error}
+          </Text>
         )}
 
         <Button
