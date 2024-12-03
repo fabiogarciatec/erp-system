@@ -1,27 +1,30 @@
-import { testSupabaseConnection } from '../utils/testConnection';
+import { Database } from '../types/supabase';
 
-console.log('Testando conexão com Supabase...\n');
+interface TestResult {
+  success: boolean;
+  message: string;
+  data?: Array<{ id: string }>;
+  error?: any;
+}
 
-testSupabaseConnection()
-  .then(result => {
+async function testConnection(): Promise<void> {
+  try {
+    const result: TestResult = await fetch('/api/test').then(res => res.json());
+    
     if (result.success) {
-      console.log('✅ Sucesso:', result.message);
-      if (result.session) {
-        console.log('\nSessão atual:', result.session);
-      }
+      console.log('Connection test successful:', result.message);
       if (result.data) {
-        console.log('\nDados de teste:', result.data);
+        console.log('Data:', result.data);
       }
-      process.exit(0);
     } else {
-      console.error('❌ Falha:', result.message);
+      console.error('Connection test failed:', result.message);
       if (result.error) {
-        console.error('\nDetalhes do erro:', result.error);
+        console.error('Error details:', result.error);
       }
-      process.exit(1);
     }
-  })
-  .catch(error => {
-    console.error('❌ Erro inesperado:', error);
-    process.exit(1);
-  });
+  } catch (error: unknown) {
+    console.error('Error testing connection:', error instanceof Error ? error.message : 'Unknown error');
+  }
+}
+
+testConnection();

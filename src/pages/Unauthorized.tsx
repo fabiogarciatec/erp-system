@@ -11,10 +11,15 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function Unauthorized() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { logout } = useAuth();
 
-  const handleSignOut = async () => {
-    await signOut();
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
   };
 
   return (
@@ -35,7 +40,7 @@ export default function Unauthorized() {
           </Button>
           <Button
             variant="outline"
-            onClick={handleSignOut}
+            onClick={handleLogout}
           >
             Sair
           </Button>

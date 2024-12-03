@@ -34,6 +34,7 @@ import {
 } from '@chakra-ui/react';
 import { FiPlus, FiEdit2, FiPackage, FiDownload } from 'react-icons/fi';
 import { useState } from 'react';
+import { PageHeader } from '../../components/PageHeader';
 
 interface InventoryItem {
   id: string;

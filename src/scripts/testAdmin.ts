@@ -1,18 +1,25 @@
-import { testSupabaseAdminConnection } from '../utils/testSupabaseAdmin';
+import { Database } from '../types/supabase';
 
-console.log('Iniciando testes de conexão superadmin...\n');
+interface TestResult {
+  success: boolean;
+  message: string;
+  data?: any;
+  error?: any;
+}
 
-testSupabaseAdminConnection()
-  .then(result => {
+async function testAdmin(): Promise<void> {
+  try {
+    const result: TestResult = await fetch('/api/admin/test').then(res => res.json());
+    
     if (result.success) {
-      console.log('\n🎉 Sucesso:', result.message);
-      process.exit(0);
+      console.log('Test successful:', result.message);
+      console.log('Data:', result.data);
     } else {
-      console.error('\n❌ Falha:', result.message);
-      process.exit(1);
+      console.error('Test failed:', result.message);
     }
-  })
-  .catch(error => {
-    console.error('\n❌ Erro inesperado:', error);
-    process.exit(1);
-  });
+  } catch (error: unknown) {
+    console.error('Error running test:', error instanceof Error ? error.message : 'Unknown error');
+  }
+}
+
+testAdmin();

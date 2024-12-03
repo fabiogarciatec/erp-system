@@ -1,4 +1,4 @@
-import { Box, Flex, useColorModeValue } from '@chakra-ui/react';
+import { Box, Flex, useColorModeValue, useDisclosure } from '@chakra-ui/react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
@@ -8,11 +8,12 @@ interface LayoutProps {
 
 function Layout({ children }: LayoutProps) {
   const bgColor = useColorModeValue('gray.50', 'gray.800');
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
     <Flex h="100vh" bg={bgColor}>
       {/* Menu Lateral */}
-      <Sidebar />
+      <Sidebar onClose={onClose} />
       
       {/* Área Principal */}
       <Box 

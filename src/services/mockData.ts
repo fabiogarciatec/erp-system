@@ -9,15 +9,20 @@ export const mockCustomers: Customer[] = [
     telefone: '(11) 99999-9999',
     tipo: 'individual',
     cpf_cnpj: '123.456.789-00',
-    endereco: 'Rua A, 123',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    cep: '01234-567',
+    endereco: { 
+      rua: 'Rua A',
+      numero: '123',
+      cidade: 'São Paulo',
+      estado: 'SP',
+      cep: '01234-567'
+    },
     status: 'active',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     empresa_id: '1',
     observacoes: 'Cliente VIP',
+    ultima_compra: new Date().toISOString(),
+    created_by: '1'
   },
   {
     id: '2',
@@ -26,16 +31,21 @@ export const mockCustomers: Customer[] = [
     telefone: '(11) 3333-3333',
     tipo: 'corporate',
     cpf_cnpj: '12.345.678/0001-90',
-    endereco: 'Av B, 456',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    cep: '04567-890',
+    endereco: {
+      rua: 'Av B',
+      numero: '456',
+      cidade: 'São Paulo',
+      estado: 'SP',
+      cep: '04567-890'
+    },
     status: 'active',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     empresa_id: '1',
     observacoes: 'Cliente Corporate',
-  },
+    ultima_compra: new Date().toISOString(),
+    created_by: '1'
+  }
 ];
 
 // Dados mockados de produtos
@@ -54,6 +64,11 @@ export const mockProducts: Product[] = [
     empresa_id: '1',
     estoque_atual: 100,
     estoque_minimo: 10,
+    fornecedor_id: '1',
+    marca: 'Marca A',
+    modelo: 'Modelo A',
+    imagem_url: null,
+    created_by: '1'
   },
   {
     id: '2',
@@ -69,5 +84,10 @@ export const mockProducts: Product[] = [
     empresa_id: '1',
     estoque_atual: 50,
     estoque_minimo: 5,
-  },
+    fornecedor_id: '2',
+    marca: 'Marca B',
+    modelo: 'Modelo B',
+    imagem_url: null,
+    created_by: '1'
+  }
 ];

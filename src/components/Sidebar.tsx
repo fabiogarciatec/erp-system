@@ -142,7 +142,11 @@ const NavItem = ({ icon, children, subItems, ...rest }: NavItemProps) => {
   );
 };
 
-function Sidebar(props: FlexProps) {
+interface SidebarProps extends FlexProps {
+  onClose: () => void;
+}
+
+export default function Sidebar({ onClose, ...props }: SidebarProps) {
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.600', 'gray.400');
@@ -309,5 +313,3 @@ function Sidebar(props: FlexProps) {
     </Box>
   );
 }
-
-export default Sidebar;

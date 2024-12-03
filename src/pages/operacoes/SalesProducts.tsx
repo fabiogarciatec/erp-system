@@ -10,7 +10,7 @@ import {
   Badge,
 } from '@chakra-ui/react';
 import { FiPlus } from 'react-icons/fi';
-import { PageHeader } from '../components/PageHeader';
+import { PageHeader } from '../../components/PageHeader';
 
 export function SalesProducts() {
   return (

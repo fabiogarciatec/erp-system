@@ -25,7 +25,7 @@ import {
   ModalCloseButton,
 } from '@chakra-ui/react';
 import { FiMoreVertical, FiPlus } from 'react-icons/fi';
-import { PageHeader } from '../components/PageHeader';
+import { PageHeader } from '../../components/PageHeader';
 
 export function ServiceOrders() {
   const { onOpen, isOpen, onClose } = useDisclosure();

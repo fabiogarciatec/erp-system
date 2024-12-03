@@ -13,7 +13,7 @@ import {
   IconButton,
 } from '@chakra-ui/react';
 import { FiMoreVertical, FiPlus } from 'react-icons/fi';
-import { PageHeader } from '../components/PageHeader';
+import { PageHeader } from '../../components/PageHeader';
 
 export function Shipping() {
   return (

@@ -1,9 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { NewLogin } from '../pages/NewLogin';
+import Login from '../pages/Login';
 import { HelloWorld } from '../pages/HelloWorld';
 import { useAuth } from '../contexts/AuthContext';
 import { Spinner, Center } from '@chakra-ui/react';
-import { Profile2 } from '../pages/Profile';
 
 function LoadingScreen() {
   return (
@@ -62,7 +61,7 @@ export function AppRoutes() {
         path="/login"
         element={
           <PublicRoute>
-            <NewLogin />
+            <Login />
           </PublicRoute>
         }
       />
@@ -76,15 +75,6 @@ export function AppRoutes() {
         }
       />
 
-      <Route
-        path="/profile"
-        element={
-          <PrivateRoute>
-            <Profile2 />
-          </PrivateRoute>
-        }
-      />
-      
       <Route path="/" element={<RootRoute />} />
       <Route path="*" element={<RootRoute />} />
     </Routes>
