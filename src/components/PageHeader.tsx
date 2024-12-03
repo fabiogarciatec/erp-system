@@ -11,7 +11,7 @@ import {
   Icon,
 } from '@chakra-ui/react'
 import { Link } from 'react-router-dom'
-import { FiChevronRight } from 'react-icons/fi'
+import { ChevronRightIcon } from '@chakra-ui/icons'
 
 interface PageHeaderProps {
   title: string;
@@ -26,95 +26,66 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle, description, breadcrumbs, rightContent }: PageHeaderProps) {
   const bgColor = useColorModeValue('white', 'gray.800')
-  const borderColor = useColorModeValue('gray.200', 'gray.700')
+  const borderColor = useColorModeValue('gray.100', 'gray.700')
+  const titleGradient = useColorModeValue(
+    'linear(to-r, blue.400, blue.600)',
+    'linear(to-r, blue.200, blue.400)'
+  )
   const subtitleColor = useColorModeValue('gray.600', 'gray.400')
-  const breadcrumbColor = useColorModeValue('gray.500', 'gray.400')
-  const separatorColor = useColorModeValue('gray.300', 'gray.600')
 
   return (
-    <>
-      <Box
-        as="header"
-        bg={bgColor}
-        borderBottom="1px"
-        borderColor={borderColor}
-        mb={8}
-        py={4}
-        px={0}
-      >
-        <Box maxW="7xl" mx="auto" px={[4, 6, 8]}>
-          <Flex direction="column">
-            {breadcrumbs && breadcrumbs.length > 0 && (
-              <Breadcrumb
-                mb={2}
-                fontSize="sm"
-                separator={
-                  <Icon
-                    as={FiChevronRight}
-                    color={separatorColor}
-                    fontSize="1em"
-                    mt={1}
-                  />
-                }
-              >
-                {breadcrumbs.map((item, index) => (
-                  <BreadcrumbItem
-                    key={index}
-                    isCurrentPage={index === breadcrumbs.length - 1}
-                  >
-                    <BreadcrumbLink
-                      as={Link}
-                      to={item.href}
-                      color={breadcrumbColor}
-                      _hover={{ color: 'blue.500', textDecoration: 'none' }}
-                    >
-                      {item.label}
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                ))}
-              </Breadcrumb>
-            )}
+    <Box
+      as="header"
+      bg={bgColor}
+      borderBottom="1px"
+      borderColor={borderColor}
+      mb={6}
+      py={2}
+      mt="-10px"
+      boxShadow="sm"
+    >
+      <Box px={8}>
+        {breadcrumbs && breadcrumbs.length > 0 && (
+          <Breadcrumb
+            mb={2}
+            fontSize="sm"
+            color={subtitleColor}
+            separator={<ChevronRightIcon color={subtitleColor} />}
+          >
+            {breadcrumbs.map((item, index) => (
+              <BreadcrumbItem key={index} isCurrentPage={index === breadcrumbs.length - 1}>
+                {item.href ? (
+                  <BreadcrumbLink as={Link} to={item.href}>
+                    {item.label}
+                  </BreadcrumbLink>
+                ) : (
+                  <Text>{item.label}</Text>
+                )}
+              </BreadcrumbItem>
+            ))}
+          </Breadcrumb>
+        )}
 
-            <HStack spacing={4} justify="space-between" align="flex-start">
-              <Box flex="1">
-                <Box>
-                  <Heading
-                    as="h1"
-                    fontSize={{ base: '2xl', sm: '3xl' }}
-                    fontWeight="bold"
-                    color="inherit"
-                    mb={description ? 1 : 0}
-                  >
-                    {title}
-                  </Heading>
-
-                  {description && (
-                    <Text color={subtitleColor} mt={1}>
-                      {description}
-                    </Text>
-                  )}
-
-                  {subtitle && (
-                    <Text 
-                      color={subtitleColor} 
-                      mt={0.5} 
-                      fontSize="sm"
-                      fontWeight="medium"
-                    >
-                      {subtitle}
-                    </Text>
-                  )}
-                </Box>
-              </Box>
-              {rightContent && (
-                <Box>
-                  {rightContent}
-                </Box>
-              )}
-            </HStack>
-          </Flex>
-        </Box>
+        <Heading 
+          size="lg" 
+          mb={subtitle ? 1 : 0}
+          bgGradient={titleGradient}
+          bgClip="text"
+          letterSpacing="tight"
+        >
+          {title}
+        </Heading>
+        
+        {subtitle && (
+          <Text 
+            color={subtitleColor}
+            fontSize="md"
+            fontWeight="medium"
+          >
+            {subtitle}
+          </Text>
+        )}
       </Box>
-    </>
+    </Box>
   )
 }

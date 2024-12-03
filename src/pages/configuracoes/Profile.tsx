@@ -313,7 +313,7 @@ export default function Perfil() {
   }
 
   return (
-    <Box w="100%">
+    <Box>
       <PageHeader 
         title="Perfil"
         subtitle="Gerencie suas informações pessoais"
@@ -323,229 +323,246 @@ export default function Perfil() {
         ]}
       />
 
-      {/* Content */}
-      <Box 
-        mt="125px"
-        px={6}
+      <Box
+        display="flex"
+        mt="-10px"
+        px={8}
+        flexDirection={{ base: "column", xl: "row" }}
+        w="86vw"
+        position="relative"
+        left="50%"
+        transform="translateX(-50%)"
       >
-        <Box maxW="1600px" mx="auto">
-          <Stack spacing={8}>
-            {/* Card do Avatar e Informações Básicas */}
-            <Card bg={cardBg} borderColor={borderColor} shadow="sm">
-              <CardBody>
-                <VStack spacing={6} align="center">
-                  <Box position="relative">
-                    <Avatar
-                      size="2xl"
-                      name={profile.full_name || profile.email}
-                      src={profile.avatar_url || undefined}
-                      bg={avatarBg}
-                      borderWidth={2}
-                      borderColor={avatarBorderColor}
-                      boxShadow="lg"
-                    />
-                    
-                    {/* Botões de ação */}
-                    <HStack 
-                      position="absolute" 
-                      bottom="-3" 
-                      right="-8" 
-                      spacing={1}
-                      zIndex={2}
-                      transform="translateX(-12px)"
-                    >
-                      {/* Botão de upload */}
-                      <label htmlFor="avatar-input">
-                        <Tooltip label="Alterar foto" placement="top">
-                          <IconButton
-                            as="div"
-                            size="xs"
-                            rounded="full"
-                            colorScheme="blue"
-                            aria-label="Alterar foto"
-                            icon={<Icon as={FiCamera} fontSize="0.9rem" />}
-                            boxShadow="base"
-                            _hover={{
-                              transform: 'scale(1.1)',
-                              boxShadow: 'md',
-                            }}
-                            transition="all 0.2s"
-                            cursor="pointer"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              document.getElementById('avatar-input')?.click();
-                            }}
-                            isLoading={isLoading}
-                          />
-                        </Tooltip>
-                      </label>
-
-                      {/* Botão de remover */}
-                      {profile.avatar_url && (
-                        <Tooltip label="Remover foto" placement="right">
-                          <IconButton
-                            aria-label="Remover foto"
-                            icon={<Icon as={FiTrash2} fontSize="0.9rem" />}
-                            size="xs"
-                            colorScheme="red"
-                            variant="solid"
-                            rounded="full"
-                            onClick={handleRemoveAvatar}
-                            isLoading={isLoading}
-                            boxShadow="base"
-                            _hover={{
-                              transform: 'scale(1.1)',
-                              boxShadow: 'md',
-                            }}
-                            transition="all 0.2s"
-                          />
-                        </Tooltip>
-                      )}
-                    </HStack>
-
-                    <Input
-                      type="file"
-                      id="avatar-input"
-                      accept="image/jpeg,image/png,image/gif"
-                      display="none"
-                      onChange={handleAvatarChange}
-                      onClick={(e) => {
-                        // Reset o valor para permitir selecionar o mesmo arquivo novamente
-                        (e.target as HTMLInputElement).value = '';
-                      }}
-                    />
-                  </Box>
-                  <VStack spacing={1}>
-                    <Heading size="md">{profile.full_name || 'Nome não definido'}</Heading>
-                    <Text color="gray.500">{profile.email}</Text>
-                    {profile.role && (
-                      <HStack 
-                        spacing={2} 
-                        bg={badgeBg} 
-                        px={3} 
-                        py={1} 
+        <VStack flex="1" spacing={6} align="stretch" width="100%">
+          {/* Card do Avatar e Informações Básicas */}
+          <Box 
+            borderWidth="2px" 
+            borderRadius="lg" 
+            p={6}
+            bg={cardBg} 
+            borderColor={borderColor}
+            width="70vw"
+            position="relative"
+            left="50%"
+            transform="translateX(-50%)"
+          >
+            <VStack spacing={6} align="center">
+              <Box position="relative">
+                <Avatar
+                  size="2xl"
+                  name={profile.full_name || profile.email}
+                  src={profile.avatar_url || undefined}
+                  bg={avatarBg}
+                  borderWidth={2}
+                  borderColor={avatarBorderColor}
+                  boxShadow="lg"
+                />
+                
+                {/* Botões de ação */}
+                <HStack 
+                  position="absolute" 
+                  bottom="-3" 
+                  right="-8" 
+                  spacing={1}
+                  zIndex={2}
+                  transform="translateX(-12px)"
+                >
+                  {/* Botão de upload */}
+                  <label htmlFor="avatar-input">
+                    <Tooltip label="Alterar foto" placement="top">
+                      <IconButton
+                        as="div"
+                        size="xs"
                         rounded="full"
-                      >
-                        <Icon as={FiUser} color="gray.500" />
-                        <Text fontSize="sm" color="gray.500">
-                          {profile.role}
-                        </Text>
-                      </HStack>
-                    )}
-                  </VStack>
-                </VStack>
-              </CardBody>
-            </Card>
+                        colorScheme="blue"
+                        aria-label="Alterar foto"
+                        icon={<Icon as={FiCamera} fontSize="0.9rem" />}
+                        boxShadow="base"
+                        _hover={{
+                          transform: 'scale(1.1)',
+                          boxShadow: 'md',
+                        }}
+                        transition="all 0.2s"
+                        cursor="pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          document.getElementById('avatar-input')?.click();
+                        }}
+                        isLoading={isLoading}
+                      />
+                    </Tooltip>
+                  </label>
 
-            {/* Card das Informações Detalhadas */}
-            <Card bg={cardBg} borderColor={borderColor} shadow="sm">
-              <CardHeader>
-                <Heading size="md">Informações Pessoais</Heading>
-              </CardHeader>
-              <Divider />
-              <CardBody>
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-                  <FormControl>
-                    <FormLabel>
-                      <HStack spacing={2}>
-                        <Icon as={FiUser} color="gray.500" />
-                        <Text>Nome Completo</Text>
-                      </HStack>
-                    </FormLabel>
-                    <Input
-                      placeholder="Seu nome completo"
-                      value={profile.full_name || ''}
-                      onChange={(e) => handleInputChange('full_name', e.target.value)}
-                      bg={inputBg}
-                      borderColor={borderColor}
-                      _hover={{
-                        borderColor: hoverBorderColor
-                      }}
-                    />
-                  </FormControl>
+                  {/* Botão de remover */}
+                  {profile.avatar_url && (
+                    <Tooltip label="Remover foto" placement="right">
+                      <IconButton
+                        aria-label="Remover foto"
+                        icon={<Icon as={FiTrash2} fontSize="0.9rem" />}
+                        size="xs"
+                        colorScheme="red"
+                        variant="solid"
+                        rounded="full"
+                        onClick={handleRemoveAvatar}
+                        isLoading={isLoading}
+                        boxShadow="base"
+                        _hover={{
+                          transform: 'scale(1.1)',
+                          boxShadow: 'md',
+                        }}
+                        transition="all 0.2s"
+                      />
+                    </Tooltip>
+                  )}
+                </HStack>
 
-                  <FormControl>
-                    <FormLabel>
-                      <HStack spacing={2}>
-                        <Icon as={FiMail} color="gray.500" />
-                        <Text>E-mail</Text>
-                      </HStack>
-                    </FormLabel>
-                    <Input
-                      value={profile.email}
-                      isReadOnly
-                      bg={readOnlyBg}
-                      opacity={0.8}
-                      cursor="not-allowed"
-                    />
-                  </FormControl>
-
-                  <FormControl>
-                    <FormLabel>
-                      <HStack spacing={2}>
-                        <Icon as={FiBriefcase} color="gray.500" />
-                        <Text>Cargo</Text>
-                      </HStack>
-                    </FormLabel>
-                    <Input
-                      placeholder="Seu cargo na empresa"
-                      value={profile.role || ''}
-                      onChange={(e) => handleInputChange('role', e.target.value)}
-                      bg={inputBg}
-                      borderColor={borderColor}
-                      _hover={{
-                        borderColor: hoverBorderColor
-                      }}
-                    />
-                  </FormControl>
-
-                  <FormControl>
-                    <FormLabel>
-                      <HStack spacing={2}>
-                        <Icon as={FiPhone} color="gray.500" />
-                        <Text>Telefone</Text>
-                      </HStack>
-                    </FormLabel>
-                    <Input
-                      ref={phoneInputRef}
-                      type="tel"
-                      value={formatPhoneForDisplay(profile.phone)}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="(00) 00000-0000"
-                      bg={inputBg}
-                      borderColor={borderColor}
-                      _hover={{
-                        borderColor: hoverBorderColor
-                      }}
-                    />
-                  </FormControl>
-                </SimpleGrid>
-
-                <Divider my={8} />
-
-                <Flex justify="center">
-                  <Button
-                    colorScheme="blue"
-                    size="lg"
-                    leftIcon={<Icon as={FiSave} />}
-                    onClick={handleSave}
-                    isLoading={isLoading}
-                    loadingText="Salvando..."
-                    boxShadow="base"
-                    px={12}
-                    _hover={{
-                      transform: 'translateY(-1px)',
-                      boxShadow: 'md',
-                    }}
-                    transition="all 0.2s"
+                <Input
+                  type="file"
+                  id="avatar-input"
+                  accept="image/jpeg,image/png,image/gif"
+                  display="none"
+                  onChange={handleAvatarChange}
+                  onClick={(e) => {
+                    // Reset o valor para permitir selecionar o mesmo arquivo novamente
+                    (e.target as HTMLInputElement).value = '';
+                  }}
+                />
+              </Box>
+              <VStack spacing={1}>
+                <Heading size="md">{profile.full_name || 'Nome não definido'}</Heading>
+                <Text color="gray.500">{profile.email}</Text>
+                {profile.role && (
+                  <HStack 
+                    spacing={2} 
+                    bg={badgeBg} 
+                    px={3} 
+                    py={1} 
+                    rounded="full"
                   >
-                    Salvar Alterações
-                  </Button>
-                </Flex>
-              </CardBody>
-            </Card>
-          </Stack>
-        </Box>
+                    <Icon as={FiUser} color="gray.500" />
+                    <Text fontSize="sm" color="gray.500">
+                      {profile.role}
+                    </Text>
+                  </HStack>
+                )}
+              </VStack>
+            </VStack>
+          </Box>
+
+          {/* Card das Informações Detalhadas */}
+          <Box 
+            borderWidth="2px" 
+            borderRadius="lg" 
+            p={6}
+            bg={cardBg} 
+            borderColor={borderColor}
+            width="70vw"
+            position="relative"
+            left="50%"
+            transform="translateX(-50%)"
+          >
+            <Heading size="md" mb={4}>Informações Pessoais</Heading>
+            <Divider mb={6} />
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+              <FormControl>
+                <FormLabel>
+                  <HStack spacing={2}>
+                    <Icon as={FiUser} color="gray.500" />
+                    <Text>Nome Completo</Text>
+                  </HStack>
+                </FormLabel>
+                <Input
+                  placeholder="Seu nome completo"
+                  value={profile.full_name || ''}
+                  onChange={(e) => handleInputChange('full_name', e.target.value)}
+                  bg={inputBg}
+                  borderColor={borderColor}
+                  _hover={{
+                    borderColor: hoverBorderColor
+                  }}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>
+                  <HStack spacing={2}>
+                    <Icon as={FiMail} color="gray.500" />
+                    <Text>E-mail</Text>
+                  </HStack>
+                </FormLabel>
+                <Input
+                  value={profile.email}
+                  isReadOnly
+                  bg={readOnlyBg}
+                  opacity={0.8}
+                  cursor="not-allowed"
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>
+                  <HStack spacing={2}>
+                    <Icon as={FiBriefcase} color="gray.500" />
+                    <Text>Cargo</Text>
+                  </HStack>
+                </FormLabel>
+                <Input
+                  placeholder="Seu cargo na empresa"
+                  value={profile.role || ''}
+                  onChange={(e) => handleInputChange('role', e.target.value)}
+                  bg={inputBg}
+                  borderColor={borderColor}
+                  _hover={{
+                    borderColor: hoverBorderColor
+                  }}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>
+                  <HStack spacing={2}>
+                    <Icon as={FiPhone} color="gray.500" />
+                    <Text>Telefone</Text>
+                  </HStack>
+                </FormLabel>
+                <Input
+                  ref={phoneInputRef}
+                  type="tel"
+                  value={formatPhoneForDisplay(profile.phone)}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  placeholder="(00) 00000-0000"
+                  bg={inputBg}
+                  borderColor={borderColor}
+                  _hover={{
+                    borderColor: hoverBorderColor
+                  }}
+                />
+              </FormControl>
+            </SimpleGrid>
+
+            <Divider my={8} />
+
+            <Flex justify="center">
+              <Button
+                colorScheme="blue"
+                size="lg"
+                leftIcon={<Icon as={FiSave} />}
+                onClick={handleSave}
+                isLoading={isLoading}
+                loadingText="Salvando..."
+                boxShadow="base"
+                px={12}
+                _hover={{
+                  transform: 'translateY(-1px)',
+                  boxShadow: 'md',
+                }}
+                transition="all 0.2s"
+              >
+                Salvar Alterações
+              </Button>
+            </Flex>
+          </Box>
+        </VStack>
       </Box>
     </Box>
   );

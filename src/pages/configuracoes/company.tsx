@@ -294,21 +294,35 @@ function CompanyPage() {
     <Box>
       <PageHeader
         title="Configurações da Empresa"
-        description="Gerencie as informações da sua empresa"
+        subtitle="Gerencie as informações da sua empresa"
         breadcrumbs={[
+          { label: 'Configurações', href: '/configuracoes' },
           { label: 'Empresa', href: '/configuracoes/empresa' }
         ]}
       />
       <Box
         display="flex"
-        gap={8}
-        pt="100px"
+        mt="-10px"
         px={8}
         flexDirection={{ base: "column", xl: "row" }}
+        w="86vw"
+        position="relative"
+        left="50%"
+        transform="translateX(-50%)"
       >
         <VStack flex="1" spacing={6} align="stretch">
           {/* Seção: Dados da Empresa */}
-          <Box borderWidth="2px" borderRadius="lg" p={6} bg={cardBg} borderColor={borderColor}>
+          <Box 
+            borderWidth="2px" 
+            borderRadius="lg" 
+            p={6} 
+            bg={cardBg} 
+            borderColor={borderColor}
+            width="45vw"
+            position="relative"
+            left="50%"
+            transform="translateX(-50%)"
+          >
             <VStack spacing={4} align="stretch">
               <Heading 
                 size="lg" 
@@ -382,7 +396,17 @@ function CompanyPage() {
           </Box>
 
           {/* Seção: Endereço */}
-          <Box borderWidth="2px" borderRadius="lg" p={6} bg={cardBg} borderColor={borderColor}>
+          <Box 
+            borderWidth="2px" 
+            borderRadius="lg" 
+            p={6} 
+            bg={cardBg} 
+            borderColor={borderColor}
+            width="45vw"
+            position="relative"
+            left="50%"
+            transform="translateX(-50%)"
+          >
             <VStack spacing={4} align="stretch">
               <Heading 
                 size="md"

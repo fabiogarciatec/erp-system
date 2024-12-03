@@ -3,6 +3,7 @@ import { Box, useColorModeValue } from '@chakra-ui/react';
 export function Logo() {
   const logoColor = useColorModeValue('#0066cc', '#4299E1');
   const subtitleColor = useColorModeValue('#666666', '#A0AEC0');
+  const erpColor = useColorModeValue('#E53E3E', '#FC8181'); // Vermelho para modo claro e escuro
 
   return (
     <Box maxW="360px" w="100%" position="relative">
@@ -40,7 +41,7 @@ export function Logo() {
           <text
             x="155"
             y="25"
-            fill={subtitleColor}
+            fill={erpColor}
             style={{ 
               fontSize: '41px', 
               fontWeight: 'bold', 
