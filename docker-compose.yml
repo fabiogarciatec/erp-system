@@ -1,0 +1,82 @@
+version: '3.7'
+
+services:
+  frontend:
+    image: ${DOCKER_HUB_USER}/erp-frontend:latest
+    networks:
+      - minha_rede
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+      - ./package.json:/app/package.json
+      - ./vite.config.ts:/app/vite.config.ts
+      - ./tsconfig.json:/app/tsconfig.json
+      - node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=https://api.erp.fatec.info
+    deploy:
+      mode: replicated
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.erp-frontend.rule=Host(`erp.fatec.info`)
+        - traefik.http.routers.erp-frontend.entrypoints=websecure
+        - traefik.http.routers.erp-frontend.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.erp-frontend.service=erp-frontend
+        - traefik.http.services.erp-frontend.loadbalancer.server.port=80
+        - traefik.http.services.erp-frontend.loadbalancer.passHostHeader=true
+
+  backend:
+    image: ${DOCKER_HUB_USER}/erp-backend:latest
+    networks:
+      - minha_rede
+    volumes:
+      - .:/app
+      - ./cache:/app/cache
+    environment:
+      - FLASK_APP=api_routes.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    deploy:
+      mode: replicated
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.erp-backend.rule=Host(`api.erp.fatec.info`)
+        - traefik.http.routers.erp-backend.entrypoints=websecure
+        - traefik.http.routers.erp-backend.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.erp-backend.service=erp-backend
+        - traefik.http.services.erp-backend.loadbalancer.server.port=5000
+        - traefik.http.services.erp-backend.loadbalancer.passHostHeader=true
+
+networks:
+  minha_rede:
+    external: true
+    name: minha_rede
+
+volumes:
+  node_modules:
