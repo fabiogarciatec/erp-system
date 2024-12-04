@@ -30,8 +30,7 @@ import { Security } from './pages/configuracoes/Security';
 import { Notifications } from './pages/configuracoes/Notifications';
 import { Backup } from './pages/configuracoes/Backup';
 import Users from './pages/configuracoes/Users';
-
-import { routerConfig } from './router.config';
+import Permissions from './pages/configuracoes/Permissions';
 
 const theme = extendTheme({
   config: {
@@ -50,13 +49,13 @@ const theme = extendTheme({
     Menu: {
       baseStyle: (props: any) => ({
         list: {
-          bg: props.colorMode === 'dark' ? 'gray.700' : 'white',
-          borderColor: props.colorMode === 'dark' ? 'gray.600' : 'gray.200',
+          bg: props.colorMode === 'dark' ? 'gray.800' : 'white',
+          border: '1px solid',
+          borderColor: props.colorMode === 'dark' ? 'gray.700' : 'gray.200',
         },
         item: {
-          bg: props.colorMode === 'dark' ? 'gray.700' : 'white',
           _hover: {
-            bg: props.colorMode === 'dark' ? 'gray.600' : 'gray.100',
+            bg: props.colorMode === 'dark' ? 'gray.700' : 'gray.100',
           },
         },
       }),
@@ -68,17 +67,14 @@ function App() {
   return (
     <ChakraProvider theme={theme}>
       <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-      <BrowserRouter future={routerConfig.future}>
+      <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Public routes */}
+            {/* Rota pública - Login */}
             <Route path="/login" element={<Login />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
-            
-            {/* Private routes */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            
-            {/* Dashboard */}
+
+            {/* Rotas privadas */}
             <Route
               path="/dashboard"
               element={
@@ -89,8 +85,8 @@ function App() {
                 </PrivateRoute>
               }
             />
-            
-            {/* Cadastros */}
+
+            {/* Rotas de Cadastros */}
             <Route
               path="/cadastros/clientes"
               element={
@@ -101,7 +97,6 @@ function App() {
                 </PrivateRoute>
               }
             />
-            
             <Route
               path="/cadastros/produtos"
               element={
@@ -112,7 +107,6 @@ function App() {
                 </PrivateRoute>
               }
             />
-            
             <Route
               path="/cadastros/fornecedores"
               element={
@@ -123,7 +117,6 @@ function App() {
                 </PrivateRoute>
               }
             />
-            
             <Route
               path="/cadastros/categorias"
               element={
@@ -135,7 +128,7 @@ function App() {
               }
             />
 
-            {/* Operações */}
+            {/* Rotas de Operações */}
             <Route
               path="/operacoes/vendas"
               element={
@@ -146,7 +139,6 @@ function App() {
                 </PrivateRoute>
               }
             />
-            
             <Route
               path="/operacoes/orcamentos"
               element={
@@ -157,7 +149,6 @@ function App() {
                 </PrivateRoute>
               }
             />
-            
             <Route
               path="/operacoes/pedidos"
               element={
@@ -168,7 +159,6 @@ function App() {
                 </PrivateRoute>
               }
             />
-            
             <Route
               path="/operacoes/notas-fiscais"
               element={
@@ -180,9 +170,9 @@ function App() {
               }
             />
 
-            {/* Configurações */}
+            {/* Rotas de Configurações */}
             <Route
-              path="/configuracoes/*"
+              path="/configuracoes"
               element={
                 <PrivateRoute>
                   <Layout>
@@ -190,18 +180,102 @@ function App() {
                   </Layout>
                 </PrivateRoute>
               }
-            >
-              <Route path="perfil" element={<Profile />} />
-              <Route path="empresa" element={<Company />} />
-              <Route path="gerais" element={<GeneralSettings />} />
-              <Route path="integracoes" element={<IntegrationsSettings />} />
-              <Route path="seguranca" element={<Security />} />
-              <Route path="notificacoes" element={<Notifications />} />
-              <Route path="backup" element={<Backup />} />
-              <Route path="usuarios" element={<Users />} />
-            </Route>
+            />
+            <Route
+              path="/configuracoes/perfil"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <Profile />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/empresa"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <Company />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/gerais"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <GeneralSettings />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/integracoes"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <IntegrationsSettings />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/seguranca"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <Security />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/notificacoes"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <Notifications />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/backup"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <Backup />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/usuarios"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <Users />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/permissoes"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <Permissions />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
 
-            {/* 404 route */}
+            {/* Rota padrão - Redireciona para o dashboard */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+            {/* Rota 404 - Página não encontrada */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

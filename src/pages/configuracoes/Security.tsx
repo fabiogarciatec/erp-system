@@ -9,11 +9,18 @@ import {
   Text,
   Divider,
   useToast,
+  Card,
+  CardBody,
+  useColorModeValue,
+  Icon,
 } from '@chakra-ui/react';
 import { PageHeader } from '../../components/PageHeader';
+import { FiLock } from 'react-icons/fi';
 
 export function Security() {
   const toast = useToast();
+  const cardBg = useColorModeValue('white', 'gray.700');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
 
   const handleSave = () => {
     toast({
@@ -26,57 +33,96 @@ export function Security() {
   };
 
   return (
-    <Box w="full" p={8}>
+    <Box>
       <PageHeader
         title="Segurança"
-        subtitle="Gerencie suas configurações de segurança"
+        subtitle="Gerencie suas configurações de segurança e privacidade"
+        icon={FiLock}
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'Configurações', href: '/settings' },
-          { label: 'Segurança', href: '/settings/security' }
+          { label: 'Configurações', href: '/configuracoes' },
+          { label: 'Segurança', href: '/configuracoes/seguranca' }
         ]}
       />
 
-      <Box bg="white" rounded="lg" shadow="sm" p={6}>
-        <VStack spacing={6} align="stretch" maxW="600px" mx="auto">
-          <Text fontSize="lg" fontWeight="bold">Alterar Senha</Text>
-          
-          <FormControl>
-            <FormLabel>Senha Atual</FormLabel>
-            <Input type="password" />
-          </FormControl>
+      <Box
+        display="flex"
+        mt="-10px"
+        px={8}
+        flexDirection={{ base: "column", xl: "row" }}
+        w="86vw"
+        position="relative"
+        left="50%"
+        transform="translateX(-50%)"
+      >
+        <VStack flex="1" spacing={6} align="stretch" width="100%">
+          <Card
+            bg={cardBg}
+            shadow="sm"
+            rounded="lg"
+            borderWidth="1px"
+            borderColor={borderColor}
+            p={6}
+          >
+            <CardBody>
+              <VStack spacing={6} align="stretch">
+                <Box>
+                  <Text fontSize="lg" fontWeight="semibold" mb={4}>
+                    Alterar Senha
+                  </Text>
+                  <VStack spacing={4} align="stretch">
+                    <FormControl>
+                      <FormLabel>Senha Atual</FormLabel>
+                      <Input type="password" />
+                    </FormControl>
 
-          <FormControl>
-            <FormLabel>Nova Senha</FormLabel>
-            <Input type="password" />
-          </FormControl>
+                    <FormControl>
+                      <FormLabel>Nova Senha</FormLabel>
+                      <Input type="password" />
+                    </FormControl>
 
-          <FormControl>
-            <FormLabel>Confirmar Nova Senha</FormLabel>
-            <Input type="password" />
-          </FormControl>
+                    <FormControl>
+                      <FormLabel>Confirmar Nova Senha</FormLabel>
+                      <Input type="password" />
+                    </FormControl>
+                  </VStack>
+                </Box>
 
-          <Divider />
+                <Divider />
 
-          <Text fontSize="lg" fontWeight="bold">Autenticação em Duas Etapas</Text>
+                <Box>
+                  <Text fontSize="lg" fontWeight="semibold" mb={4}>
+                    Autenticação em Duas Etapas
+                  </Text>
+                  <VStack spacing={4} align="stretch">
+                    <FormControl display="flex" alignItems="center">
+                      <FormLabel mb="0">
+                        Ativar autenticação em duas etapas
+                      </FormLabel>
+                      <Switch colorScheme="blue" />
+                    </FormControl>
 
-          <FormControl display="flex" alignItems="center">
-            <FormLabel mb="0">
-              Ativar autenticação em duas etapas
-            </FormLabel>
-            <Switch colorScheme="blue" />
-          </FormControl>
+                    <FormControl display="flex" alignItems="center">
+                      <FormLabel mb="0">
+                        Notificar sobre novos acessos
+                      </FormLabel>
+                      <Switch colorScheme="blue" defaultChecked />
+                    </FormControl>
+                  </VStack>
+                </Box>
 
-          <FormControl display="flex" alignItems="center">
-            <FormLabel mb="0">
-              Notificar sobre novos acessos
-            </FormLabel>
-            <Switch colorScheme="blue" defaultChecked />
-          </FormControl>
-
-          <Button colorScheme="blue" onClick={handleSave}>
-            Salvar Alterações
-          </Button>
+                <Box pt={4}>
+                  <Button 
+                    colorScheme="blue" 
+                    size="lg" 
+                    w={{ base: "full", md: "auto" }}
+                    onClick={handleSave}
+                  >
+                    Salvar Alterações
+                  </Button>
+                </Box>
+              </VStack>
+            </CardBody>
+          </Card>
         </VStack>
       </Box>
     </Box>

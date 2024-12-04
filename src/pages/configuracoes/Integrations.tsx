@@ -1,7 +1,5 @@
 import {
   Box,
-  Container,
-  Card,
   VStack,
   Text,
   useColorModeValue,
@@ -16,8 +14,11 @@ import {
   Input,
   IconButton,
   Divider,
+  Card,
+  CardBody,
+  Icon,
 } from '@chakra-ui/react';
-import { FiPlus, FiSettings } from 'react-icons/fi';
+import { FiPlus, FiSettings, FiLink } from 'react-icons/fi';
 import { PageHeader } from '../../components/PageHeader';
 
 interface IntegrationCardProps {
@@ -130,95 +131,116 @@ const integrations: IntegrationCardProps[] = [
 ];
 
 export function IntegrationsSettings() {
-  const bgColor = useColorModeValue('gray.50', 'gray.900');
+  const cardBg = useColorModeValue('white', 'gray.700');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
 
   return (
-    <Box w="full" minH="100vh" bg={bgColor}>
-      <Container maxW="full" p={{ base: 4, lg: 8 }}>
-        <PageHeader
-          title="Integrações"
-          subtitle="Gerencie as integrações do sistema"
-          breadcrumbs={[
-            { label: 'Configurações', href: '/settings' },
-            { label: 'Integrações', href: '/settings/integrations' }
-          ]}
-        />
+    <Box>
+      <PageHeader
+        title="Integrações"
+        subtitle="Gerencie as integrações e conexões do sistema"
+        icon={FiLink}
+        breadcrumbs={[
+          { label: 'Configurações', href: '/configuracoes' },
+          { label: 'Integrações', href: '/configuracoes/integracoes' }
+        ]}
+      />
 
-        <VStack spacing={8} align="stretch">
+      <Box
+        display="flex"
+        mt="-10px"
+        px={8}
+        flexDirection={{ base: "column", xl: "row" }}
+        w="86vw"
+        position="relative"
+        left="50%"
+        transform="translateX(-50%)"
+      >
+        <VStack flex="1" spacing={6} align="stretch" width="100%">
           <Card
-            bg={useColorModeValue('white', 'gray.700')}
-            shadow="xl"
-            rounded="xl"
+            bg={cardBg}
+            shadow="sm"
+            rounded="lg"
             borderWidth="1px"
-            borderColor={useColorModeValue('gray.200', 'gray.600')}
-            p={{ base: 4, lg: 6 }}
+            borderColor={borderColor}
+            p={6}
           >
-            <VStack spacing={4} align="stretch">
-              <HStack justify="space-between">
-                <Text fontSize="lg" fontWeight="semibold">
-                  Integrações Disponíveis
-                </Text>
-                <Button
-                  leftIcon={<FiPlus />}
-                  colorScheme="blue"
-                  size="sm"
-                >
-                  Nova Integração
-                </Button>
-              </HStack>
+            <CardBody>
+              <VStack spacing={6} align="stretch">
+                <HStack justify="space-between">
+                  <Text fontSize="lg" fontWeight="semibold">
+                    Integrações Disponíveis
+                  </Text>
+                  <Button
+                    leftIcon={<FiPlus />}
+                    colorScheme="blue"
+                    size="sm"
+                  >
+                    Nova Integração
+                  </Button>
+                </HStack>
 
-              <SimpleGrid
-                columns={{ base: 1, md: 2, lg: 3, xl: 4 }}
-                spacing={4}
-              >
-                {integrations.map((integration, index) => (
-                  <IntegrationCard key={index} {...integration} />
-                ))}
-              </SimpleGrid>
-            </VStack>
+                <SimpleGrid
+                  columns={{ base: 1, md: 2, lg: 3, xl: 4 }}
+                  spacing={4}
+                >
+                  {integrations.map((integration, index) => (
+                    <IntegrationCard key={index} {...integration} />
+                  ))}
+                </SimpleGrid>
+              </VStack>
+            </CardBody>
           </Card>
 
           <Card
-            bg={useColorModeValue('white', 'gray.700')}
-            shadow="xl"
-            rounded="xl"
+            bg={cardBg}
+            shadow="sm"
+            rounded="lg"
             borderWidth="1px"
-            borderColor={useColorModeValue('gray.200', 'gray.600')}
-            p={{ base: 4, lg: 6 }}
+            borderColor={borderColor}
+            p={6}
           >
-            <VStack spacing={4} align="stretch">
-              <Text fontSize="lg" fontWeight="semibold">
-                Configurações Globais de Integração
-              </Text>
+            <CardBody>
+              <VStack spacing={6} align="stretch">
+                <Text fontSize="lg" fontWeight="semibold">
+                  Configurações Globais de Integração
+                </Text>
 
-              <Divider />
+                <Divider />
 
-              <FormControl>
-                <FormLabel>Intervalo de Sincronização (minutos)</FormLabel>
-                <Input type="number" defaultValue={15} />
-              </FormControl>
+                <FormControl>
+                  <FormLabel>Intervalo de Sincronização (minutos)</FormLabel>
+                  <Input type="number" defaultValue={15} />
+                </FormControl>
 
-              <FormControl display="flex" alignItems="center">
-                <FormLabel mb="0">
-                  Sincronização Automática
-                </FormLabel>
-                <Switch defaultChecked />
-              </FormControl>
+                <FormControl display="flex" alignItems="center">
+                  <FormLabel mb="0">
+                    Sincronização Automática
+                  </FormLabel>
+                  <Switch colorScheme="blue" defaultChecked />
+                </FormControl>
 
-              <FormControl display="flex" alignItems="center">
-                <FormLabel mb="0">
-                  Notificações de Erro
-                </FormLabel>
-                <Switch defaultChecked />
-              </FormControl>
+                <FormControl display="flex" alignItems="center">
+                  <FormLabel mb="0">
+                    Notificar Erros de Sincronização
+                  </FormLabel>
+                  <Switch colorScheme="blue" defaultChecked />
+                </FormControl>
 
-              <Button colorScheme="blue" alignSelf="flex-start">
-                Salvar Configurações
-              </Button>
-            </VStack>
+                <Box pt={4}>
+                  <Button 
+                    colorScheme="blue" 
+                    size="lg" 
+                    w={{ base: "full", md: "auto" }}
+                  >
+                    Salvar Configurações
+                  </Button>
+                </Box>
+              </VStack>
+            </CardBody>
           </Card>
         </VStack>
-      </Container>
+      </Box>
     </Box>
   );
 }

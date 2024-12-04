@@ -1,9 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { NewLogin } from '../pages/NewLogin';
+import Login from '../pages/Login';
 import { HelloWorld } from '../pages/HelloWorld';
 import { useAuth } from '../contexts/AuthContext';
 import { Spinner, Center } from '@chakra-ui/react';
-import { Profile2 } from '../pages/Profile';
+import Profile from '../pages/configuracoes/Profile';
+import Permissions from '../pages/configuracoes/Permissions';
+import Layout from '../components/Layout';
 
 function LoadingScreen() {
   return (
@@ -35,7 +37,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
   
   if (user) {
-    return <Navigate to="/hello" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   
   return <>{children}</>;
@@ -49,7 +51,7 @@ function RootRoute() {
   }
   
   if (user) {
-    return <Navigate to="/hello" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   
   return <Navigate to="/login" replace />;
@@ -62,7 +64,7 @@ export function AppRoutes() {
         path="/login"
         element={
           <PublicRoute>
-            <NewLogin />
+            <Login />
           </PublicRoute>
         }
       />
@@ -71,7 +73,9 @@ export function AppRoutes() {
         path="/hello"
         element={
           <PrivateRoute>
-            <HelloWorld />
+            <Layout>
+              <HelloWorld />
+            </Layout>
           </PrivateRoute>
         }
       />
@@ -80,7 +84,20 @@ export function AppRoutes() {
         path="/profile"
         element={
           <PrivateRoute>
-            <Profile2 />
+            <Layout>
+              <Profile />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/configuracoes/permissoes"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <Permissions />
+            </Layout>
           </PrivateRoute>
         }
       />

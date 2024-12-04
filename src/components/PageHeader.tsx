@@ -22,9 +22,10 @@ interface PageHeaderProps {
     href: string;
   }>;
   rightContent?: React.ReactNode;
+  icon?: React.ElementType;
 }
 
-export function PageHeader({ title, subtitle, description, breadcrumbs, rightContent }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, description, breadcrumbs, rightContent, icon: IconComponent }: PageHeaderProps) {
   const bgColor = useColorModeValue('white', 'gray.800')
   const borderColor = useColorModeValue('gray.100', 'gray.700')
   const titleGradient = useColorModeValue(
@@ -49,42 +50,59 @@ export function PageHeader({ title, subtitle, description, breadcrumbs, rightCon
           <Breadcrumb
             mb={2}
             fontSize="sm"
-            color={subtitleColor}
-            separator={<ChevronRightIcon color={subtitleColor} />}
+            separator={<ChevronRightIcon color="gray.500" />}
           >
-            {breadcrumbs.map((item, index) => (
-              <BreadcrumbItem key={index} isCurrentPage={index === breadcrumbs.length - 1}>
-                {item.href ? (
-                  <BreadcrumbLink as={Link} to={item.href}>
-                    {item.label}
-                  </BreadcrumbLink>
-                ) : (
-                  <Text>{item.label}</Text>
-                )}
+            {breadcrumbs.map((breadcrumb, index) => (
+              <BreadcrumbItem key={index}>
+                <BreadcrumbLink
+                  as={Link}
+                  to={breadcrumb.href}
+                  color="gray.500"
+                  _hover={{ color: 'blue.500' }}
+                >
+                  {breadcrumb.label}
+                </BreadcrumbLink>
               </BreadcrumbItem>
             ))}
           </Breadcrumb>
         )}
 
-        <Heading 
-          size="lg" 
-          mb={subtitle ? 1 : 0}
-          bgGradient={titleGradient}
-          bgClip="text"
-          letterSpacing="tight"
-        >
-          {title}
-        </Heading>
-        
-        {subtitle && (
-          <Text 
-            color={subtitleColor}
-            fontSize="md"
-            fontWeight="medium"
-          >
-            {subtitle}
-          </Text>
-        )}
+        <Flex justify="space-between" align="center">
+          <Box>
+            <HStack spacing={4} align="center">
+              {IconComponent && (
+                <Icon
+                  as={IconComponent}
+                  boxSize={8}
+                  color="blue.500"
+                />
+              )}
+              <Box>
+                <Heading
+                  as="h1"
+                  size="lg"
+                  bgGradient={titleGradient}
+                  bgClip="text"
+                >
+                  {title}
+                </Heading>
+                {subtitle && (
+                  <Text color={subtitleColor} mt={1}>
+                    {subtitle}
+                  </Text>
+                )}
+                {description && (
+                  <Text mt={2} color="gray.500" fontSize="sm">
+                    {description}
+                  </Text>
+                )}
+              </Box>
+            </HStack>
+          </Box>
+          {rightContent && (
+            <Box>{rightContent}</Box>
+          )}
+        </Flex>
       </Box>
     </Box>
   )

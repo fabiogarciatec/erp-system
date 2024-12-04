@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  Container,
   Divider,
   HStack,
   Input,
@@ -15,8 +14,12 @@ import {
   VStack,
   useToast,
   Progress,
+  Card,
+  CardBody,
+  useColorModeValue,
+  Icon,
 } from '@chakra-ui/react';
-import { FiDownload, FiRotateCw, FiTrash2, FiUpload } from 'react-icons/fi';
+import { FiDownload, FiRotateCw, FiTrash2, FiUpload, FiDatabase } from 'react-icons/fi';
 import { PageHeader } from '../../components/PageHeader';
 import { useState, useRef, ChangeEvent } from 'react';
 
@@ -63,6 +66,9 @@ export function Backup() {
   const [isRestoreInProgress, setIsRestoreInProgress] = useState(false);
   const [backupProgress, setBackupProgress] = useState(0);
   const [backups, setBackups] = useState<BackupRecord[]>(mockBackups);
+
+  const cardBg = useColorModeValue('white', 'gray.700');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
 
   const handleBackup = async () => {
     setIsBackupInProgress(true);
@@ -137,98 +143,141 @@ export function Backup() {
   };
 
   return (
-    <Container maxW="container.xl">
-      <PageHeader title="Backup do Sistema" />
+    <Box>
+      <PageHeader
+        title="Backup do Sistema"
+        subtitle="Gerencie os backups e restaurações do sistema"
+        icon={FiDatabase}
+        breadcrumbs={[
+          { label: 'Configurações', href: '/configuracoes' },
+          { label: 'Backup', href: '/configuracoes/backup' }
+        ]}
+      />
 
-      <Box bg="white" p={6} rounded="lg" shadow="sm" mb={6}>
-        <VStack spacing={4} align="stretch">
-          <Text fontSize="lg" fontWeight="medium">
-            Gerenciamento de Backup
-          </Text>
-          <Divider />
-          <HStack spacing={4}>
-            <Button
-              leftIcon={<FiDownload />}
-              colorScheme="blue"
-              onClick={handleBackup}
-              isLoading={isBackupInProgress}
-              loadingText="Realizando backup..."
-            >
-              Realizar Backup
-            </Button>
-            <Button
-              leftIcon={<FiUpload />}
-              colorScheme="green"
-              onClick={() => fileInputRef.current?.click()}
-              isLoading={isRestoreInProgress}
-              loadingText="Restaurando..."
-            >
-              Restaurar Backup
-            </Button>
-            <Input
-              type="file"
-              ref={fileInputRef}
-              display="none"
-              onChange={handleFileSelect}
-              accept=".zip"
-            />
-          </HStack>
-          {isBackupInProgress && (
-            <Box>
-              <Text mb={2}>Progresso do backup:</Text>
-              <Progress value={backupProgress} size="sm" colorScheme="blue" />
-            </Box>
-          )}
+      <Box
+        display="flex"
+        mt="-10px"
+        px={8}
+        flexDirection={{ base: "column", xl: "row" }}
+        w="86vw"
+        position="relative"
+        left="50%"
+        transform="translateX(-50%)"
+      >
+        <VStack flex="1" spacing={6} align="stretch" width="100%">
+          <Card
+            bg={cardBg}
+            shadow="sm"
+            rounded="lg"
+            borderWidth="1px"
+            borderColor={borderColor}
+            p={6}
+          >
+            <CardBody>
+              <VStack spacing={6} align="stretch">
+                <Text fontSize="lg" fontWeight="semibold">
+                  Gerenciamento de Backup
+                </Text>
+                <Divider />
+                <HStack spacing={4}>
+                  <Button
+                    leftIcon={<FiDownload />}
+                    colorScheme="blue"
+                    onClick={handleBackup}
+                    isLoading={isBackupInProgress}
+                    loadingText="Realizando backup..."
+                    size="lg"
+                  >
+                    Realizar Backup
+                  </Button>
+                  <Button
+                    leftIcon={<FiUpload />}
+                    colorScheme="green"
+                    onClick={() => fileInputRef.current?.click()}
+                    isLoading={isRestoreInProgress}
+                    loadingText="Restaurando..."
+                    size="lg"
+                  >
+                    Restaurar Backup
+                  </Button>
+                  <Input
+                    type="file"
+                    ref={fileInputRef}
+                    display="none"
+                    onChange={handleFileSelect}
+                    accept=".zip"
+                  />
+                </HStack>
+                {isBackupInProgress && (
+                  <Box>
+                    <Text mb={2}>Progresso do backup:</Text>
+                    <Progress value={backupProgress} size="sm" colorScheme="blue" rounded="md" />
+                  </Box>
+                )}
+              </VStack>
+            </CardBody>
+          </Card>
+
+          <Card
+            bg={cardBg}
+            shadow="sm"
+            rounded="lg"
+            borderWidth="1px"
+            borderColor={borderColor}
+            p={6}
+          >
+            <CardBody>
+              <VStack spacing={6} align="stretch">
+                <Text fontSize="lg" fontWeight="semibold">
+                  Histórico de Backups
+                </Text>
+                <Table variant="simple">
+                  <Thead>
+                    <Tr>
+                      <Th>Data</Th>
+                      <Th>Tamanho</Th>
+                      <Th>Tipo</Th>
+                      <Th>Status</Th>
+                      <Th>Ações</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {backups.map((backup) => (
+                      <Tr key={backup.id}>
+                        <Td>{backup.date}</Td>
+                        <Td>{backup.size}</Td>
+                        <Td>{backup.type}</Td>
+                        <Td>{backup.status}</Td>
+                        <Td>
+                          <HStack spacing={2}>
+                            <Button
+                              leftIcon={<FiDownload />}
+                              size="sm"
+                              colorScheme="blue"
+                              variant="ghost"
+                            >
+                              Download
+                            </Button>
+                            <Button
+                              leftIcon={<FiTrash2 />}
+                              size="sm"
+                              colorScheme="red"
+                              variant="ghost"
+                              onClick={() => handleDelete(backup.id)}
+                            >
+                              Excluir
+                            </Button>
+                          </HStack>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </VStack>
+            </CardBody>
+          </Card>
         </VStack>
       </Box>
-
-      <Box bg="white" p={6} rounded="lg" shadow="sm">
-        <Text fontSize="lg" fontWeight="medium" mb={4}>
-          Histórico de Backups
-        </Text>
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th>Data</Th>
-              <Th>Tamanho</Th>
-              <Th>Tipo</Th>
-              <Th>Status</Th>
-              <Th>Ações</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {backups.map((backup) => (
-              <Tr key={backup.id}>
-                <Td>{backup.date}</Td>
-                <Td>{backup.size}</Td>
-                <Td>{backup.type}</Td>
-                <Td>{backup.status}</Td>
-                <Td>
-                  <HStack spacing={2}>
-                    <Button
-                      size="sm"
-                      leftIcon={<FiDownload />}
-                      colorScheme="blue"
-                      variant="ghost"
-                    >
-                      Download
-                    </Button>
-                    <Button
-                      size="sm"
-                      leftIcon={<FiTrash2 />}
-                      colorScheme="red"
-                      variant="ghost"
-                      onClick={() => handleDelete(backup.id)}
-                    >
-                      Excluir
-                    </Button>
-                  </HStack>
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </Box>
-    </Container>
+    </Box>
   );
 }

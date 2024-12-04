@@ -1,10 +1,55 @@
+
+# 1. Acesse o servidor
+ssh root@207.180.249.172
+
+# 2. Vá para o diretório do projeto e atualize o código
+cd /opt/erp
+git pull origin Modo_Dev
+
+# 3. Dê permissão de execução ao script
+chmod +x build-push.sh
+
+# 4. Execute o script de build
+./build-push.sh
+
+
+
+
+
+
 # Guia de Atualização do ERP no Docker
 
-## Pré-requisitos
-- Docker instalado
-- Acesso ao Docker Hub (usuário: fatecinfo)
-- Acesso SSH ao servidor (207.180.249.172)
-- Git configurado
+# 1. Acesse o servidor
+ssh root@207.180.249.172
+
+# 2. Vá para o diretório do projeto e atualize o código
+cd /opt/erp
+git pull origin Modo_Dev
+
+# 3. Faça login no Docker Hub (se necessário)
+docker login
+
+# 4. Build e push do Frontend
+docker build -t fatecinfo/erp-frontend:dev-1.0.0 -t fatecinfo/erp-frontend:latest .
+docker push fatecinfo/erp-frontend:dev-1.0.0
+docker push fatecinfo/erp-frontend:latest
+
+# 5. Build e push do Backend
+docker build -f Dockerfile.python -t fatecinfo/erp-backend:dev-1.0.0 -t fatecinfo/erp-backend:latest .
+docker push fatecinfo/erp-backend:dev-1.0.0
+docker push fatecinfo/erp-backend:latest
+
+# 6. Remova a stack atual
+docker stack rm erp
+
+# 7. Aguarde alguns segundos
+sleep 30
+
+# 8. Faça o deploy da nova stack
+docker stack deploy -c docker-compose.yml erp
+
+# 9. Verifique o status
+docker service ls
 
 ## 1. Processo de Build e Push
 
