@@ -19,6 +19,7 @@ import {
   ModalOverlay,
   Select,
   Table,
+  TableContainer,
   Tbody,
   Td,
   Th,
@@ -36,7 +37,11 @@ import {
   Grid,
   GridItem,
   Tooltip,
-  SimpleGrid
+  SimpleGrid,
+  Stat,
+  StatGroup,
+  StatLabel,
+  StatNumber
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiStar, FiUsers, FiUserCheck, FiUserPlus } from 'react-icons/fi';
@@ -67,6 +72,8 @@ function Users() {
   const bgColor = useColorModeValue('gray.50', 'gray.800');
   const cardBg = useColorModeValue('white', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const textColorSecondary = useColorModeValue('gray.600', 'gray.400');
+  const theadBg = useColorModeValue('gray.100', 'gray.600');
 
   // Função auxiliar para verificar se o usuário é Super Admin
   const isSuperAdmin = (user: any) => {
@@ -376,23 +383,23 @@ function Users() {
         subtitle="Gerencie os usuários do sistema"
         icon={FiUsers}
         breadcrumbs={[
-          { label: 'Configurações', href: '/configuracoes' },
-          { label: 'Usuários', href: '/configuracoes/usuarios' }
+          { label: "Configurações", href: "/configuracoes" },
+          { label: "Usuários", href: "/configuracoes/users" }
         ]}
       />
 
       <Box
         display="flex"
         mt="-10px"
-        px={8}
+        px={{ base: 2, xl: 8 }}
         flexDirection={{ base: "column", xl: "row" }}
-        w="86vw"
+        w={{ base: "96vw", xl: "86vw" }}
         position="relative"
         left="50%"
         transform="translateX(-50%)"
       >
         <VStack flex="1" spacing={6} align="stretch" width="100%">
-          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mb={4}>
+          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 2, md: 4 }} mb={4}>
             <Card>
               <CardBody>
                 <Flex align="center" justify="space-between">
@@ -411,20 +418,6 @@ function Users() {
               <CardBody>
                 <Flex align="center" justify="space-between">
                   <Box>
-                    <Text fontSize="sm" color="gray.500">Super Admins</Text>
-                    <Text fontSize="2xl" fontWeight="bold">
-                      {users.filter(user => user.roles?.some(role => role.name === 'Super Admin')).length}
-                    </Text>
-                  </Box>
-                  <Icon as={FiStar} boxSize={8} color="yellow.500" />
-                </Flex>
-              </CardBody>
-            </Card>
-
-            <Card>
-              <CardBody>
-                <Flex align="center" justify="space-between">
-                  <Box>
                     <Text fontSize="sm" color="gray.500">Usuários Ativos</Text>
                     <Text fontSize="2xl" fontWeight="bold">
                       {users.filter(user => user.is_active !== false).length}
@@ -434,81 +427,118 @@ function Users() {
                 </Flex>
               </CardBody>
             </Card>
+
+            <Card>
+              <CardBody>
+                <Flex align="center" justify="space-between">
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">Super Admins</Text>
+                    <Text fontSize="2xl" fontWeight="bold">
+                      {users.filter(user => 
+                        user.roles?.some(role => 
+                          role.name === 'Super Admin' || role.name === 'Admin'
+                        )
+                      ).length}
+                    </Text>
+                  </Box>
+                  <Icon as={FiStar} boxSize={8} color="yellow.500" />
+                </Flex>
+              </CardBody>
+            </Card>
           </SimpleGrid>
 
-          <Card bg={cardBg} borderColor={borderColor} borderWidth="1px" shadow="sm">
+          {/* Bloco Adicionar Usuário */}
+          <Card bg={cardBg} borderColor={borderColor} borderWidth="1px" shadow="sm" mb={4}>
             <CardHeader>
               <Flex justifyContent="space-between" alignItems="center">
                 <Heading size="md">Lista de Usuários</Heading>
-                {/* Mostra botão de adicionar apenas se tiver permissão */}
                 {currentUser && (
                   <Button
-                    leftIcon={<FiPlus />}
+                    leftIcon={<Icon as={FiUserPlus} />}
                     colorScheme="blue"
                     onClick={handleAddUser}
                     isLoading={loading}
+                    size={{ base: "sm", md: "md" }}
                   >
                     Adicionar Usuário
                   </Button>
                 )}
               </Flex>
             </CardHeader>
-            <CardBody>
-              <Table variant="simple">
-                <Thead>
-                  <Tr>
-                    <Th>Nome</Th>
-                    <Th>E-mail</Th>
-                    <Th>Função</Th>
-                    <Th>Data de Cadastro</Th>
-                    <Th>Ações</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {users.map((user) => (
-                    <Tr key={user.id}>
-                      <Td>{user.full_name}</Td>
-                      <Td>{user.email}</Td>
-                      <Td>{user.roles?.map(role => role.name).join(', ') || '-'}</Td>
-                      <Td>{new Date(user.created_at).toLocaleDateString('pt-BR')}</Td>
-                      <Td>
-                        <HStack spacing={2}>
-                          {/* Mostra botão de editar apenas se tiver permissão */}
-                          {canEditUser(user) && (
-                            <Tooltip label="Editar usuário">
-                              <IconButton
-                                aria-label="Editar usuário"
-                                icon={<FiEdit2 />}
-                                size="sm"
-                                onClick={() => handleEditUser(user)}
-                              />
-                            </Tooltip>
-                          )}
-                          {/* Mostra indicador visual se for Super Admin */}
-                          {isSuperAdmin(user) && (
-                            <Tooltip label="Super Admin">
-                              <Box>
-                                <Icon as={FiStar} color="yellow.500" />
-                              </Box>
-                            </Tooltip>
-                          )}
-                          <Tooltip label="Remover usuário">
+          </Card>
+
+          {/* Tabela de Usuários */}
+          <TableContainer bg={cardBg} borderRadius="lg" borderWidth="1px" borderColor={borderColor}>
+            <Table variant="simple" size={{ base: "sm", md: "md" }}>
+              <Thead bg={theadBg}>
+                <Tr>
+                  <Th>Nome</Th>
+                  <Th display={{ base: "none", md: "table-cell" }}>E-mail</Th>
+                  <Th display={{ base: "none", md: "table-cell" }}>Função</Th>
+                  <Th display={{ base: "none", md: "table-cell" }}>Data de Cadastro</Th>
+                  <Th>Ações</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {users.map((user) => (
+                  <Tr key={user.id}>
+                    <Td>
+                      <VStack align="start" spacing={1}>
+                        <Text>{user.full_name}</Text>
+                        <Text
+                          fontSize="sm"
+                          color={textColorSecondary}
+                          display={{ base: "block", md: "none" }}
+                        >
+                          {user.email}
+                        </Text>
+                        <Text
+                          fontSize="sm"
+                          color={textColorSecondary}
+                          display={{ base: "block", md: "none" }}
+                        >
+                          {user.roles?.map(role => role.name).join(', ') || '-'}
+                        </Text>
+                      </VStack>
+                    </Td>
+                    <Td display={{ base: "none", md: "table-cell" }}>{user.email}</Td>
+                    <Td display={{ base: "none", md: "table-cell" }}>{user.roles?.map(role => role.name).join(', ') || '-'}</Td>
+                    <Td display={{ base: "none", md: "table-cell" }}>{new Date(user.created_at).toLocaleDateString('pt-BR')}</Td>
+                    <Td>
+                      <HStack spacing={2} justify={{ base: "flex-start", md: "flex-end" }}>
+                        {canEditUser(user) && (
+                          <Tooltip label="Editar usuário">
                             <IconButton
-                              aria-label="Remover usuário"
-                              icon={<FiTrash2 />}
-                              size="sm"
-                              colorScheme="red"
-                              onClick={() => handleDeleteUser(user.id)}
+                              aria-label="Editar usuário"
+                              icon={<FiEdit2 />}
+                              size={{ base: "sm", md: "sm" }}
+                              onClick={() => handleEditUser(user)}
                             />
                           </Tooltip>
-                        </HStack>
-                      </Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-            </CardBody>
-          </Card>
+                        )}
+                        {isSuperAdmin(user) && (
+                          <Tooltip label="Super Admin">
+                            <Box>
+                              <Icon as={FiStar} color="yellow.500" />
+                            </Box>
+                          </Tooltip>
+                        )}
+                        <Tooltip label="Remover usuário">
+                          <IconButton
+                            aria-label="Remover usuário"
+                            icon={<FiTrash2 />}
+                            size={{ base: "sm", md: "sm" }}
+                            colorScheme="red"
+                            onClick={() => handleDeleteUser(user.id)}
+                          />
+                        </Tooltip>
+                      </HStack>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </TableContainer>
 
           <Modal isOpen={isOpen} onClose={onClose} size="md">
             <ModalOverlay />
