@@ -36,7 +36,7 @@ export function CadastroModal({ isOpen, onClose, onSuccess }: CadastroModalProps
   const [cnpj, setCnpj] = useState('');
   
   const [isLoading, setIsLoading] = useState(false);
-  const { signUp } = useAuth();
+  const { register } = useAuth();
   const toast = useToast();
 
   const formatCNPJ = (value: string) => {
@@ -99,9 +99,11 @@ export function CadastroModal({ isOpen, onClose, onSuccess }: CadastroModalProps
       }
 
       // Cadastra usuário e empresa
-      await signUp(email, password, nome, {
-        nomeEmpresa,
-        cnpj: cnpj.replace(/\D/g, '')
+      await register({
+        email,
+        password,
+        companyName: nomeEmpresa,
+        companyDocument: cnpj.replace(/\D/g, '')
       });
 
       toast({

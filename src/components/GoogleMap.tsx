@@ -367,7 +367,7 @@ export function GoogleMap({ company, height = '400px', states, latitude, longitu
                   const marker = new google.maps.marker.AdvancedMarkerElement({
                     map: mapRef.current,
                     position,
-                    draggable: true,
+                    gmpDraggable: true,
                     title: 'Localização',
                     content: pin.element
                   });

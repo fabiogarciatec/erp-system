@@ -11,11 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function Unauthorized() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
-
-  const handleSignOut = async () => {
-    await signOut();
-  };
+  const { logout } = useAuth();
 
   return (
     <Container maxW="container.md" py={10}>
@@ -35,7 +31,8 @@ export default function Unauthorized() {
           </Button>
           <Button
             variant="outline"
-            onClick={handleSignOut}
+            colorScheme="blue"
+            onClick={logout}
           >
             Sair
           </Button>

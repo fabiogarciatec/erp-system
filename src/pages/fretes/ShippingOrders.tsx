@@ -12,7 +12,7 @@ import {
   InputRightElement,
 } from '@chakra-ui/react';
 import { FiSearch, FiPlus } from 'react-icons/fi';
-import { PageHeader } from '../components/PageHeader';
+import { PageHeader } from '../../components/PageHeader';
 
 export function ShippingOrders() {
   return (

@@ -20,7 +20,7 @@ import {
   FiTrendingUp,
   FiDownload
 } from 'react-icons/fi';
-import { PageHeader } from '../components/PageHeader';
+import { PageHeader } from '../../components/PageHeader';
 
 interface ReportsProps {
   type?: 'sales' | 'financial' | 'inventory';

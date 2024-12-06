@@ -33,7 +33,7 @@ const api = axios.create({
 export const omieService = {
   async listCustomers(page: number = 1, pageSize: number = 50): Promise<OmieResponse<OmieListResponse>> {
     try {
-      const response = await api.get('/clientes', {
+      const response = await api.get<OmieResponse<OmieListResponse>>('/clientes', {
         params: { page, pageSize }
       });
       return response.data;
@@ -48,7 +48,7 @@ export const omieService = {
 
   async searchCustomers(query: string): Promise<OmieResponse<OmieListResponse>> {
     try {
-      const response = await api.get('/clientes/busca', {
+      const response = await api.get<OmieResponse<OmieListResponse>>('/clientes/busca', {
         params: { q: query }
       });
       return response.data;

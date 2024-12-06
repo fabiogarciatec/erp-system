@@ -31,7 +31,6 @@ import {
   Select,
   NumberInput,
   NumberInputField,
-  PageHeader,
   SimpleGrid,
   Stack,
   TableContainer,
@@ -39,6 +38,7 @@ import {
 import { FiPlus, FiDownload } from 'react-icons/fi';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { PageHeader } from '../../components/PageHeader';
 
 interface Transaction {
   id: string;

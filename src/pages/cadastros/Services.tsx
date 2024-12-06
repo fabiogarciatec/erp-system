@@ -12,7 +12,7 @@ import {
   InputRightElement,
 } from '@chakra-ui/react';
 import { FiSearch, FiPlus, FiDownload } from 'react-icons/fi';
-import { PageHeader } from '../components/PageHeader';
+import { PageHeader } from '../../components/PageHeader';
 
 export function Services() {
   const handleExportServices = () => {
@@ -28,10 +28,10 @@ export function Services() {
       <PageHeader
         title="Serviços"
         subtitle="Gerencie os serviços oferecidos"
-        breadcrumbs=[
+        breadcrumbs={[
           { label: 'Cadastros', href: '/cadastros' },
           { label: 'Serviços', href: '/cadastros/servicos' }
-        ]
+        ]}
         rightContent={
           <Box>
             <Button

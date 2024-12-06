@@ -1,14 +1,18 @@
 import { testSupabaseConnection } from '../utils/testConnection';
 
+interface TestConnectionResult {
+  success: boolean;
+  message: string;
+  data?: Array<{ id: string }>;
+  error?: string;
+}
+
 console.log('Testando conexão com Supabase...\n');
 
 testSupabaseConnection()
-  .then(result => {
+  .then((result: TestConnectionResult) => {
     if (result.success) {
       console.log('✅ Sucesso:', result.message);
-      if (result.session) {
-        console.log('\nSessão atual:', result.session);
-      }
       if (result.data) {
         console.log('\nDados de teste:', result.data);
       }
@@ -21,7 +25,7 @@ testSupabaseConnection()
       process.exit(1);
     }
   })
-  .catch(error => {
+  .catch((error: Error) => {
     console.error('❌ Erro inesperado:', error);
     process.exit(1);
   });
