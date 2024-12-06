@@ -6,12 +6,16 @@ export const theme = extendTheme({
     useSystemColorMode: false,
   },
   styles: {
-    global: {
+    global: (props) => ({
       'html, body': {
-        backgroundColor: 'gray.50',
-        color: 'gray.900',
+        color: props.colorMode === 'dark' ? 'white' : 'gray.900',
+        bg: props.colorMode === 'dark' ? 'gray.800' : 'white',
       },
-    },
+      '#root': {
+        minHeight: '100vh',
+        bg: 'inherit'
+      }
+    }),
   },
   fonts: {
     heading: 'Inter, system-ui, sans-serif',

@@ -21,13 +21,13 @@ import {
   Stack,
   InputGroup,
 } from '@chakra-ui/react';
-import { FiSave, FiSearch } from 'react-icons/fi';
+import { FiSave, FiSearch, FiGrid } from 'react-icons/fi';
 import { useCep } from '../../hooks/useCep';
 import { useCompanyData } from '../../hooks/useCompanyData';
 import { GoogleMap } from '../../components/GoogleMap';
 import { Company } from '../../types/company';
 import { PageHeader } from '@/components/PageHeader';
-import InputMask from 'react-input-mask';
+import { InputMaskChakra } from '@/components/InputMaskChakra';
 
 interface StyleProps {
   textColor: string;
@@ -59,8 +59,7 @@ function CompanyCard({ company, handleInputChange, styles }: CompanyCardProps) {
         <FormControl isRequired>
           <FormLabel>CNPJ</FormLabel>
           <InputGroup>
-            <Input
-              as={InputMask}
+            <InputMaskChakra
               mask="99.999.999/9999-99"
               value={company.document}
               onChange={(e) => handleInputChange('document', e.target.value)}
@@ -74,8 +73,7 @@ function CompanyCard({ company, handleInputChange, styles }: CompanyCardProps) {
         <FormControl>
           <FormLabel>Telefone</FormLabel>
           <InputGroup>
-            <Input
-              as={InputMask}
+            <InputMaskChakra
               mask="(99) 99999-9999"
               value={company.phone}
               onChange={(e) => handleInputChange('phone', e.target.value)}
@@ -286,6 +284,28 @@ function CompanyPage() {
     }
   }, [company?.latitude, company?.longitude]);
 
+  const handleLocationSelect = async (lat: number, lng: number) => {
+    try {
+      await handleInputChange('latitude', lat);
+      await handleInputChange('longitude', lng);
+      toast({
+        title: "Localização atualizada",
+        description: "As coordenadas foram atualizadas com sucesso.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar as coordenadas.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   if (isLoading || !company) {
     return <div>Carregando...</div>;
   }
@@ -293,55 +313,47 @@ function CompanyPage() {
   return (
     <Box>
       <PageHeader
-        title="Configurações da Empresa"
+        title="Empresa"
+        icon={FiGrid}
         subtitle="Gerencie as informações da sua empresa"
         breadcrumbs={[
           { label: 'Configurações', href: '/configuracoes' },
           { label: 'Empresa', href: '/configuracoes/empresa' }
         ]}
       />
+
       <Box
         display="flex"
-        mt="-10px"
-        px={8}
         flexDirection={{ base: "column", xl: "row" }}
-        w="86vw"
-        position="relative"
-        left="50%"
-        transform="translateX(-50%)"
+        gap={4}
+        px={{ base: 2, xl: 8 }}
+        pb={12}
+        mx={{ base: 0, xl: "auto" }}
+        maxW={{ base: "100%", xl: "86vw" }}
+        w="full"
       >
-        <VStack flex="1" spacing={6} align="stretch">
-          {/* Seção: Dados da Empresa */}
-          <Box 
-            borderWidth="2px" 
-            borderRadius="lg" 
-            p={6} 
-            bg={cardBg} 
-            borderColor={borderColor}
-            width="45vw"
-            position="relative"
-            left="50%"
-            transform="translateX(-50%)"
-          >
-            <VStack spacing={4} align="stretch">
-              <Heading 
-                size="lg" 
-                bgGradient={titleGradient}
-                bgClip="text"
-              >
-                Configurações da Empresa
-              </Heading>
-              <Divider borderColor={styles.dividerColor} />
-
-              {/* Seção: Dados da Empresa */}
+        {/* Coluna da esquerda - Formulários */}
+        <Box flex={{ base: "1", xl: "1.5" }}>
+          <VStack spacing={6} w="full" align="stretch">
+            {/* Bloco: Informações da Empresa */}
+            <Box 
+              borderWidth="2px" 
+              borderRadius={{ base: "md", md: "lg" }}
+              p={{ base: 3, md: 6 }}
+              bg={cardBg} 
+              borderColor={borderColor}
+              w="full"
+              mx={{ base: 0, xl: "auto" }}
+            >
               <VStack spacing={4} align="stretch">
                 <Heading 
                   size="md"
                   bgGradient={titleGradient}
                   bgClip="text"
                 >
-                  Dados da Empresa
+                  Configurações da Empresa
                 </Heading>
+                <Divider borderColor={styles.dividerColor} />
 
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                   <FormControl isRequired>
@@ -356,8 +368,7 @@ function CompanyPage() {
                   <FormControl isRequired>
                     <FormLabel>CNPJ</FormLabel>
                     <InputGroup>
-                      <Input
-                        as={InputMask}
+                      <InputMaskChakra
                         mask="99.999.999/9999-99"
                         value={company.document}
                         onChange={(e) => handleInputChange('document', e.target.value)}
@@ -381,8 +392,7 @@ function CompanyPage() {
                   <FormControl isRequired>
                     <FormLabel>Telefone</FormLabel>
                     <InputGroup>
-                      <Input
-                        as={InputMask}
+                      <InputMaskChakra
                         mask="(99) 99999-9999"
                         value={company.phone}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
@@ -392,203 +402,210 @@ function CompanyPage() {
                   </FormControl>
                 </SimpleGrid>
               </VStack>
-            </VStack>
-          </Box>
+            </Box>
 
-          {/* Seção: Endereço */}
-          <Box 
-            borderWidth="2px" 
-            borderRadius="lg" 
-            p={6} 
-            bg={cardBg} 
+            {/* Bloco: Endereço */}
+            <Box 
+              borderWidth="2px" 
+              borderRadius={{ base: "md", md: "lg" }}
+              p={{ base: 3, md: 6 }}
+              bg={cardBg} 
+              borderColor={borderColor}
+              w="full"
+              mx={{ base: 0, xl: "auto" }}
+            >
+              <VStack spacing={4} align="stretch">
+                <Heading 
+                  size="md"
+                  bgGradient={titleGradient}
+                  bgClip="text"
+                >
+                  Endereço
+                </Heading>
+                <Divider borderColor={styles.dividerColor} />
+
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                  <FormControl>
+                    <FormLabel>CEP</FormLabel>
+                    <HStack>
+                      <InputGroup>
+                        <InputMaskChakra
+                          mask="99999-999"
+                          value={company.postal_code}
+                          onChange={(e) => handleInputChange('postal_code', e.target.value)}
+                          placeholder="00000-000"
+                        />
+                      </InputGroup>
+                      <Button
+                        onClick={() => {
+                          if (!company.postal_code) return;
+                          handleCepLookup(company.postal_code);
+                        }}
+                        isLoading={cepLoading}
+                        colorScheme="blue"
+                        leftIcon={<Icon as={FiSearch} />}
+                      >
+                        Buscar
+                      </Button>
+                    </HStack>
+                  </FormControl>
+
+                  <FormControl>
+                    <FormLabel>Endereço</FormLabel>
+                    <Input
+                      value={company.address}
+                      onChange={(e) => handleInputChange('address', e.target.value)}
+                      placeholder="Rua, Avenida, etc"
+                    />
+                  </FormControl>
+                </SimpleGrid>
+
+                <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+                  <FormControl>
+                    <FormLabel>Número</FormLabel>
+                    <Input
+                      value={company.address_number}
+                      onChange={(e) => handleInputChange('address_number', e.target.value)}
+                      placeholder="Nº"
+                    />
+                  </FormControl>
+
+                  <GridItem colSpan={2}>
+                    <FormControl>
+                      <FormLabel>Complemento</FormLabel>
+                      <Input
+                        value={company.address_complement || ''}
+                        onChange={(e) => handleInputChange('address_complement', e.target.value)}
+                        placeholder="Apto, Sala, etc"
+                      />
+                    </FormControl>
+                  </GridItem>
+                </SimpleGrid>
+
+                <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+                  <FormControl>
+                    <FormLabel>Bairro</FormLabel>
+                    <Input
+                      value={company.neighborhood}
+                      onChange={(e) => handleInputChange('neighborhood', e.target.value)}
+                      placeholder="Bairro"
+                    />
+                  </FormControl>
+
+                  <FormControl>
+                    <FormLabel>Cidade</FormLabel>
+                    <Input
+                      value={company.city}
+                      onChange={(e) => handleInputChange('city', e.target.value)}
+                      placeholder="Cidade"
+                    />
+                  </FormControl>
+
+                  <FormControl>
+                    <FormLabel>Estado</FormLabel>
+                    <Select
+                      value={company.state_id || ''}
+                      onChange={(e) => handleInputChange('state_id', Number(e.target.value))}
+                      placeholder="Selecione o estado"
+                    >
+                      {states.map((state) => (
+                        <option key={state.id} value={state.id}>
+                          {state.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </SimpleGrid>
+              </VStack>
+            </Box>
+          </VStack>
+        </Box>
+
+        {/* Coluna da direita - Mapa */}
+        <Box 
+          flex={{ base: "1", xl: "1" }} 
+          w="full"
+          position="relative"
+          minH={{ base: "400px", xl: "auto" }}
+          h={{ base: "400px", xl: "auto" }}
+        >
+          <Box
+            borderWidth="2px"
+            borderRadius="lg"
+            bg={cardBg}
             borderColor={borderColor}
-            width="45vw"
-            position="relative"
-            left="50%"
-            transform="translateX(-50%)"
+            position={{ base: "relative", xl: "sticky" }}
+            top={{ base: 0, xl: "100px" }}
+            h="full"
+            overflow="hidden"
+            p={{ base: 2, xl: 3 }}
           >
-            <VStack spacing={4} align="stretch">
+            <VStack spacing={4} align="stretch" h="full">
               <Heading 
                 size="md"
                 bgGradient={titleGradient}
                 bgClip="text"
               >
-                Endereço
+                Localização
               </Heading>
-
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                <FormControl>
-                  <FormLabel>CEP</FormLabel>
-                  <HStack>
-                    <InputGroup>
-                      <Input
-                        as={InputMask}
-                        mask="99999-999"
-                        value={company.postal_code}
-                        onChange={(e) => handleInputChange('postal_code', e.target.value)}
-                        placeholder="00000-000"
-                      />
-                    </InputGroup>
-                    <Button
-                      onClick={() => {
-                        if (!company.postal_code) return;
-                        handleCepLookup(company.postal_code);
-                      }}
-                      isLoading={cepLoading}
-                      colorScheme="blue"
-                      leftIcon={<Icon as={FiSearch} />}
-                    >
-                      Buscar
-                    </Button>
-                  </HStack>
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Endereço</FormLabel>
-                  <Input
-                    value={company.address}
-                    onChange={(e) => handleInputChange('address', e.target.value)}
-                    placeholder="Rua, Avenida, etc"
-                  />
-                </FormControl>
-              </SimpleGrid>
-
-              <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
-                <FormControl>
-                  <FormLabel>Número</FormLabel>
-                  <Input
-                    value={company.address_number}
-                    onChange={(e) => handleInputChange('address_number', e.target.value)}
-                    placeholder="Nº"
-                  />
-                </FormControl>
-
-                <GridItem colSpan={2}>
-                  <FormControl>
-                    <FormLabel>Complemento</FormLabel>
-                    <Input
-                      value={company.address_complement || ''}
-                      onChange={(e) => handleInputChange('address_complement', e.target.value)}
-                      placeholder="Apto, Sala, etc"
-                    />
-                  </FormControl>
-                </GridItem>
-              </SimpleGrid>
-
-              <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
-                <FormControl>
-                  <FormLabel>Bairro</FormLabel>
-                  <Input
-                    value={company.neighborhood}
-                    onChange={(e) => handleInputChange('neighborhood', e.target.value)}
-                    placeholder="Bairro"
-                  />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Cidade</FormLabel>
-                  <Input
-                    value={company.city}
-                    onChange={(e) => handleInputChange('city', e.target.value)}
-                    placeholder="Cidade"
-                  />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Estado</FormLabel>
-                  <Select
-                    value={company.state_id || ''}
-                    onChange={(e) => handleInputChange('state_id', Number(e.target.value))}
-                    placeholder="Selecione o estado"
-                  >
-                    {states.map((state) => (
-                      <option key={state.id} value={state.id}>
-                        {state.name}
-                      </option>
-                    ))}
-                  </Select>
-                </FormControl>
-              </SimpleGrid>
-            </VStack>
-          </Box>
-
-          {/* Botões de Ação */}
-          <Box borderWidth="2px" borderRadius="lg" p={6} bg={cardBg} borderColor={borderColor}>
-            <VStack spacing={4} align="stretch">
-              <HStack spacing={4} justify="center">
-                <Button
-                  leftIcon={<FiSave />}
-                  colorScheme="blue"
-                  onClick={handleSave}
-                  isLoading={isSaving}
-                >
-                  Salvar Alterações
-                </Button>
-              </HStack>
-            </VStack>
-          </Box>
-        </VStack>
-
-        {/* Container do Mapa */}
-        <Box 
-          display={{ base: "none", xl: "block" }}
-          borderWidth="2px" 
-          borderRadius="lg"
-          w="900px"
-          h="805px"
-          position="sticky"
-          top="24px"
-          bg={cardBg}
-          borderColor={borderColor}
-          p={4}
-        >
-          <VStack spacing={4} align="stretch" h="full">
-            <Heading 
-              size="md"
-              bgGradient={titleGradient}
-              bgClip="text"
-            >
-              Localização no Mapa
-            </Heading>
-            <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
-              Clique no mapa ou arraste o marcador para atualizar a localização
-            </Text>
-            {company && (
-              <Box flex="1">
+              <Divider borderColor={styles.dividerColor} />
+              <Box 
+                flex="1" 
+                borderRadius="md" 
+                overflow="hidden" 
+                position="relative"
+                minH={{ base: "300px", xl: "auto" }}
+              >
                 <GoogleMap
-                  key={`${company.address}-${company.city}-${company.state_id}-${addressUpdated}`}
-                  company={company}
-                  states={states}
+                  address={`${company.address}, ${company.city}, ${states.find(s => s.id === company.state_id)?.uf}`}
                   latitude={company.latitude}
                   longitude={company.longitude}
+                  onLocationSelect={handleLocationSelect}
                   height="100%"
-                  onMapClick={async (lat, lng) => {
-                    try {
-                      await handleInputChange('latitude', lat);
-                      await handleInputChange('longitude', lng);
-                      toast({
-                        title: "Localização atualizada",
-                        description: "As coordenadas foram atualizadas com sucesso.",
-                        status: "success",
-                        duration: 3000,
-                        isClosable: true,
-                      });
-                    } catch (error) {
-                      toast({
-                        title: "Erro",
-                        description: "Erro ao atualizar as coordenadas.",
-                        status: "error",
-                        duration: 3000,
-                        isClosable: true,
-                      });
-                    }
-                  }}
+                  company={company}
+                  states={states}
                 />
               </Box>
-            )}
-          </VStack>
+            </VStack>
+          </Box>
         </Box>
       </Box>
+
+      {/* Botões de Ação */}
+      <Flex
+        width="100%"
+        justify="center"
+        mt={-6}
+        mb={4}
+      >
+        <Box 
+          borderWidth="2px" 
+          borderRadius="lg" 
+          p={{ base: 2, xl: 3 }}
+          ml={{ base: 2, xl: 6 }}
+          mr={{ base: 2, xl: 6 }}
+          bg={cardBg} 
+          borderColor={borderColor} 
+          maxW="86vw"
+          w="full"
+          position="relative"
+        >
+          <VStack spacing={3} align="stretch">
+            <HStack spacing={3} justify="center">
+              <Button
+                leftIcon={<FiSave />}
+                colorScheme="blue"
+                onClick={handleSave}
+                isLoading={isSaving}
+                size="lg"
+                px={4}
+              >
+                Salvar Alterações
+              </Button>
+            </HStack>
+          </VStack>
+        </Box>
+      </Flex>
     </Box>
   );
 }

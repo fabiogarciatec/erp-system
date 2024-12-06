@@ -71,7 +71,7 @@ const SalesCard: React.FC<SalesCardProps> = ({ month, value, growth }) => {
       rounded="lg"
       borderWidth="1px"
       borderColor={borderColor}
-      p={4}
+      p={{ base: 3, md: 4 }}
     >
       <VStack spacing={1} align="stretch">
         <Text fontSize="sm" color={textColor}>
@@ -109,7 +109,7 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, percentage, isI
       rounded="lg"
       borderWidth="1px"
       borderColor={borderColor}
-      p={6}
+      p={{ base: 4, md: 5 }}
     >
       <VStack spacing={2} align="stretch">
         <HStack justify="space-between">
@@ -123,7 +123,7 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, percentage, isI
             {isIncrease ? '+' : '-'}{percentage}
           </Badge>
         </HStack>
-        <Text fontSize="2xl" fontWeight="bold">
+        <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold">
           {value}
         </Text>
         <Text fontSize="sm" color={textColor}>
@@ -165,71 +165,88 @@ export default function Dashboard() {
 
   return (
     <Box w="100%">
-      <PageHeader 
-        title="Dashboard"
-        subtitle="Visão geral do seu negócio"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' }
-        ]}
-      />
-
-      {/* Content */}
       <Box 
-        mt="125px"
-        px={6}
+        pt={{ base: "10px", md: "15px" }}
+        position="relative"
+        w="100%"
       >
-        <Box maxW="1600px" mx="auto">
-          {/* Stats Grid */}
-          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={5} mb={8}>
-            {stats.map((stat, index) => (
-              <StatCard key={index} {...stat} />
-            ))}
-          </SimpleGrid>
+        <PageHeader 
+          title="Dashboard"
+          subtitle="Visão geral do seu negócio"
+          breadcrumbs={[
+            { label: 'Dashboard', href: '/dashboard' }
+          ]}
+        />
 
-          {/* Sales Grid */}
-          <Box mb={8}>
-            <Heading size="md" mb={4}>
-              Vendas Mensais
-            </Heading>
-            <SimpleGrid columns={{ base: 2, md: 3, lg: 6 }} spacing={4}>
-              {salesData.map((data, index) => (
-                <SalesCard key={index} {...data} />
+        {/* Content */}
+        <Box 
+          px={{ base: 2, sm: 4, md: 6 }}
+          pb={{ base: 6, md: 8 }}
+          w="100%"
+          overflowX="hidden"
+        >
+          <Box maxW="1600px" mx="auto">
+            {/* Stats Grid */}
+            <SimpleGrid 
+              columns={{ base: 1, sm: 2, md: 3 }} 
+              spacing={{ base: 2, sm: 3, md: 4 }} 
+              mb={{ base: 4, md: 6 }}
+              w="100%"
+            >
+              {stats.map((stat, index) => (
+                <StatCard key={index} {...stat} />
               ))}
             </SimpleGrid>
-          </Box>
 
-          {/* Recent Activities */}
-          <Card>
-            <CardHeader>
-              <Heading size="md">Atividades Recentes</Heading>
-            </CardHeader>
-            <CardBody>
-              <Table variant="simple">
-                <Thead>
-                  <Tr>
-                    <Th>Ação</Th>
-                    <Th>Usuário</Th>
-                    <Th>Status</Th>
-                    <Th>Data</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  <Tr>
-                    <Td>Novo cliente cadastrado</Td>
-                    <Td>{user?.email}</Td>
-                    <Td><Badge colorScheme="green">Concluído</Badge></Td>
-                    <Td>{new Date().toLocaleDateString()}</Td>
-                  </Tr>
-                  <Tr>
-                    <Td>Pedido atualizado</Td>
-                    <Td>{user?.email}</Td>
-                    <Td><Badge colorScheme="blue">Em andamento</Badge></Td>
-                    <Td>{new Date().toLocaleDateString()}</Td>
-                  </Tr>
-                </Tbody>
-              </Table>
-            </CardBody>
-          </Card>
+            {/* Sales Grid */}
+            <Box mb={{ base: 4, md: 6 }}>
+              <Heading size="md" mb={{ base: 2, md: 3 }}>
+                Vendas Mensais
+              </Heading>
+              <SimpleGrid 
+                columns={{ base: 1, sm: 2, md: 3, lg: 6 }} 
+                spacing={{ base: 2, sm: 3, md: 4 }}
+                w="100%"
+              >
+                {salesData.map((data, index) => (
+                  <SalesCard key={index} {...data} />
+                ))}
+              </SimpleGrid>
+            </Box>
+
+            {/* Recent Activities */}
+            <Card>
+              <CardHeader>
+                <Heading size="md">Atividades Recentes</Heading>
+              </CardHeader>
+              <CardBody>
+                <Table variant="simple">
+                  <Thead>
+                    <Tr>
+                      <Th>Ação</Th>
+                      <Th>Usuário</Th>
+                      <Th>Status</Th>
+                      <Th>Data</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    <Tr>
+                      <Td>Novo cliente cadastrado</Td>
+                      <Td>{user?.email}</Td>
+                      <Td><Badge colorScheme="green">Concluído</Badge></Td>
+                      <Td>{new Date().toLocaleDateString()}</Td>
+                    </Tr>
+                    <Tr>
+                      <Td>Pedido atualizado</Td>
+                      <Td>{user?.email}</Td>
+                      <Td><Badge colorScheme="blue">Em andamento</Badge></Td>
+                      <Td>{new Date().toLocaleDateString()}</Td>
+                    </Tr>
+                  </Tbody>
+                </Table>
+              </CardBody>
+            </Card>
+          </Box>
         </Box>
       </Box>
     </Box>

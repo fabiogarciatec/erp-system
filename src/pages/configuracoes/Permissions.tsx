@@ -124,7 +124,7 @@ export default function Permissions() {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [rolePermissions, setRolePermissions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const {
     isOpen: isRoleModalOpen,
     onOpen: onRoleModalOpen,
@@ -307,105 +307,107 @@ export default function Permissions() {
   };
 
   return (
-    <Box p={4}>
+    <Box>
       <PageHeader
         title="Permissões"
         icon={FiShield}
         description="Gerencie os cargos e permissões do sistema"
       />
 
-      <Card mt={4}>
-        <CardBody>
-          <HStack spacing={4} mb={4}>
-            <FormControl flex={1}>
-              <FormLabel>Cargo</FormLabel>
-              <Select
-                value={selectedRole?.id || ''}
-                onChange={(e) => handleRoleSelect(e.target.value)}
-                placeholder="Selecione um cargo"
+      <Box px={8}>
+        <Card>
+          <CardBody>
+            <HStack spacing={4} mb={4}>
+              <FormControl flex={1}>
+                <FormLabel>Cargo</FormLabel>
+                <Select
+                  value={selectedRole?.id || ''}
+                  onChange={(e) => handleRoleSelect(e.target.value)}
+                  placeholder="Selecione um cargo"
+                >
+                  {roles.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
+              <Button
+                leftIcon={<FiPlus />}
+                colorScheme="blue"
+                onClick={() => {
+                  setEditingRole(null);
+                  onRoleModalOpen();
+                }}
+                alignSelf="flex-end"
               >
-                {roles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}
-                  </option>
-                ))}
-              </Select>
-            </FormControl>
-            <Button
-              leftIcon={<FiPlus />}
-              colorScheme="blue"
-              onClick={() => {
-                setEditingRole(null);
-                onRoleModalOpen();
-              }}
-              alignSelf="flex-end"
-            >
-              Novo Cargo
-            </Button>
-          </HStack>
-
-          {selectedRole && (
-            <HStack spacing={2} mb={4}>
-              <IconButton
-                aria-label="Editar cargo"
-                icon={<FiEdit2 />}
-                size="sm"
-                onClick={() => handleEditRole(selectedRole)}
-              />
-              <IconButton
-                aria-label="Excluir cargo"
-                icon={<FiTrash2 />}
-                size="sm"
-                colorScheme="red"
-                onClick={() => handleDeleteRole(selectedRole.id)}
-                isDisabled={selectedRole.is_system_role}
-              />
+                Novo Cargo
+              </Button>
             </HStack>
-          )}
 
-          <Divider my={4} />
+            {selectedRole && (
+              <HStack spacing={2} mb={4}>
+                <IconButton
+                  aria-label="Editar cargo"
+                  icon={<FiEdit2 />}
+                  size="sm"
+                  onClick={() => handleEditRole(selectedRole)}
+                />
+                <IconButton
+                  aria-label="Excluir cargo"
+                  icon={<FiTrash2 />}
+                  size="sm"
+                  colorScheme="red"
+                  onClick={() => handleDeleteRole(selectedRole.id)}
+                  isDisabled={selectedRole.is_system_role}
+                />
+              </HStack>
+            )}
 
-          {modules.map((module) => {
-            const modulePermissions = permissions.filter(
-              (p) => p.module === module.code
-            );
+            <Divider my={4} />
 
-            if (modulePermissions.length === 0) return null;
+            {modules.map((module) => {
+              const modulePermissions = permissions.filter(
+                (p) => p.module === module.code
+              );
 
-            return (
-              <Box key={module.id} mb={6}>
-                <Text fontSize="lg" fontWeight="bold" mb={2}>
-                  {module.name}
-                </Text>
-                <Table variant="simple">
-                  <Thead>
-                    <Tr>
-                      <Th>Permissão</Th>
-                      <Th>Descrição</Th>
-                      <Th width="100px">Conceder</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {modulePermissions.map((permission) => (
-                      <Tr key={permission.id}>
-                        <Td>{permission.name}</Td>
-                        <Td>{permission.description}</Td>
-                        <Td>
-                          <Checkbox
-                            isChecked={rolePermissions.includes(permission.id)}
-                            onChange={() => handlePermissionToggle(permission.id)}
-                            isDisabled={!selectedRole || selectedRole.is_system_role}
-                          />
-                        </Td>
+              if (modulePermissions.length === 0) return null;
+
+              return (
+                <Box key={module.id} mb={6}>
+                  <Text fontSize="lg" fontWeight="bold" mb={2}>
+                    {module.name}
+                  </Text>
+                  <Table variant="simple">
+                    <Thead>
+                      <Tr>
+                        <Th>Permissão</Th>
+                        <Th>Descrição</Th>
+                        <Th width="100px">Conceder</Th>
                       </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
-              </Box>
-            );
-          })}
-        </CardBody>
-      </Card>
+                    </Thead>
+                    <Tbody>
+                      {modulePermissions.map((permission) => (
+                        <Tr key={permission.id}>
+                          <Td>{permission.name}</Td>
+                          <Td>{permission.description}</Td>
+                          <Td>
+                            <Checkbox
+                              isChecked={rolePermissions.includes(permission.id)}
+                              onChange={() => handlePermissionToggle(permission.id)}
+                              isDisabled={!selectedRole || selectedRole.is_system_role}
+                            />
+                          </Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                </Box>
+              );
+            })}
+          </CardBody>
+        </Card>
+      </Box>
 
       <RoleModal
         isOpen={isRoleModalOpen}

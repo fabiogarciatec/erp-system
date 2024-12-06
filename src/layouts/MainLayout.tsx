@@ -1,5 +1,5 @@
 import { Box, useColorModeValue } from '@chakra-ui/react';
-import { Sidebar } from '@/components/Sidebar';
+import Sidebar from '@/components/Sidebar';
 import { TopBar } from '@/components/TopBar';
 
 interface MainLayoutProps {
@@ -7,26 +7,22 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const bgColor = useColorModeValue('gray.50', 'gray.900');
-  
+  const bg = useColorModeValue('white', 'gray.800');
+
   return (
-    <Box minH="100vh" bg={bgColor}>
+    <Box display="flex" height="100vh" bg={bg}>
       <TopBar />
       <Sidebar
-        onClose={() => {}}
         display={{ base: 'none', md: 'block' }}
       />
       <Box 
         ml={{ base: 0, md: "64" }}
         mt="16"
-        pt={6}
-        maxW="100%"
-        h="calc(100vh - 4rem)"
-        overflowY="auto"
+        flex="1"
+        position="relative"
+        bg="inherit"
       >
-        <Box px={16}>
-          {children}
-        </Box>
+        {children}
       </Box>
     </Box>
   );

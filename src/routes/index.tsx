@@ -9,8 +9,23 @@ import Layout from '../components/Layout';
 
 function LoadingScreen() {
   return (
-    <Center h="100vh">
-      <Spinner size="xl" />
+    <Center 
+      position="fixed"
+      top="0"
+      left="0"
+      right="0"
+      bottom="0"
+      w="100vw"
+      h="100vh"
+      bg="white"
+      zIndex={9999}
+    >
+      <Spinner 
+        size="xl" 
+        thickness="4px"
+        speed="0.65s"
+        color="blue.500"
+      />
     </Center>
   );
 }

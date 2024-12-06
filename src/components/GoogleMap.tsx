@@ -1,7 +1,7 @@
 /// <reference types="google.maps" />
 import { Box, Text, Spinner, Center, useToast, useColorMode } from '@chakra-ui/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { GoogleMap as GoogleMapComponent, MarkerF, useLoadScript } from '@react-google-maps/api';
+import { GoogleMap as GoogleMapComponent, useLoadScript } from '@react-google-maps/api';
 import { Company } from '../types/company';
 
 interface GoogleMapProps {
@@ -11,12 +11,14 @@ interface GoogleMapProps {
   latitude?: number | null;
   longitude?: number | null;
   onMapClick?: (lat: number, lng: number) => void;
+  onLocationSelect?: (lat: number, lng: number) => void;
+  address?: string;
 }
 
-type Libraries = ('places' | 'geometry')[];
+type Libraries = ('places' | 'geometry' | 'marker')[];
 
 // Define as bibliotecas fora do componente para evitar recriação
-const libraries: Libraries = ['places', 'geometry'];
+const libraries: Libraries = ['places', 'geometry', 'marker'];
 
 interface MapCoordinates {
   lat: number;
@@ -26,250 +28,66 @@ interface MapCoordinates {
 const DEFAULT_ZOOM = 15;
 const DEFAULT_CENTER: MapCoordinates = { lat: -1.4557, lng: -48.4902 }; // Belém
 
-// Estilo dark para o mapa
-const darkModeStyle: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-  {
-    featureType: "administrative.locality",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#d59563" }],
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#d59563" }],
-  },
-  {
-    featureType: "poi.park",
-    elementType: "geometry",
-    stylers: [{ color: "#263c3f" }],
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#6b9a76" }],
-  },
-  {
-    featureType: "road",
-    elementType: "geometry",
-    stylers: [{ color: "#38414e" }],
-  },
-  {
-    featureType: "road",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#212a37" }],
-  },
-  {
-    featureType: "road",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#9ca5b3" }],
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry",
-    stylers: [{ color: "#746855" }],
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#1f2835" }],
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#f3d19c" }],
-  },
-  {
-    featureType: "transit",
-    elementType: "geometry",
-    stylers: [{ color: "#2f3948" }],
-  },
-  {
-    featureType: "transit.station",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#d59563" }],
-  },
-  {
-    featureType: "water",
-    elementType: "geometry",
-    stylers: [{ color: "#17263c" }],
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#515c6d" }],
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.stroke",
-    stylers: [{ color: "#17263c" }],
-  },
-];
-
-const mapOptions: google.maps.MapOptions = {
-  disableDefaultUI: false,
-  clickableIcons: true,
-  scrollwheel: true,
-  gestureHandling: 'cooperative',
-  mapTypeControl: false,
-  isFractionalZoomEnabled: true,
-  zoomControl: true,
-  streetViewControl: true,
-  mapTypeId: 'roadmap'
-};
-
-export function GoogleMap({ company, height = '400px', states, latitude, longitude, onMapClick }: GoogleMapProps) {
+export function GoogleMap({ company, height = '400px', states, latitude, longitude, onMapClick, onLocationSelect, address }: GoogleMapProps) {
   const { colorMode } = useColorMode();
   const [center, setCenter] = useState<MapCoordinates>(DEFAULT_CENTER);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const mapRef = useRef<google.maps.Map | null>(null);
+  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
   const toast = useToast();
 
   // Verifica a chave da API
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-
-  if (!apiKey) {
-    console.error('Chave da API do Google Maps não encontrada no .env');
-    return (
-      <Center h={height}>
-        <Text color="red.500">Erro: Chave da API do Google Maps não configurada</Text>
-      </Center>
-    );
-  }
-
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: apiKey,
-    libraries
+    googleMapsApiKey: apiKey || '',
+    libraries: libraries
   });
 
   // Gera o endereço completo para geocodificação
   const fullAddress = useCallback(() => {
     if (!company) return '';
+    const state = states.find(s => s.id === company.state_id);
+    const stateUF = state?.uf || '';
     
-    const parts = [
+    // Limpa o CEP removendo caracteres não numéricos
+    const cleanCep = company.postal_code ? company.postal_code.replace(/\D/g, '') : '';
+    const formattedCep = cleanCep.length === 8 ? `${cleanCep.slice(0, 5)}-${cleanCep.slice(5)}` : '';
+    
+    // Construindo endereço mais detalhado para melhor precisão
+    const components = [
       company.address && company.address_number 
-        ? `${company.address}, ${company.address_number}`
+        ? `${company.address}, ${company.address_number}` 
         : company.address,
+      company.address_complement,
       company.neighborhood,
-      company.city && states.find(s => s.id === company.state_id)?.uf
-        ? `${company.city} - ${states.find(s => s.id === company.state_id)?.uf}`
-        : company.city,
+      company.city,
+      stateUF,
+      formattedCep,
       'Brasil'
-    ].filter(Boolean);
+    ].filter(Boolean); // Remove itens vazios
     
-    return parts.join(', ');
+    return components.join(', ');
   }, [company, states]);
 
-  // Busca e atualiza as coordenadas
-  useEffect(() => {
-    const geocodeAddress = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        // Se temos coordenadas diretas, usa elas
-        if (typeof latitude === 'number' && typeof longitude === 'number' && 
-            latitude !== 0 && longitude !== 0) {
-          const newCenter = { lat: latitude, lng: longitude };
-          setCenter(newCenter);
-          return;
-        }
-
-        // Se temos coordenadas da empresa, usa elas
-        if (company?.latitude && company?.longitude && 
-            Number(company.latitude) !== 0 && Number(company.longitude) !== 0) {
-          const newCenter = {
-            lat: Number(company.latitude),
-            lng: Number(company.longitude)
-          };
-          setCenter(newCenter);
-          return;
-        }
-
-        // Se não temos coordenadas mas temos endereço, geocodifica
-        const address = fullAddress();
-        if (!address) {
-          setCenter(DEFAULT_CENTER);
-          return;
-        }
-
-        console.log('Geocodificando endereço:', address);
-
-        let response = await fetch(
-          `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-            address
-          )}&key=${apiKey}`
-        );
-        
-        if (!response.ok) {
-          throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
-        }
-        
-        let data = await response.json();
-        console.log('Resposta da geocodificação:', data);
-
-        if (data.status === 'REQUEST_DENIED') {
-          throw new Error(`Erro de API: ${data.error_message || 'Chave da API do Google Maps inválida'}`);
-        }
-
-        if (data.status === 'OK' && data.results[0]) {
-          const newCenter = {
-            lat: data.results[0].geometry.location.lat,
-            lng: data.results[0].geometry.location.lng
-          };
-          setCenter(newCenter);
-          
-          if ((!company.latitude && !company.longitude) || 
-              (Number(company.latitude) === 0 && Number(company.longitude) === 0)) {
-            onMapClick?.(newCenter.lat, newCenter.lng);
-          }
-        } else {
-          setCenter(DEFAULT_CENTER);
-          toast({
-            title: "Aviso",
-            description: "Usando localização padrão pois não foi possível encontrar o endereço",
-            status: "warning",
-            duration: 5000,
-            isClosable: true
-          });
-        }
-      } catch (err) {
-        console.error('Erro ao geocodificar:', err);
-        setError('Erro ao carregar o mapa');
-        setCenter(DEFAULT_CENTER);
-        toast({
-          title: "Erro",
-          description: err instanceof Error ? err.message : "Erro ao carregar o mapa",
-          status: "error",
-          duration: 5000,
-          isClosable: true
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const timeoutId = setTimeout(() => {
-      geocodeAddress();
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [apiKey, company?.address, company?.city, company?.state_id, company?.latitude, company?.longitude, fullAddress, latitude, longitude, onMapClick, toast, states]);
-
   const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
-    if (!e.latLng || !onMapClick) return;
+    if (!e.latLng) return;
     
     const newPosition = {
       lat: e.latLng.lat(),
       lng: e.latLng.lng()
     };
+
+    if (onMapClick) {
+      onMapClick(newPosition.lat, newPosition.lng);
+    }
     
+    if (onLocationSelect) {
+      onLocationSelect(newPosition.lat, newPosition.lng);
+    }
+
     setCenter(newPosition);
-    onMapClick(newPosition.lat, newPosition.lng);
-  }, [onMapClick]);
+  }, [onMapClick, onLocationSelect]);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
@@ -279,53 +97,312 @@ export function GoogleMap({ company, height = '400px', states, latitude, longitu
     mapRef.current = null;
   }, []);
 
+  const geocodeAddress = useCallback(async () => {
+    if (!apiKey) {
+      setError('API key não encontrada');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Se já temos coordenadas, use-as
+      if (latitude && longitude) {
+        const newCenter = { lat: latitude, lng: longitude };
+        setCenter(newCenter);
+        return;
+      }
+
+      // Se não temos coordenadas mas temos endereço, geocodifica
+      const addressToGeocode = address || fullAddress();
+      if (!addressToGeocode) {
+        setCenter(DEFAULT_CENTER);
+        return;
+      }
+
+      console.log('Geocodificando endereço:', addressToGeocode);
+
+      // Tenta primeiro com o CEP se disponível
+      let geocodeResult = null;
+      if (company?.postal_code) {
+        const cleanCep = company.postal_code.replace(/\D/g, '');
+        if (cleanCep.length === 8) {
+          geocodeResult = await geocodeWithComponents([
+            `postal_code:${cleanCep}`,
+            'country:BR'
+          ]);
+        }
+      }
+
+      // Se não encontrar com CEP, tenta com endereço completo
+      if (!geocodeResult) {
+        geocodeResult = await geocodeWithAddress(addressToGeocode);
+      }
+
+      // Se ainda não encontrar, tenta com componentes estruturados
+      if (!geocodeResult && company) {
+        const components = [];
+        
+        if (company.city) {
+          components.push(`locality:${company.city}`);
+        }
+        
+        const state = states.find(s => s.id === company.state_id);
+        if (state?.uf) {
+          components.push(`administrative_area:${state.uf}`);
+        }
+        
+        components.push('country:BR');
+        
+        geocodeResult = await geocodeWithComponents(components);
+      }
+
+      if (!geocodeResult) {
+        throw new Error('Endereço não encontrado');
+      }
+
+      setCenter(geocodeResult);
+
+    } catch (error) {
+      console.error('Erro ao geocodificar:', error);
+      setError(error instanceof Error ? error.message : 'Erro ao geocodificar endereço');
+      setCenter(DEFAULT_CENTER);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [apiKey, address, fullAddress, latitude, longitude, company, states]);
+
+  // Função auxiliar para geocodificar com endereço
+  const geocodeWithAddress = async (address: string) => {
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+          address
+        )}&region=br&language=pt-BR&key=${apiKey}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (data.status === 'ZERO_RESULTS') {
+        return null;
+      }
+
+      if (data.status !== 'OK') {
+        throw new Error(`Erro na geocodificação: ${data.status}`);
+      }
+
+      const result = data.results[0];
+      return {
+        lat: result.geometry.location.lat,
+        lng: result.geometry.location.lng
+      };
+    } catch (error) {
+      console.error('Erro na geocodificação com endereço:', error);
+      return null;
+    }
+  };
+
+  // Função auxiliar para geocodificar com componentes
+  const geocodeWithComponents = async (components: string[]) => {
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?components=${components.join(
+          '|'
+        )}&key=${apiKey}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (data.status === 'ZERO_RESULTS') {
+        return null;
+      }
+
+      if (data.status !== 'OK') {
+        throw new Error(`Erro na geocodificação: ${data.status}`);
+      }
+
+      const result = data.results[0];
+      return {
+        lat: result.geometry.location.lat,
+        lng: result.geometry.location.lng
+      };
+    } catch (error) {
+      console.error('Erro na geocodificação com componentes:', error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    if (!isLoaded || loadError) return;
+
+    const timeoutId = setTimeout(() => {
+      geocodeAddress();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [isLoaded, loadError, geocodeAddress]);
+
+  if (!apiKey) {
+    return (
+      <Center h={height}>
+        <Text color="red.500">Erro: Chave da API do Google Maps não configurada</Text>
+      </Center>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <Center h={height} bg="blackAlpha.100" borderRadius="md">
+        <Spinner size="xl" />
+      </Center>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <Center h={height} bg="blackAlpha.100" borderRadius="md">
+        <Text color="red.500">Erro ao carregar o Google Maps</Text>
+      </Center>
+    );
+  }
+
+  if (error) {
+    return (
+      <Center h={height} bg="blackAlpha.100" borderRadius="md">
+        <Text color="red.500">{error}</Text>
+      </Center>
+    );
+  }
+
+  const mapOptions: google.maps.MapOptions = {
+    disableDefaultUI: false,
+    clickableIcons: true,
+    scrollwheel: true,
+    mapId: colorMode === 'dark' ? 'dark-mode-map' : 'light-mode-map',
+    mapTypeId: 'roadmap',
+    gestureHandling: 'greedy', // Permite arrastar no mobile sem precisar de dois dedos
+    mapTypeControl: true,
+    mapTypeControlOptions: {
+      position: google.maps.ControlPosition.TOP_RIGHT,
+      style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+    },
+    zoomControl: true,
+    zoomControlOptions: {
+      position: google.maps.ControlPosition.RIGHT_CENTER
+    },
+    streetViewControl: true,
+    streetViewControlOptions: {
+      position: google.maps.ControlPosition.RIGHT_CENTER
+    },
+    fullscreenControl: true,
+    fullscreenControlOptions: {
+      position: google.maps.ControlPosition.RIGHT_TOP
+    },
+    scaleControl: true,
+    rotateControl: true
+  };
+
   return (
-    <Box h={height} position="relative">
-      {error && (
-        <Center h="full">
-          <Text color="red.500">{error}</Text>
-        </Center>
-      )}
+    <Box 
+      h={height} 
+      minH={{ base: "400px", md: "450px", lg: "500px" }}
+      maxH={{ base: "calc(100vh - 200px)", md: "700px" }}
+      w={{ base: "100%", md: "calc(100% + 6rem)" }}
+      mx={{ base: 0, md: "-3rem" }}
+      borderRadius={{ base: "md", md: "lg" }}
+      overflow="hidden" 
+      position="relative"
+      flex="1"
+      boxShadow="lg"
+      bg="white"
+      _dark={{ bg: "gray.800" }}
+    >
+      <GoogleMapComponent
+        mapContainerStyle={{
+          width: '100%',
+          height: '100%',
+          minHeight: 'inherit',
+          maxHeight: 'inherit',
+          borderRadius: 'inherit'
+        }}
+        center={center}
+        zoom={DEFAULT_ZOOM}
+        onClick={handleMapClick}
+        onLoad={onLoad}
+        onUnmount={onUnmount}
+        options={{
+          ...mapOptions,
+          fullscreenControl: true,
+          fullscreenControlOptions: {
+            position: google.maps.ControlPosition.TOP_RIGHT
+          }
+        }}
+      >
+        {center && window.google && mapRef.current && (
+          <div
+            ref={(element) => {
+              if (element && window.google && mapRef.current) {
+                const position = new window.google.maps.LatLng(center.lat, center.lng);
+                
+                if (markerRef.current) {
+                  markerRef.current.position = position;
+                } else {
+                  const pin = new google.maps.marker.PinElement({
+                    scale: 1.2,
+                    glyph: '📍',
+                    background: colorMode === 'dark' ? '#2D3748' : '#3182CE',
+                    borderColor: colorMode === 'dark' ? '#4A5568' : '#2B6CB0',
+                  });
 
-      {isLoading && (
-        <Center h="full" position="absolute" top="0" left="0" right="0" bottom="0" bg="whiteAlpha.800" zIndex={1}>
-          <Spinner size="xl" />
-        </Center>
-      )}
+                  const marker = new google.maps.marker.AdvancedMarkerElement({
+                    map: mapRef.current,
+                    position,
+                    draggable: true,
+                    title: 'Localização',
+                    content: pin.element
+                  });
 
-      {isLoaded && !loadError ? (
-        <GoogleMapComponent
-          mapContainerStyle={{ width: '100%', height: '100%' }}
-          zoom={DEFAULT_ZOOM}
-          center={center}
-          options={{
-            ...mapOptions,
-            styles: colorMode === 'dark' ? darkModeStyle : undefined
-          }}
-          onClick={handleMapClick}
-          onLoad={onLoad}
-          onUnmount={onUnmount}
-        >
-          <MarkerF
-            position={center}
-            draggable={true}
-            onDragEnd={(e) => {
-              if (e.latLng && onMapClick) {
-                const newPosition = {
-                  lat: e.latLng.lat(),
-                  lng: e.latLng.lng()
-                };
-                setCenter(newPosition);
-                onMapClick(newPosition.lat, newPosition.lng);
+                  marker.addListener('dragend', (e: google.maps.MapMouseEvent) => {
+                    if (e.latLng) {
+                      const newPosition = {
+                        lat: e.latLng.lat(),
+                        lng: e.latLng.lng()
+                      };
+                      setCenter(newPosition);
+                      if (onLocationSelect) {
+                        onLocationSelect(newPosition.lat, newPosition.lng);
+                      }
+                    }
+                  });
+
+                  markerRef.current = marker;
+                }
               }
             }}
           />
-        </GoogleMapComponent>
-      ) : (
-        <Center h="full">
-          <Text color="red.500">
-            {loadError ? 'Erro ao carregar o Google Maps' : 'Carregando...'}
-          </Text>
+        )}
+      </GoogleMapComponent>
+      {isLoading && (
+        <Center
+          position="absolute"
+          top="0"
+          left="0"
+          right="0"
+          bottom="0"
+          bg="blackAlpha.300"
+          zIndex="1"
+        >
+          <Spinner size="xl" color="blue.500" thickness="4px" />
         </Center>
       )}
     </Box>

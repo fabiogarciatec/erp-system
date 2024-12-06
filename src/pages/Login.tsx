@@ -20,6 +20,7 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import { useAuth } from '@/contexts/AuthContext'
+import { InputMaskChakra } from '@/components/InputMaskChakra'
 
 interface LoginFormProps {
   isRegistering: boolean
@@ -715,7 +716,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
               <FormControl isRequired>
                 <FormLabel color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>CNPJ</FormLabel>
-                <Input
+                <InputMaskChakra
+                  mask="99.999.999/9999-99"
                   value={companyDocument}
                   onChange={(e) => setCompanyDocument(e.target.value)}
                   size={{ base: "md", sm: "lg" }}
@@ -723,6 +725,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                   borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
                   _hover={{ borderColor: colorMode === 'dark' ? 'gray.500' : 'gray.300' }}
                   color={colorMode === 'dark' ? 'white' : 'black'}
+                  placeholder="00.000.000/0000-00"
                 />
               </FormControl>
 
@@ -742,7 +745,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
               <FormControl>
                 <FormLabel color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>Telefone da Empresa</FormLabel>
-                <Input
+                <InputMaskChakra
+                  mask="(99) 99999-9999"
                   value={companyPhone}
                   onChange={(e) => setCompanyPhone(e.target.value)}
                   size={{ base: "md", sm: "lg" }}
@@ -750,6 +754,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                   borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
                   _hover={{ borderColor: colorMode === 'dark' ? 'gray.500' : 'gray.300' }}
                   color={colorMode === 'dark' ? 'white' : 'black'}
+                  placeholder="(00) 00000-0000"
                 />
               </FormControl>
             </VStack>
@@ -772,7 +777,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           mt={{ base: 6, sm: 8 }}
           size={{ base: "md", sm: "lg" }}
           isLoading={isLoading}
-          onClick={handleSubmit}
+          type="submit"
         >
           {isRegistering ? 'Criar Conta' : 'Entrar'}
         </Button>
