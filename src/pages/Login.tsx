@@ -107,7 +107,7 @@ export default function Login() {
       minH="100vh"
       w="100vw"
       m="0"
-      p="0"
+      p={{ base: 4, md: 8 }}
       bg={colorMode === 'dark' 
         ? 'linear-gradient(135deg, #1A365D 0%, #2D3748 100%)'
         : 'linear-gradient(135deg, #0396FF 0%, #ABDCFF 100%)'
@@ -129,10 +129,12 @@ export default function Login() {
           overflow="hidden"
           variant="outline"
           maxW="900px"
+          maxH={{ base: "auto", md: isRegistering ? "700px" : "500px" }}
           w="90%"
           boxShadow="xl"
           borderRadius="xl"
           mx="auto"
+          my={{ base: 4, md: 8 }}
         >
           <Box
             flex="1"
@@ -376,7 +378,14 @@ export default function Login() {
             </Flex>
           </Box>
 
-          <CardBody flex="1" p={8} bg={colorMode === 'dark' ? 'gray.700' : 'white'} boxShadow="inset 0 0 20px rgba(74, 144, 226, 0.1)">
+          <CardBody 
+            flex="1" 
+            py={30} 
+            px={{ base: 4, md: 8 }}
+            bg={colorMode === 'dark' ? 'gray.700' : 'white'} 
+            boxShadow="inset 0 0 20px rgba(74, 144, 226, 0.1)"
+            overflowY="auto"
+          >
             <LoginForm 
               isRegistering={isRegistering}
               setIsRegistering={setIsRegistering}
@@ -402,9 +411,18 @@ export default function Login() {
 
       {/* Layout Mobile */}
       <Show below='md'>
-        <Container maxW="container.xl" py={10}>
-          <Card>
-            <CardBody p={8} bg={colorMode === 'dark' ? 'gray.700' : 'white'} boxShadow="inset 0 0 20px rgba(74, 144, 226, 0.1)">
+        <Container maxW="container.xl" py={6}>
+          <Card
+            maxH={{ base: isRegistering ? "85vh" : "auto" }}
+            overflow="hidden"
+          >
+            <CardBody 
+              py={30} 
+              px={4}
+              bg={colorMode === 'dark' ? 'gray.700' : 'white'} 
+              boxShadow="inset 0 0 20px rgba(74, 144, 226, 0.1)"
+              overflowY="auto"
+            >
               <Stack
                 direction={{ base: 'column', md: 'row' }}
                 align="center"
@@ -659,137 +677,100 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const { colorMode } = useColorMode()
 
   return (
-    <form onSubmit={handleSubmit} style={{ width: '100%' }}>
-      <VStack spacing={4} align="stretch">
-        <FormControl isRequired mb={4}>
-          <FormLabel color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>Email</FormLabel>
+    <form onSubmit={handleSubmit}>
+      <VStack spacing={{ base: 3, md: 4 }} align="stretch">
+        {isRegistering && (
+          <>
+            <FormControl isRequired size="sm">
+              <FormLabel fontSize={{ base: "sm", md: "md" }}>Nome da Empresa</FormLabel>
+              <Input
+                type="text"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="Digite o nome da empresa"
+                size={{ base: "sm", md: "md" }}
+              />
+            </FormControl>
+            <FormControl isRequired size="sm">
+              <FormLabel fontSize={{ base: "sm", md: "md" }}>CNPJ</FormLabel>
+              <InputMaskChakra
+                mask="99.999.999/9999-99"
+                value={companyDocument}
+                onChange={(e) => setCompanyDocument(e.target.value)}
+                placeholder="Digite o CNPJ"
+                size={{ base: "sm", md: "md" }}
+              />
+            </FormControl>
+            <FormControl size="sm">
+              <FormLabel fontSize={{ base: "sm", md: "md" }}>E-mail da Empresa</FormLabel>
+              <Input
+                type="email"
+                value={companyEmail}
+                onChange={(e) => setCompanyEmail(e.target.value)}
+                placeholder="Digite o e-mail da empresa"
+                size={{ base: "sm", md: "md" }}
+              />
+            </FormControl>
+            <FormControl size="sm">
+              <FormLabel fontSize={{ base: "sm", md: "md" }}>Telefone da Empresa</FormLabel>
+              <InputMaskChakra
+                mask="(99) 99999-9999"
+                value={companyPhone}
+                onChange={(e) => setCompanyPhone(e.target.value)}
+                placeholder="Digite o telefone da empresa"
+                size={{ base: "sm", md: "md" }}
+              />
+            </FormControl>
+          </>
+        )}
+
+        <FormControl isRequired size="sm">
+          <FormLabel fontSize={{ base: "sm", md: "md" }}>E-mail</FormLabel>
           <Input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            size={{ base: "md", sm: "lg" }}
-            bg={colorMode === 'dark' ? 'gray.700' : 'white'}
-            borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
-            _hover={{ borderColor: colorMode === 'dark' ? 'gray.500' : 'gray.300' }}
-            color={colorMode === 'dark' ? 'white' : 'black'}
+            placeholder="Digite seu e-mail"
+            size={{ base: "sm", md: "md" }}
           />
         </FormControl>
 
-        <FormControl isRequired mb={4}>
-          <FormLabel color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>Senha</FormLabel>
+        <FormControl isRequired size="sm">
+          <FormLabel fontSize={{ base: "sm", md: "md" }}>Senha</FormLabel>
           <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            size={{ base: "md", sm: "lg" }}
-            bg={colorMode === 'dark' ? 'gray.700' : 'white'}
-            borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
-            _hover={{ borderColor: colorMode === 'dark' ? 'gray.500' : 'gray.300' }}
-            color={colorMode === 'dark' ? 'white' : 'black'}
+            placeholder="Digite sua senha"
+            size={{ base: "sm", md: "md" }}
           />
         </FormControl>
 
-        {isRegistering && (
-          <Box w="100%" mt={2}>
-            <Text
-              fontSize={{ base: "lg", sm: "xl" }}
-              fontWeight="medium"
-              color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}
-              mb={4}
-            >
-              Dados da Empresa
-            </Text>
-
-            <VStack spacing={{ base: 3, sm: 4 }} align="stretch">
-              <FormControl isRequired>
-                <FormLabel color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>Nome da Empresa</FormLabel>
-                <Input
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  size={{ base: "md", sm: "lg" }}
-                  bg={colorMode === 'dark' ? 'gray.700' : 'white'}
-                  borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
-                  _hover={{ borderColor: colorMode === 'dark' ? 'gray.500' : 'gray.300' }}
-                  color={colorMode === 'dark' ? 'white' : 'black'}
-                />
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>CNPJ</FormLabel>
-                <InputMaskChakra
-                  mask="99.999.999/9999-99"
-                  value={companyDocument}
-                  onChange={(e) => setCompanyDocument(e.target.value)}
-                  size={{ base: "md", sm: "lg" }}
-                  bg={colorMode === 'dark' ? 'gray.700' : 'white'}
-                  borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
-                  _hover={{ borderColor: colorMode === 'dark' ? 'gray.500' : 'gray.300' }}
-                  color={colorMode === 'dark' ? 'white' : 'black'}
-                  placeholder="00.000.000/0000-00"
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>Email da Empresa</FormLabel>
-                <Input
-                  type="email"
-                  value={companyEmail}
-                  onChange={(e) => setCompanyEmail(e.target.value)}
-                  size={{ base: "md", sm: "lg" }}
-                  bg={colorMode === 'dark' ? 'gray.700' : 'white'}
-                  borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
-                  _hover={{ borderColor: colorMode === 'dark' ? 'gray.500' : 'gray.300' }}
-                  color={colorMode === 'dark' ? 'white' : 'black'}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>Telefone da Empresa</FormLabel>
-                <InputMaskChakra
-                  mask="(99) 99999-9999"
-                  value={companyPhone}
-                  onChange={(e) => setCompanyPhone(e.target.value)}
-                  size={{ base: "md", sm: "lg" }}
-                  bg={colorMode === 'dark' ? 'gray.700' : 'white'}
-                  borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
-                  _hover={{ borderColor: colorMode === 'dark' ? 'gray.500' : 'gray.300' }}
-                  color={colorMode === 'dark' ? 'white' : 'black'}
-                  placeholder="(00) 00000-0000"
-                />
-              </FormControl>
-            </VStack>
-          </Box>
-        )}
-
-        {error && (
-          <Text
-            fontSize={{ base: "sm", sm: "md" }}
-            color={colorMode === 'dark' ? 'red.500' : 'red.500'}
-            mb={4}
-          >
-            {error}
-          </Text>
-        )}
-
         <Button
-          colorScheme="blue"
-          w="100%"
-          mt={{ base: 6, sm: 8 }}
-          size={{ base: "md", sm: "lg" }}
-          isLoading={isLoading}
           type="submit"
+          colorScheme="blue"
+          size={{ base: "sm", md: "md" }}
+          isLoading={isLoading}
+          w="full"
+          mt={{ base: 2, md: 4 }}
         >
           {isRegistering ? 'Criar Conta' : 'Entrar'}
         </Button>
 
         <Button
-          variant="link"
+          variant="ghost"
           onClick={() => setIsRegistering(!isRegistering)}
-          mt={2}
-          size={{ base: "sm", sm: "md" }}
+          size={{ base: "sm", md: "md" }}
+          mt={1}
         >
-          {isRegistering ? 'Já tem uma conta? Entre aqui' : 'Não tem uma conta? Cadastre-se'}
+          {isRegistering ? 'Já tem uma conta? Entre aqui' : 'Não tem uma conta? Crie aqui'}
         </Button>
+
+        {error && (
+          <Text color="red.500" fontSize={{ base: "sm", md: "md" }} textAlign="center" mt={2}>
+            {error}
+          </Text>
+        )}
       </VStack>
     </form>
   )
