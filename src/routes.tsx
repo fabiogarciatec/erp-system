@@ -18,7 +18,7 @@ import { Backup } from './pages/configuracoes/Backup';
 import Categorias from './pages/cadastros/Categorias';
 import PlaceholderPage from './components/PlaceholderPage';
 import NotFound from './pages/NotFound';
-import Users from './pages/configuracoes/Users';
+import Users from './pages/configuracoes/Users.jsx';
 
 function AppRoutes() {
   return (

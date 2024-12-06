@@ -30,7 +30,7 @@ import { IntegrationsSettings } from './pages/configuracoes/Integrations';
 import { Security } from './pages/configuracoes/Security';
 import { Notifications } from './pages/configuracoes/Notifications';
 import { Backup } from './pages/configuracoes/Backup';
-import Users from './pages/configuracoes/Users';
+import Users from './pages/configuracoes/Users.jsx';
 import Permissions from './pages/configuracoes/Permissions';
 
 const theme = extendTheme({
