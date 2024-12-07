@@ -3,6 +3,7 @@ export function useProfileStyles() {
     return {
         colors: {
             bg: useColorModeValue('white', 'gray.800'),
+            cardBg: useColorModeValue('white', 'gray.700'),
             border: useColorModeValue('gray.200', 'gray.700'),
             input: useColorModeValue('white', 'gray.700'),
             inputReadOnly: useColorModeValue('gray.50', 'gray.900'),

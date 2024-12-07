@@ -4,48 +4,55 @@ import {
   Button,
   Card,
   CardHeader,
-  Heading,
+  FormControl,
+  FormLabel,
+  HStack,
+  IconButton,
+  Input,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  Switch,
   Table,
   TableContainer,
   Tbody,
   Td,
+  Text,
   Th,
   Thead,
-  Tr,
-  useColorModeValue,
-  useDisclosure,
-  useToast,
-  IconButton,
-  HStack,
-  Text,
-  Icon,
   Tooltip,
+  Tr,
+  VStack,
+  useDisclosure,
   AlertDialog,
-  AlertDialogOverlay,
-  AlertDialogContent,
-  AlertDialogHeader,
   AlertDialogBody,
   AlertDialogFooter,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-  FormControl,
-  FormLabel,
-  Input,
-  Select,
-  VStack,
-  ModalFooter,
-  FormErrorMessage,
-  Switch,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  useToast,
   Radio,
   RadioGroup,
   Checkbox,
-  CheckboxGroup
+  CheckboxGroup,
+  Flex,
+  Center,
+  Spinner,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Tag,
+  Icon,
+  Heading,
+  SimpleGrid
 } from '@chakra-ui/react';
-import { FiEdit2, FiTrash2, FiStar, FiUserPlus } from 'react-icons/fi';
+import { AddIcon, EditIcon, DeleteIcon } from '@chakra-ui/icons';
+import { FiEdit2, FiTrash2, FiStar, FiUserPlus, FiMoreVertical, FiUsers, FiUserCheck, FiUserX, FiShield } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import supabase from '@/lib/supabase';
 import { PageHeader } from '@/components/PageHeader';
@@ -57,7 +64,8 @@ const StarIcon = forwardRef((props, ref) => {
 });
 
 function Users() {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
+  const { isOpen: isNewOpen, onOpen: onNewOpen, onClose: onNewClose } = useDisclosure();
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -70,19 +78,13 @@ function Users() {
     phone: '',
     password: '',
     confirmPassword: '',
-    selectedRoles: [],
+    selectedRole: '',
     is_active: true
   });
   const cancelRef = useRef();
   const toast = useToast();
   const { user: currentUser } = useAuth();
   const { currentCompany } = useCompany();
-
-  // Theme hooks
-  const cardBg = useColorModeValue('white', 'gray.700');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
-  const textColorSecondary = useColorModeValue('gray.600', 'gray.400');
-  const theadBg = useColorModeValue('gray.100', 'gray.600');
 
   // Função auxiliar para verificar se o usuário é Super Admin
   const isSuperAdmin = (user) => {
@@ -103,6 +105,33 @@ function Users() {
       return false;
     }
     return true;
+  };
+
+  // Função para aplicar máscara de telefone
+  const applyPhoneMask = (value) => {
+    // Remove tudo que não é número
+    const numbers = value.replace(/\D/g, '');
+    
+    // Aplica a máscara dependendo da quantidade de números
+    if (numbers.length <= 10) { // Telefone fixo
+      return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3').trim();
+    } else { // Celular
+      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3').trim();
+    }
+  };
+
+  // Função para limpar a máscara
+  const clearPhoneMask = (value) => {
+    return value.replace(/\D/g, '');
+  };
+
+  // Handler para mudança no campo de telefone
+  const handlePhoneChange = (e) => {
+    const maskedValue = applyPhoneMask(e.target.value);
+    setFormData(prev => ({
+      ...prev,
+      phone: maskedValue
+    }));
   };
 
   const fetchRoles = async () => {
@@ -129,42 +158,30 @@ function Users() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      const { data: userData, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          roles:user_roles(
+            role:roles(
+              id,
+              name
+            )
+          )
+        `);
 
-      // Primeiro buscar a empresa do usuário atual
-      const { data: userCompany, error: companyError } = await supabase
-        .from('user_companies')
-        .select('company_id')
-        .eq('user_id', currentUser.id)
-        .single();
+      if (error) throw error;
 
-      if (companyError) throw companyError;
-
-      if (!userCompany?.company_id) {
-        console.warn('Nenhuma empresa encontrada para o usuário');
-        return;
-      }
-
-      // Buscar usuários usando a função RPC
-      const { data: usersData, error: usersError } = await supabase
-        .rpc('get_users_with_emails', {
-          company_id: userCompany.company_id
-        });
-
-      if (usersError) throw usersError;
-
-      // Formatar os dados dos usuários
-      const formattedUsers = (usersData || []).map(user => ({
-        id: user.user_id,
-        email: user.email || '',
-        full_name: user.full_name || '',
-        phone: user.phone || '',
-        is_active: user.is_active,
-        roles: Array.isArray(user.roles) ? user.roles : []
+      // Aplicar máscara nos telefones
+      const formattedUsers = userData.map(user => ({
+        ...user,
+        phone: user.phone ? applyPhoneMask(user.phone) : '',
+        roles: user.roles?.map(r => r.role)
       }));
 
       setUsers(formattedUsers);
     } catch (error) {
-      console.error('Erro ao buscar usuários:', error.message);
+      console.error('Erro ao buscar usuários:', error);
       toast({
         title: 'Erro ao buscar usuários',
         description: error.message,
@@ -190,44 +207,41 @@ function Users() {
       phone: '',
       password: '',
       confirmPassword: '',
-      selectedRoles: [],
+      selectedRole: '',
       is_active: true
     });
-    onOpen();
+    onNewOpen();
   };
 
   const handleEditUser = (user) => {
     if (!canEditUser(user)) {
       toast({
-        title: 'Permissão negada',
-        description: 'Apenas Super Admins podem modificar outros Super Admins',
+        title: 'Acesso negado',
+        description: 'Você não tem permissão para editar este usuário.',
         status: 'error',
         duration: 3000,
         isClosable: true,
       });
       return;
     }
-
-    // Extrair os IDs dos papéis
-    const selectedRoles = user.roles?.map(role => role.role_id) || [];
-
+    setSelectedUser(user);
     setFormData({
       email: user.email,
       full_name: user.full_name,
-      phone: user.phone,
-      selectedRoles,
+      phone: user.phone ? applyPhoneMask(user.phone) : '',
+      password: '',
+      confirmPassword: '',
+      selectedRole: user.roles?.[0]?.name || '',
       is_active: user.is_active
     });
-    
-    setSelectedUser(user);
-    onOpen();
+    onEditOpen();
   };
 
   const handleDeleteClick = (user) => {
     if (!canEditUser(user)) {
       toast({
-        title: 'Permissão negada',
-        description: 'Apenas Super Admins podem excluir outros Super Admins',
+        title: 'Acesso negado',
+        description: 'Você não tem permissão para excluir este usuário.',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -332,86 +346,34 @@ function Users() {
   const handleRoleChange = (roleId) => {
     setFormData(prev => ({
       ...prev,
-      selectedRoles: [roleId] // Sempre será um array com apenas um item
+      selectedRole: roleId
     }));
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+    if (e) e.preventDefault();
 
     try {
-      // Buscar company_id do usuário atual
-      const { data: userCompany, error: companyError } = await supabase
-        .from('user_companies')
-        .select('company_id')
-        .eq('user_id', currentUser.id)
-        .single();
+      setLoading(true);
 
-      if (companyError) throw companyError;
-
-      if (!userCompany?.company_id) {
-        throw new Error('Empresa não encontrada');
-      }
-
-      if (selectedUser) {
-        // Atualizar usuário existente
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            full_name: formData.full_name,
-            phone: formData.phone,
-            is_active: formData.is_active,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', selectedUser.id);
-
-        if (profileError) throw profileError;
-
-        // Atualizar status na tabela user_companies
-        const { error: userCompanyError } = await supabase
-          .from('user_companies')
-          .update({
-            is_active: formData.is_active
-          })
-          .eq('user_id', selectedUser.id)
-          .eq('company_id', userCompany.company_id);
-
-        if (userCompanyError) throw userCompanyError;
-
-        // Atualizar roles
-        const { error: deleteRolesError } = await supabase
-          .from('user_roles')
-          .delete()
-          .eq('user_id', selectedUser.id);
-
-        if (deleteRolesError) throw deleteRolesError;
-
-        if (formData.selectedRoles.length > 0) {
-          const { error: insertRolesError } = await supabase
-            .from('user_roles')
-            .insert(
-              formData.selectedRoles.map(roleId => ({
-                user_id: selectedUser.id,
-                role_id: roleId
-              }))
-            );
-
-          if (insertRolesError) throw insertRolesError;
-        }
-
+      // Validações básicas
+      if (!formData.full_name || !formData.email) {
         toast({
-          title: 'Usuário atualizado com sucesso',
-          status: 'success',
+          title: 'Campos obrigatórios',
+          description: 'Por favor, preencha todos os campos obrigatórios.',
+          status: 'error',
           duration: 3000,
           isClosable: true,
         });
-      } else {
-        // Validar senha
+        return;
+      }
+
+      // Se for novo usuário ou se senha foi fornecida, validar senha
+      if (!selectedUser || formData.password) {
         if (formData.password !== formData.confirmPassword) {
           toast({
-            title: 'Erro de validação',
-            description: 'As senhas não coincidem',
+            title: 'Senhas não conferem',
+            description: 'A senha e a confirmação devem ser iguais.',
             status: 'error',
             duration: 3000,
             isClosable: true,
@@ -419,77 +381,116 @@ function Users() {
           return;
         }
 
-        if (formData.password.length < 6) {
+        if (!selectedUser && formData.password.length < 6) {
           toast({
-            title: 'Erro de validação',
-            description: 'A senha deve ter pelo menos 6 caracteres',
+            title: 'Senha muito curta',
+            description: 'A senha deve ter no mínimo 6 caracteres.',
             status: 'error',
             duration: 3000,
             isClosable: true,
           });
           return;
         }
-
-        // Criar novo usuário
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              full_name: formData.full_name,
-            }
-          }
-        });
-
-        if (authError) throw authError;
-
-        // Atualizar perfil
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            full_name: formData.full_name,
-            phone: formData.phone,
-            is_active: formData.is_active
-          })
-          .eq('id', authData.user.id);
-
-        if (profileError) throw profileError;
-
-        // Criar registro na tabela user_companies
-        const { error: userCompanyError } = await supabase
-          .from('user_companies')
-          .insert({
-            user_id: authData.user.id,
-            company_id: userCompany.company_id,
-            is_active: formData.is_active
-          });
-
-        if (userCompanyError) throw userCompanyError;
-
-        // Criar registros na tabela user_roles
-        if (formData.selectedRoles.length > 0) {
-          const { error: rolesError } = await supabase
-            .from('user_roles')
-            .insert(
-              formData.selectedRoles.map(roleId => ({
-                user_id: authData.user.id,
-                role_id: roleId
-              }))
-            );
-
-          if (rolesError) throw rolesError;
-        }
-
-        toast({
-          title: 'Usuário criado com sucesso',
-          description: 'O usuário pode fazer login com as credenciais fornecidas',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
       }
 
-      onClose();
+      let userId = selectedUser?.id;
+
+      // Se não for edição, criar novo usuário
+      if (!selectedUser) {
+        const { data, error: createError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (createError) throw createError;
+        if (!data?.user?.id) throw new Error('Erro ao criar usuário: ID não gerado');
+        
+        userId = data.user.id;
+      }
+
+      // Atualizar perfil do usuário
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: userId,
+          email: formData.email,
+          full_name: formData.full_name,
+          phone: clearPhoneMask(formData.phone),
+          is_active: formData.is_active,
+          updated_at: new Date(),
+        });
+
+      if (profileError) throw profileError;
+
+      // Buscar os IDs dos papéis selecionados
+      const { data: selectedRoleId, error: rolesError } = await supabase
+        .from('roles')
+        .select('id')
+        .eq('name', formData.selectedRole)
+        .single();
+
+      if (rolesError) throw rolesError;
+
+      // Remover papéis antigos se for edição
+      if (selectedUser) {
+        const { error: deleteError } = await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', userId);
+
+        if (deleteError) throw deleteError;
+      }
+
+      // Inserir novo papel
+      if (selectedRoleId) {
+        const { error: insertError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: userId,
+            role_id: selectedRoleId.id
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      // Vincular usuário à empresa atual
+      if (!selectedUser) {
+        // Primeiro buscar company_id do usuário atual
+        const { data: userCompany, error: companyError } = await supabase
+          .from('user_companies')
+          .select('company_id')
+          .eq('user_id', currentUser.id)
+          .single();
+
+        if (companyError) throw companyError;
+        if (!userCompany?.company_id) throw new Error('Empresa não encontrada');
+
+        const { error: linkError } = await supabase
+          .from('user_companies')
+          .insert({
+            user_id: userId,
+            company_id: userCompany.company_id,
+          });
+
+        if (linkError) throw linkError;
+      }
+
+      toast({
+        title: selectedUser ? 'Usuário atualizado' : 'Usuário criado',
+        description: 'Operação realizada com sucesso!',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Fechar o modal apropriado
+      if (selectedUser) {
+        onEditClose();
+      } else {
+        onNewClose();
+      }
+
+      // Atualizar lista de usuários
       fetchUsers();
     } catch (error) {
       console.error('Erro ao salvar usuário:', error.message);
@@ -513,85 +514,223 @@ function Users() {
   };
 
   return (
-    <Box w="100%">
-      <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
-        <Card>
-          <CardHeader>
-            <HStack spacing={4} justify="space-between" w="100%">
-              <Heading size="md">Lista de Usuários</Heading>
-              <Button
-                leftIcon={<FiUserPlus />}
-                colorScheme="blue"
-                onClick={handleAddUser}
-              >
-                Adicionar Usuário
-              </Button>
+    <Box h="100%" display="flex" flexDirection="column">
+      <PageHeader 
+        title="Usuários"
+        subtitle="Gerencie os usuários do sistema"
+        breadcrumbs={[
+          { label: 'Configurações', href: '/configuracoes' },
+          { label: 'Usuários', href: '/configuracoes/users' }
+        ]}
+      />
+      <Box 
+        flex="1"
+        mt={{ base: "0px", md: "4px" }}
+        px={{ base: 4, md: 8 }}
+        pb={{ base: 4, md: 8 }}
+        display="flex"
+        flexDirection="column"
+      >
+        <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} spacing={4} mb={6}>
+          <Box
+            bg="white"
+            p={4}
+            borderRadius="lg"
+            shadow="sm"
+            border="1px"
+            borderColor="gray.100"
+          >
+            <HStack spacing={4}>
+              <Icon as={FiUsers} boxSize={8} color="blue.500" />
+              <Box>
+                <Text color="gray.500" fontSize="sm">Total de Usuários</Text>
+                <Text fontSize="2xl" fontWeight="bold">
+                  {users.length}
+                </Text>
+              </Box>
             </HStack>
-          </CardHeader>
-          <TableContainer bg={cardBg} borderRadius="lg" borderWidth="1px" borderColor={borderColor}>
-            <Table variant="simple">
-              <Thead>
+          </Box>
+
+          <Box
+            bg="white"
+            p={4}
+            borderRadius="lg"
+            shadow="sm"
+            border="1px"
+            borderColor="gray.100"
+          >
+            <HStack spacing={4}>
+              <Icon as={FiUserCheck} boxSize={8} color="green.500" />
+              <Box>
+                <Text color="gray.500" fontSize="sm">Usuários Ativos</Text>
+                <Text fontSize="2xl" fontWeight="bold">
+                  {users.filter(user => user.is_active).length}
+                </Text>
+              </Box>
+            </HStack>
+          </Box>
+
+          <Box
+            bg="white"
+            p={4}
+            borderRadius="lg"
+            shadow="sm"
+            border="1px"
+            borderColor="gray.100"
+          >
+            <HStack spacing={4}>
+              <Icon as={FiUserX} boxSize={8} color="red.500" />
+              <Box>
+                <Text color="gray.500" fontSize="sm">Usuários Inativos</Text>
+                <Text fontSize="2xl" fontWeight="bold">
+                  {users.filter(user => !user.is_active).length}
+                </Text>
+              </Box>
+            </HStack>
+          </Box>
+
+          <Box
+            bg="white"
+            p={4}
+            borderRadius="lg"
+            shadow="sm"
+            border="1px"
+            borderColor="gray.100"
+          >
+            <HStack spacing={4}>
+              <Icon as={FiShield} boxSize={8} color="purple.500" />
+              <Box>
+                <Text color="gray.500" fontSize="sm">Administradores</Text>
+                <Text fontSize="2xl" fontWeight="bold">
+                  {users.filter(user => user.roles?.some(role => role.name === 'admin')).length}
+                </Text>
+              </Box>
+            </HStack>
+          </Box>
+        </SimpleGrid>
+
+        <Flex 
+          justify="flex-end" 
+          align="center" 
+          mb={4}
+          gap={2}
+          flexWrap="wrap"
+        >
+          <Button
+            leftIcon={<AddIcon />}
+            colorScheme="blue"
+            size="sm"
+            onClick={handleAddUser}
+            borderRadius="lg"
+            _hover={{ transform: 'translateY(-1px)', shadow: 'md' }}
+            transition="all 0.2s"
+          >
+            Novo Usuário
+          </Button>
+        </Flex>
+
+        <Box 
+          bg="white" 
+          borderRadius="lg" 
+          shadow="sm"
+          overflow="hidden"
+          border="1px"
+          borderColor="gray.100"
+        >
+          {loading ? (
+            <Center p={8}>
+              <Spinner size="lg" color="blue.500" />
+            </Center>
+          ) : users.length === 0 ? (
+            <Center p={8} flexDirection="column" gap={3}>
+              <Icon as={FiUsers} boxSize={8} color="gray.400" />
+              <Text color="gray.500">Nenhum usuário cadastrado</Text>
+            </Center>
+          ) : (
+            <Table variant="simple" w="100%">
+              <Thead bg="gray.50">
                 <Tr>
-                  <Th>Nome</Th>
-                  <Th>Email</Th>
-                  <Th>Telefone</Th>
-                  <Th>Status</Th>
-                  <Th>Função</Th>
-                  <Th>Ações</Th>
+                  <Th color="gray.600">Nome</Th>
+                  <Th color="gray.600">Email</Th>
+                  <Th color="gray.600" display={{ base: 'none', md: 'table-cell' }}>Telefone</Th>
+                  <Th color="gray.600" display={{ base: 'none', md: 'table-cell' }}>Função</Th>
+                  <Th color="gray.600" display={{ base: 'none', md: 'table-cell' }}>Status</Th>
+                  <Th width="1%"></Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {users.map((user, index) => (
-                  <Tr key={user.id}>
+                {users.map((user) => (
+                  <Tr 
+                    key={user.id}
+                    _hover={{ bg: 'gray.50' }}
+                    transition="background 0.2s"
+                  >
                     <Td>
-                      <HStack>
-                        <Text>{user.full_name}</Text>
-                        {user.roles?.some(role => role.name === 'Super Admin') && (
-                          <Tooltip label="Super Admin">
-                            <span>
-                              <StarIcon color="yellow.500" />
-                            </span>
-                          </Tooltip>
-                        )}
+                      <Text fontWeight="medium">{user.full_name}</Text>
+                    </Td>
+                    <Td>
+                      <Text color="gray.600" fontSize="sm">{user.email}</Text>
+                    </Td>
+                    <Td display={{ base: 'none', md: 'table-cell' }}>
+                      <Text color="gray.600" fontSize="sm">{user.phone}</Text>
+                    </Td>
+                    <Td display={{ base: 'none', md: 'table-cell' }}>
+                      <HStack spacing={1}>
+                        {user.roles?.map((role) => (
+                          <Tag
+                            key={role.id}
+                            size="sm"
+                            variant="subtle"
+                            colorScheme={role.name === 'admin' ? 'purple' : 'blue'}
+                          >
+                            {role.name}
+                          </Tag>
+                        ))}
                       </HStack>
                     </Td>
-                    <Td>{user.email}</Td>
-                    <Td>{user.phone}</Td>
-                    <Td>
-                      <Switch
-                        isChecked={user.is_active}
-                        isReadOnly
-                        colorScheme="green"
-                      />
+                    <Td display={{ base: 'none', md: 'table-cell' }}>
+                      <Tag
+                        size="sm"
+                        variant="subtle"
+                        colorScheme={user.is_active ? 'green' : 'red'}
+                      >
+                        {user.is_active ? 'Ativo' : 'Inativo'}
+                      </Tag>
                     </Td>
                     <Td>
-                      {user.roles?.map(role => role.name).join(', ') || '-'}
-                    </Td>
-                    <Td>
-                      <HStack spacing={2}>
-                        <IconButton
-                          aria-label={`Editar usuário ${user.full_name}`}
-                          icon={<FiEdit2 />}
+                      <Menu>
+                        <MenuButton
+                          as={IconButton}
+                          icon={<FiMoreVertical />}
+                          variant="ghost"
                           size="sm"
-                          onClick={() => handleEditUser(user)}
-                          isDisabled={!canEditUser(user)}
+                          _hover={{ bg: 'gray.100' }}
                         />
-                        <IconButton
-                          aria-label={`Excluir usuário ${user.full_name}`}
-                          icon={<FiTrash2 />}
-                          size="sm"
-                          colorScheme="red"
-                          onClick={() => handleDeleteClick(user)}
-                          isDisabled={!canEditUser(user)}
-                        />
-                      </HStack>
+                        <MenuList shadow="lg">
+                          <MenuItem 
+                            icon={<EditIcon />} 
+                            onClick={() => handleEditUser(user)}
+                            _hover={{ bg: 'gray.100' }}
+                          >
+                            Editar
+                          </MenuItem>
+                          <MenuItem 
+                            icon={<DeleteIcon />} 
+                            onClick={() => handleDeleteClick(user)}
+                            color="red.500"
+                            _hover={{ bg: 'red.50' }}
+                          >
+                            Excluir
+                          </MenuItem>
+                        </MenuList>
+                      </Menu>
                     </Td>
                   </Tr>
                 ))}
               </Tbody>
             </Table>
-          </TableContainer>
-        </Card>
+          )}
+        </Box>
 
         <AlertDialog
           isOpen={isDeleteAlertOpen}
@@ -618,120 +757,207 @@ function Users() {
           </AlertDialogOverlay>
         </AlertDialog>
 
-        {/* Modal de Criar/Editar Usuário */}
-        <Modal isOpen={isOpen} onClose={onClose} size="xl">
+        {/* Modal de Novo Usuário */}
+        <Modal isOpen={isNewOpen} onClose={onNewClose} size="xl">
           <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>
-              {selectedUser ? 'Editar Usuário' : 'Novo Usuário'}
-            </ModalHeader>
+          <ModalContent mx={{ base: "8px", md: 0 }}>
+            <ModalHeader>Novo Usuário</ModalHeader>
             <ModalCloseButton />
-            <form onSubmit={handleSubmit}>
-              <ModalBody>
-                <VStack spacing={4}>
-                  {!selectedUser && (
-                    <>
-                      <FormControl isRequired>
-                        <FormLabel>Email</FormLabel>
-                        <Input
-                          name="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                        />
-                      </FormControl>
+            <ModalBody>
+              <VStack spacing={4}>
+                <FormControl isRequired>
+                  <FormLabel>Nome Completo</FormLabel>
+                  <Input
+                    placeholder="Digite o nome completo"
+                    value={formData.full_name}
+                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                  />
+                </FormControl>
 
-                      <FormControl isRequired>
-                        <FormLabel>Senha</FormLabel>
-                        <Input
-                          name="password"
-                          type="password"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          placeholder="Mínimo 6 caracteres"
-                        />
-                      </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Email</FormLabel>
+                  <Input
+                    type="email"
+                    placeholder="Digite o email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </FormControl>
 
-                      <FormControl isRequired>
-                        <FormLabel>Confirmar Senha</FormLabel>
-                        <Input
-                          name="confirmPassword"
-                          type="password"
-                          value={formData.confirmPassword}
-                          onChange={handleInputChange}
-                          placeholder="Digite a senha novamente"
-                        />
-                      </FormControl>
-                    </>
-                  )}
+                <FormControl>
+                  <FormLabel>Telefone</FormLabel>
+                  <Input
+                    placeholder="(00) 00000-0000"
+                    value={formData.phone}
+                    onChange={handlePhoneChange}
+                    maxLength={15}
+                  />
+                </FormControl>
 
-                  <FormControl isRequired>
-                    <FormLabel>Nome Completo</FormLabel>
-                    <Input
-                      name="full_name"
-                      value={formData.full_name}
-                      onChange={handleInputChange}
-                    />
-                  </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Senha</FormLabel>
+                  <Input
+                    type="password"
+                    placeholder="Digite a senha"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  />
+                </FormControl>
 
-                  <FormControl>
-                    <FormLabel>Telefone</FormLabel>
-                    <Input
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                    />
-                  </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Confirmar Senha</FormLabel>
+                  <Input
+                    type="password"
+                    placeholder="Confirme a senha"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  />
+                </FormControl>
 
-                  <FormControl isRequired>
-                    <FormLabel>Função</FormLabel>
-                    <RadioGroup
-                      value={formData.selectedRoles[0] || ''}
-                      onChange={handleRoleChange}
-                    >
-                      <VStack align="start">
-                        {roles.map((role) => (
-                          <Radio
-                            key={role.id}
-                            value={role.id}
-                            isDisabled={!canAssignRole(role.name)}
-                          >
-                            {role.name}
-                          </Radio>
-                        ))}
-                      </VStack>
-                    </RadioGroup>
-                  </FormControl>
+                <FormControl>
+                  <FormLabel>Função</FormLabel>
+                  <RadioGroup
+                    value={formData.selectedRole}
+                    onChange={(value) => setFormData({ ...formData, selectedRole: value })}
+                  >
+                    <VStack align="start">
+                      {roles.map((role) => (
+                        <Radio
+                          key={role.id}
+                          value={role.name}
+                          isDisabled={!canAssignRole(role.name)}
+                        >
+                          {role.name}
+                        </Radio>
+                      ))}
+                    </VStack>
+                  </RadioGroup>
+                </FormControl>
 
-                  <FormControl display="flex" alignItems="center">
-                    <FormLabel mb="0">Ativo</FormLabel>
-                    <Switch
-                      name="is_active"
-                      isChecked={formData.is_active}
-                      onChange={(e) => {
-                        const newValue = e.target.checked;
-                        setFormData(prev => ({
-                          ...prev,
-                          is_active: newValue
-                        }));
-                      }}
-                    />
-                  </FormControl>
-                </VStack>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="ghost" mr={3} onClick={onClose}>
-                  Cancelar
-                </Button>
-                <Button
-                  colorScheme="blue"
-                  type="submit"
-                  isLoading={loading}
-                >
-                  {selectedUser ? 'Salvar' : 'Criar'}
-                </Button>
-              </ModalFooter>
-            </form>
+                <FormControl>
+                  <FormLabel>Status</FormLabel>
+                  <Switch
+                    isChecked={formData.is_active}
+                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  />
+                </FormControl>
+              </VStack>
+            </ModalBody>
+
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onNewClose}>
+                Cancelar
+              </Button>
+              <Button
+                colorScheme="blue"
+                onClick={handleSubmit}
+                isLoading={loading}
+              >
+                Salvar
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* Modal de Edição */}
+        <Modal isOpen={isEditOpen} onClose={onEditClose} size="xl">
+          <ModalOverlay />
+          <ModalContent mx={{ base: "8px", md: 0 }}>
+            <ModalHeader>Editar Usuário</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <VStack spacing={4}>
+                <FormControl isRequired>
+                  <FormLabel>Nome Completo</FormLabel>
+                  <Input
+                    placeholder="Digite o nome completo"
+                    value={formData.full_name}
+                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                  />
+                </FormControl>
+
+                <FormControl isRequired>
+                  <FormLabel>Email</FormLabel>
+                  <Input
+                    type="email"
+                    placeholder="Digite o email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Telefone</FormLabel>
+                  <Input
+                    placeholder="(00) 00000-0000"
+                    value={formData.phone}
+                    onChange={handlePhoneChange}
+                    maxLength={15}
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Nova Senha (opcional)</FormLabel>
+                  <Input
+                    type="password"
+                    placeholder="Digite a nova senha"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Confirmar Nova Senha</FormLabel>
+                  <Input
+                    type="password"
+                    placeholder="Confirme a nova senha"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Função</FormLabel>
+                  <RadioGroup
+                    value={formData.selectedRole}
+                    onChange={(value) => setFormData({ ...formData, selectedRole: value })}
+                  >
+                    <VStack align="start">
+                      {roles.map((role) => (
+                        <Radio
+                          key={role.id}
+                          value={role.name}
+                          isDisabled={!canAssignRole(role.name)}
+                        >
+                          {role.name}
+                        </Radio>
+                      ))}
+                    </VStack>
+                  </RadioGroup>
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Status</FormLabel>
+                  <Switch
+                    isChecked={formData.is_active}
+                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  />
+                </FormControl>
+              </VStack>
+            </ModalBody>
+
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onEditClose}>
+                Cancelar
+              </Button>
+              <Button
+                colorScheme="blue"
+                onClick={handleSubmit}
+                isLoading={loading}
+              >
+                Salvar
+              </Button>
+            </ModalFooter>
           </ModalContent>
         </Modal>
       </Box>

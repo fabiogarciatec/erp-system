@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { Box, Container, Text, VStack, SimpleGrid, Card, CardBody, Icon, useColorModeValue, } from '@chakra-ui/react';
-import { FiUser, FiUsers, FiSettings, FiDatabase, FiLink, FiBell, FiShield } from 'react-icons/fi';
+import { FiUser, FiUsers, FiSettings, FiLink, FiBell, FiShield } from 'react-icons/fi';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { PageHeader } from '../../components/PageHeader';
 const settingCards = [
@@ -46,22 +46,21 @@ const settingCards = [
         icon: FiLink,
         href: '/configuracoes/integracoes',
     },
-    {
-        title: 'Backup',
-        description: 'Configure e gerencie backups do sistema',
-        icon: FiDatabase,
-        href: '/configuracoes/backup',
-    },
 ];
 export function Settings() {
     const location = useLocation();
+    const isRoot = location.pathname === '/configuracoes';
     const cardBg = useColorModeValue('white', 'gray.700');
-    const isRoot = location.pathname === '/configuracoes' || location.pathname === '/configuracoes/';
+    const borderColor = useColorModeValue('gray.200', 'gray.600');
     if (!isRoot) {
         return _jsx(Outlet, {});
     }
-    return (_jsxs(Box, { w: "100%", children: [_jsx(PageHeader, { title: "Configura\u00E7\u00F5es", subtitle: "Gerencie as configura\u00E7\u00F5es do sistema", breadcrumbs: [
-                    { label: 'Configurações', href: '/configuracoes' }
-                ] }), _jsx(Box, { mt: "154px", px: 6, children: _jsx(Box, { maxW: "1600px", mx: "auto", children: _jsx(Container, { maxW: "container.xl", py: 8, children: _jsx(SimpleGrid, { columns: { base: 1, md: 2, lg: 3 }, spacing: 6, mt: 6, children: settingCards.map((card) => (_jsx(Card, { as: Link, to: card.href, _hover: { transform: 'translateY(-2px)', shadow: 'lg' }, transition: "all 0.2s", bg: cardBg, children: _jsx(CardBody, { children: _jsxs(VStack, { align: "start", spacing: 4, children: [_jsx(Icon, { as: card.icon, boxSize: 6, color: "blue.500" }), _jsxs(Box, { children: [_jsx(Text, { fontSize: "lg", fontWeight: "bold", children: card.title }), _jsx(Text, { color: "gray.500", fontSize: "sm", children: card.description })] })] }) }) }, card.href))) }) }) }) })] }));
+    return (_jsxs(Box, { children: [_jsx(PageHeader, { title: "Configura\u00E7\u00F5es", subtitle: "Gerencie todas as configura\u00E7\u00F5es do sistema", icon: FiSettings, breadcrumbs: [
+                    { label: 'Dashboard', href: '/' },
+                    { label: 'Configurações', href: '/configuracoes' },
+                ] }), _jsx(Container, { maxW: "container.xl", mt: 6, children: _jsx(SimpleGrid, { columns: { base: 1, md: 2, lg: 3 }, spacing: 6, children: settingCards.map((card) => (_jsx(Link, { to: card.href, children: _jsx(Card, { bg: cardBg, borderWidth: "1px", borderColor: borderColor, _hover: {
+                                transform: 'translateY(-2px)',
+                                shadow: 'md',
+                                borderColor: 'blue.500',
+                            }, transition: "all 0.2s", cursor: "pointer", children: _jsx(CardBody, { children: _jsxs(VStack, { align: "start", spacing: 4, children: [_jsx(Icon, { as: card.icon, boxSize: 6, color: "blue.500" }), _jsxs(Box, { children: [_jsx(Text, { fontWeight: "bold", fontSize: "lg", children: card.title }), _jsx(Text, { color: "gray.500", fontSize: "sm", children: card.description })] })] }) }) }) }, card.title))) }) })] }));
 }
-export default Settings;

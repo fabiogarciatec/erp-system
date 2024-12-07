@@ -35,10 +35,10 @@ export function useProfileLogic() {
     const handleInputChange = (field, value) => {
         if (!profile)
             return;
-        if (field === 'phone') {
-            value = value.replace(/\D/g, '');
-        }
-        setProfile({ ...profile, [field]: value });
+        setProfile(prev => ({
+            ...prev,
+            [field]: value
+        }));
     };
     const formatPhoneForDisplay = (phone) => {
         if (!phone)
@@ -207,6 +207,35 @@ export function useProfileLogic() {
             setIsLoading(false);
         }
     };
+    const handlePasswordChange = async (currentPassword, newPassword) => {
+        try {
+            setIsLoading(true);
+            const { error } = await supabase.auth.updateUser({
+                password: newPassword
+            });
+            if (error)
+                throw error;
+            toast({
+                title: 'Senha alterada',
+                description: 'Sua senha foi atualizada com sucesso.',
+                status: 'success',
+                duration: 3000,
+                isClosable: true,
+            });
+        }
+        catch (error) {
+            toast({
+                title: 'Erro ao alterar senha',
+                description: error.message,
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+            });
+        }
+        finally {
+            setIsLoading(false);
+        }
+    };
     useEffect(() => {
         if (user) {
             loadUserProfile();
@@ -221,6 +250,7 @@ export function useProfileLogic() {
         formatPhoneForDisplay,
         handleAvatarChange,
         handleRemoveAvatar,
-        handleSave
+        handleSave,
+        handlePasswordChange
     };
 }
