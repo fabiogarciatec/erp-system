@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { FC } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ChakraProvider, ColorModeScript, extendTheme } from '@chakra-ui/react';
 import { AuthProvider } from './contexts/AuthContext';
 import { SidebarProvider } from './contexts/SidebarContext';
@@ -27,7 +28,7 @@ import { IntegrationsSettings } from './pages/configuracoes/Integrations';
 import { Security } from './pages/configuracoes/Security';
 import { Notifications } from './pages/configuracoes/Notifications';
 import { Backup } from './pages/configuracoes/Backup';
-import Users from './pages/configuracoes/Users.jsx';
+import Users from './pages/configuracoes/Users';
 import Permissions from './pages/configuracoes/Permissions';
 
 const theme = extendTheme({
@@ -56,11 +57,11 @@ const theme = extendTheme({
   },
 });
 
-function App() {
+const App: FC = () => {
   return (
     <ChakraProvider theme={theme}>
       <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-      <BrowserRouter>
+      <Router>
         <AuthProvider>
           <SidebarProvider>
             <Layout>
@@ -100,9 +101,9 @@ function App() {
             </Layout>
           </SidebarProvider>
         </AuthProvider>
-      </BrowserRouter>
+      </Router>
     </ChakraProvider>
   );
-}
+};
 
 export default App;
