@@ -1,0 +1,86 @@
+version: '3.7'
+
+services:
+  frontend:
+    image: fatecinfo/erp-frontend:latest
+    networks:
+      - minha_rede
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+      - ./package.json:/app/package.json
+      - ./vite.config.ts:/app/vite.config.ts
+      - ./tsconfig.json:/app/tsconfig.json
+      - node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=https://api.erp.fatec.info
+      - VITE_SUPABASE_URL=https://hgbvvvvaqylsincjopnl.supabase.co
+      - VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnYnZ2dnZhcXlsc2luY2pvcG5sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI4MTg3NDQsImV4cCI6MjA0ODM5NDc0NH0.RpYXPeSa3eA4qAD3jBNif6w4HfkWxSmZQGViP2z2Hfw
+      - VITE_GOOGLE_MAPS_API_KEY=AIzaSyDVzyn9rtZi9-1mWKFykiP47--6mPeKJH8
+    deploy:
+      mode: replicated
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.erp-front.rule=Host(`erp.fatec.info`)
+        - traefik.http.routers.erp-front.entrypoints=websecure
+        - traefik.http.routers.erp-front.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.erp-front.priority=1
+        - traefik.http.routers.erp-front.service=erp-front
+        - traefik.http.services.erp-front.loadbalancer.server.port=80
+        - traefik.http.services.erp-front.loadbalancer.passHostHeader=true
+
+  backend:
+    image: fatecinfo/erp-backend:latest
+    networks:
+      - minha_rede
+    volumes:
+      - .:/app
+      - ./cache:/app/cache
+    environment:
+      - FLASK_APP=api_routes.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    deploy:
+      mode: replicated
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.erp-back.rule=Host(`api.erp.fatec.info`)
+        - traefik.http.routers.erp-back.entrypoints=websecure
+        - traefik.http.routers.erp-back.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.erp-back.priority=1
+        - traefik.http.routers.erp-back.service=erp-back
+        - traefik.http.services.erp-back.loadbalancer.server.port=5000
+        - traefik.http.services.erp-back.loadbalancer.passHostHeader=true
+
+networks:
+  minha_rede:
+    external: true
+
+volumes:
+  node_modules:

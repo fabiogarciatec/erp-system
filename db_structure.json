@@ -1,0 +1,540 @@
+{
+  "tables": {
+    "companies": {
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "primary_key": true
+        },
+        "name": {
+          "type": "text"
+        },
+        "document": {
+          "type": "text",
+          "unique": true
+        },
+        "email": {
+          "type": "text"
+        },
+        "phone": {
+          "type": "text"
+        },
+        "address": {
+          "type": "text"
+        },
+        "city": {
+          "type": "text"
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        },
+        "updated_at": {
+          "type": "timestamp with time zone"
+        },
+        "postal_code": {
+          "type": "character varying"
+        },
+        "state_id": {
+          "type": "integer",
+          "foreign_key": "states.id"
+        },
+        "latitude": {
+          "type": "numeric(10,8)"
+        },
+        "longitude": {
+          "type": "numeric(11,8)"
+        },
+        "address_number": {
+          "type": "character varying"
+        },
+        "address_complement": {
+          "type": "character varying"
+        },
+        "neighborhood": {
+          "type": "character varying"
+        },
+        "owner_id": {
+          "type": "uuid",
+          "foreign_key": "auth.users.id"
+        }
+      }
+    },
+    "customers": {
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "primary_key": true
+        },
+        "company_id": {
+          "type": "uuid",
+          "foreign_key": "companies.id"
+        },
+        "name": {
+          "type": "text"
+        },
+        "email": {
+          "type": "text"
+        },
+        "phone": {
+          "type": "text"
+        },
+        "address": {
+          "type": "text"
+        },
+        "city": {
+          "type": "text"
+        },
+        "state": {
+          "type": "text"
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        },
+        "updated_at": {
+          "type": "timestamp with time zone"
+        }
+      }
+    },
+    "permission_modules": {
+      "columns": {
+        "name": {
+          "type": "character varying(50)",
+          "primary_key": true
+        },
+        "description": {
+          "type": "text"
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        },
+        "updated_at": {
+          "type": "timestamp with time zone"
+        }
+      }
+    },
+    "permissions": {
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "primary_key": true
+        },
+        "name": {
+          "type": "character varying(100)"
+        },
+        "code": {
+          "type": "character varying(100)",
+          "unique": true
+        },
+        "description": {
+          "type": "text"
+        },
+        "module": {
+          "type": "character varying(50)",
+          "foreign_key": "permission_modules.name"
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        },
+        "updated_at": {
+          "type": "timestamp with time zone"
+        }
+      }
+    },
+    "products": {
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "primary_key": true
+        },
+        "company_id": {
+          "type": "uuid",
+          "foreign_key": "companies.id"
+        },
+        "name": {
+          "type": "text"
+        },
+        "description": {
+          "type": "text"
+        },
+        "price": {
+          "type": "numeric(10,2)"
+        },
+        "stock_quantity": {
+          "type": "integer"
+        },
+        "category": {
+          "type": "text"
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        },
+        "updated_at": {
+          "type": "timestamp with time zone"
+        }
+      }
+    },
+    "profiles": {
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "primary_key": true,
+          "foreign_key": "auth.users.id"
+        },
+        "email": {
+          "type": "text",
+          "unique": true
+        },
+        "full_name": {
+          "type": "text"
+        },
+        "role": {
+          "type": "text"
+        },
+        "avatar_url": {
+          "type": "text"
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        },
+        "updated_at": {
+          "type": "timestamp with time zone"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "permissions": {
+          "type": "jsonb"
+        },
+        "phone": {
+          "type": "character varying"
+        },
+        "deleted_at": {
+          "type": "timestamp with time zone"
+        },
+        "company_id": {
+          "type": "uuid",
+          "foreign_key": "companies.id"
+        }
+      }
+    },
+    "role_permissions": {
+      "columns": {
+        "role_id": {
+          "type": "uuid",
+          "primary_key": true,
+          "foreign_key": "roles.id"
+        },
+        "permission_id": {
+          "type": "uuid",
+          "primary_key": true,
+          "foreign_key": "permissions.id"
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        }
+      }
+    },
+    "roles": {
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "primary_key": true
+        },
+        "name": {
+          "type": "character varying(50)",
+          "unique": true
+        },
+        "description": {
+          "type": "text"
+        },
+        "is_system_role": {
+          "type": "boolean"
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        },
+        "updated_at": {
+          "type": "timestamp with time zone"
+        }
+      }
+    },
+    "sale_items": {
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "primary_key": true
+        },
+        "sale_id": {
+          "type": "uuid",
+          "foreign_key": "sales.id"
+        },
+        "product_id": {
+          "type": "uuid",
+          "foreign_key": "products.id"
+        },
+        "quantity": {
+          "type": "integer"
+        },
+        "unit_price": {
+          "type": "numeric(10,2)"
+        },
+        "total": {
+          "type": "numeric(10,2)"
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        },
+        "updated_at": {
+          "type": "timestamp with time zone"
+        }
+      }
+    },
+    "sales": {
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "primary_key": true
+        },
+        "company_id": {
+          "type": "uuid",
+          "foreign_key": "companies.id"
+        },
+        "customer_id": {
+          "type": "uuid",
+          "foreign_key": "customers.id"
+        },
+        "total": {
+          "type": "numeric(10,2)"
+        },
+        "status": {
+          "type": "text"
+        },
+        "payment_method": {
+          "type": "text"
+        },
+        "payment_status": {
+          "type": "text"
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        },
+        "updated_at": {
+          "type": "timestamp with time zone"
+        }
+      }
+    },
+    "service_orders": {
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "primary_key": true
+        },
+        "company_id": {
+          "type": "uuid",
+          "foreign_key": "companies.id"
+        },
+        "customer_id": {
+          "type": "uuid",
+          "foreign_key": "customers.id"
+        },
+        "service_id": {
+          "type": "uuid",
+          "foreign_key": "services.id"
+        },
+        "status": {
+          "type": "text"
+        },
+        "notes": {
+          "type": "text"
+        },
+        "scheduled_date": {
+          "type": "timestamp with time zone"
+        },
+        "completed_date": {
+          "type": "timestamp with time zone"
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        },
+        "updated_at": {
+          "type": "timestamp with time zone"
+        }
+      }
+    },
+    "services": {
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "primary_key": true
+        },
+        "company_id": {
+          "type": "uuid",
+          "foreign_key": "companies.id"
+        },
+        "name": {
+          "type": "text"
+        },
+        "description": {
+          "type": "text"
+        },
+        "price": {
+          "type": "numeric(10,2)"
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        },
+        "updated_at": {
+          "type": "timestamp with time zone"
+        }
+      }
+    },
+    "shipping_orders": {
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "primary_key": true
+        },
+        "company_id": {
+          "type": "uuid",
+          "foreign_key": "companies.id"
+        },
+        "sale_id": {
+          "type": "uuid",
+          "foreign_key": "sales.id"
+        },
+        "customer_id": {
+          "type": "uuid",
+          "foreign_key": "customers.id"
+        },
+        "status": {
+          "type": "text"
+        },
+        "tracking_code": {
+          "type": "text"
+        },
+        "shipping_address": {
+          "type": "text"
+        },
+        "estimated_delivery_date": {
+          "type": "timestamp with time zone"
+        },
+        "delivered_date": {
+          "type": "timestamp with time zone"
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        },
+        "updated_at": {
+          "type": "timestamp with time zone"
+        }
+      }
+    },
+    "states": {
+      "columns": {
+        "id": {
+          "type": "serial",
+          "primary_key": true
+        },
+        "name": {
+          "type": "character varying"
+        },
+        "uf": {
+          "type": "character(2)",
+          "unique": true
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        },
+        "updated_at": {
+          "type": "timestamp with time zone"
+        }
+      }
+    },
+    "user_companies": {
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "primary_key": true
+        },
+        "user_id": {
+          "type": "uuid",
+          "foreign_key": "auth.users.id"
+        },
+        "company_id": {
+          "type": "uuid",
+          "foreign_key": "companies.id"
+        },
+        "is_owner": {
+          "type": "boolean"
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        },
+        "deleted_at": {
+          "type": "timestamp with time zone"
+        },
+        "is_active": {
+          "type": "boolean"
+        }
+      }
+    },
+    "user_roles": {
+      "columns": {
+        "user_id": {
+          "type": "uuid",
+          "primary_key": true,
+          "foreign_key": "auth.users.id"
+        },
+        "role_id": {
+          "type": "uuid",
+          "primary_key": true,
+          "foreign_key": "roles.id"
+        },
+        "created_at": {
+          "type": "timestamp with time zone"
+        },
+        "updated_at": {
+          "type": "timestamp with time zone"
+        }
+      }
+    }
+  },
+  "relationships": {
+    "companies": {
+      "has_many": [
+        "customers",
+        "products",
+        "profiles",
+        "sales",
+        "service_orders",
+        "shipping_orders"
+      ]
+    },
+    "customers": {
+      "has_many": [
+        "sales"
+      ]
+    },
+    "sales": {
+      "has_many": [
+        "sale_items"
+      ]
+    },
+    "service_orders": {
+      "has_many": [
+        "services"
+      ]
+    },
+    "roles": {
+      "has_many": [
+        "role_permissions"
+      ]
+    },
+    "auth.users": {
+      "has_many": [
+        "profiles",
+        "user_roles"
+      ]
+    }
+  }
+}

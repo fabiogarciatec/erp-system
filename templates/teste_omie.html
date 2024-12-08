@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste API Omie</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .cliente {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #loading {
+            display: none;
+            margin: 10px 0;
+        }
+        .error {
+            color: red;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste API Omie</h1>
+    <button onclick="buscarClientes()">Buscar Clientes</button>
+    <div id="loading">Carregando...</div>
+    <div id="error" class="error"></div>
+    <div id="clientes"></div>
+
+    <script>
+        async function buscarClientes() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const clientesDiv = document.getElementById('clientes');
+            
+            loading.style.display = 'block';
+            error.textContent = '';
+            clientesDiv.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/clientes');
+                const data = await response.json();
+
+                if (data.success && data.data.clientes_cadastro) {
+                    const clientes = data.data.clientes_cadastro;
+                    clientes.forEach(cliente => {
+                        const div = document.createElement('div');
+                        div.className = 'cliente';
+                        div.innerHTML = `
+                            <p><strong>Nome:</strong> ${cliente.razao_social || 'Não informado'}</p>
+                            <p><strong>CPF/CNPJ:</strong> ${cliente.cnpj_cpf || 'Não informado'}</p>
+                            <p><strong>Cidade:</strong> ${cliente.cidade || 'Não informada'}</p>
+                            <p><strong>Estado:</strong> ${cliente.estado || 'Não informado'}</p>
+                            <p><strong>Email:</strong> ${cliente.email || 'Não informado'}</p>
+                            <p><strong>Telefone:</strong> (${cliente.telefone1_ddd || ''}) ${cliente.telefone1_numero || ''}</p>
+                        `;
+                        clientesDiv.appendChild(div);
+                    });
+                } else {
+                    error.textContent = data.error || 'Erro ao buscar clientes';
+                }
+            } catch (e) {
+                error.textContent = 'Erro ao conectar com o servidor';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
