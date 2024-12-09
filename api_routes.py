@@ -1,10 +1,20 @@
 from flask import Flask, jsonify, render_template, request
+from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
 from omie_api import OmieAPI
+from src.models.user import User
+from src.db.connection import db, get_db
 import os
 
 # Configura o caminho correto para os templates
 template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=template_dir)
+
+# Habilita CORS para todas as rotas
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+
+# Atualizando a string de conexão para o banco de dados MySQL remoto
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Fatec555133@207.180.249.172:3306/erp_fatec'
 
 @app.route('/')
 def index():
@@ -43,6 +53,34 @@ def search_clientes():
         response['data']['registros'] = len(filtered)
         
     return jsonify(response)
+
+@app.route('/auth/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email or not password:
+        return jsonify({'message': 'Email e senha são obrigatórios'}), 400
+
+    db = next(get_db())  # Obtém a sessão do banco de dados
+    user = User.get_by_email(db, email)
+
+    if not user:
+        return jsonify({'message': 'Email ou senha inválidos'}), 401
+
+    # Verifica a senha
+    if not user.check_password(password):
+        return jsonify({'message': 'Email ou senha inválidos'}), 401
+
+    # Retorna apenas o usuário e um token fictício
+    return jsonify({
+        'token': 'fake-jwt-token',
+        'user': {
+            'id': user.id,
+            'email': user.email
+        }
+    })
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

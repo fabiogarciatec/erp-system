@@ -209,105 +209,39 @@ export const authService = {
       throw new Error('Ocorreu um erro durante o registro. Por favor, tente novamente.')
     }
   },
-
+  
   async login(email: string, password: string) {
     try {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (authError) throw authError
-
-      // Buscar empresas do usuário
-      const { data: companies, error: companiesError } = await supabase
-        .from('user_companies')
-        .select('company:companies(*)')
-        .eq('user_id', authData.user.id)
-
-      if (companiesError) throw companiesError
-
-      if (!companies.length) {
-        throw new Error('Usuário não está associado a nenhuma empresa')
-      }
-
-      // Buscar roles e permissões
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select(`
-          role:roles (
-            id,
-            name,
-            description,
-            permissions:role_permissions (
-              permission:permissions (
-                id,
-                name,
-                description
-              )
-            )
-          )
-        `)
-        .eq('user_id', authData.user.id)
-
-      if (rolesError) throw rolesError
-
-      // Transform roles data safely
-      const userRoles: UserRole[] = roles
-        .map(data => {
-          try {
-            return transformRoleData(data);
-          } catch (error) {
-            console.error('Error transforming role:', error);
-            return null;
-          }
-        })
-        .filter((role): role is UserRole => role !== null);
-
-      // Combine all permissions
-      const userPermissions: UserPermission[] = userRoles.reduce((acc, role) => {
-        role.permissions.forEach((permission) => {
-          if (!acc.find(p => p.id === permission.id)) {
-            acc.push(permission);
-          }
-        });
-        return acc;
-      }, [] as UserPermission[]);
-
-      // Transform companies data safely
-      const userCompanies: Company[] = companies
-        .map(data => {
-          try {
-            return transformCompanyData(data);
-          } catch (error) {
-            console.error('Error transforming company:', error);
-            return null;
-          }
-        })
-        .filter((company): company is Company => company !== null);
-
-      return {
-        user: {
-          id: authData.user.id,
-          email: authData.user.email!,
-          roles: userRoles,
-          permissions: userPermissions,
-          companies: userCompanies,
-          currentCompany: userCompanies[0] // Por padrão, usa a primeira empresa
+      const response = await fetch('http://localhost:5000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        session: authData.session
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao fazer login');
       }
+
+      const { token, user } = await response.json();
+
+      // Armazenar o token e o usuário
+      localStorage.setItem('token', token);
+      setUser(user);
+
+      return user;
     } catch (error) {
-      console.error('Login error:', error)
-      throw error
+      console.error('Login error:', error);
+      throw error;
     }
   },
-
+  
   async logout() {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
   },
-
+  
   async getCurrentUser(): Promise<User | null> {
     const { data: { user } } = await supabase.auth.getUser()
     
@@ -385,12 +319,12 @@ export const authService = {
       currentCompany: userCompanies[0] // Por padrão, usa a primeira empresa
     }
   },
-
+  
   hasPermission(user: User | null, permission: string): boolean {
     if (!user) return false
     return user.permissions.some(p => p.name === permission)
   },
-
+  
   hasRole(user: User | null, role: string): boolean {
     if (!user) return false
     return user.roles.some(r => r.name === role)
