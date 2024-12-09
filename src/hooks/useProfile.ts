@@ -30,7 +30,7 @@ export function useProfile() {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', session.user.id)
+        .eq('user_id', session.user.id)
         .single();
 
       if (profileError) {
@@ -38,7 +38,11 @@ export function useProfile() {
       }
 
       if (profile) {
-        setProfile(profile);
+        // Garantir que o profile tem o user_id correto
+        setProfile({
+          ...profile,
+          user_id: session.user.id
+        });
       }
     } catch (err) {
       const error = err as Error;
@@ -80,10 +84,18 @@ export function useProfile() {
         throw new Error('Não autorizado');
       }
 
+      const upsertData = {
+        user_id: session.user.id,
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supabase
         .from('profiles')
-        .update(updates)
-        .eq('id', session.user.id);
+        .upsert(upsertData, {
+          onConflict: 'user_id',
+          ignoreDuplicates: false
+        });
 
       if (error) {
         throw error;

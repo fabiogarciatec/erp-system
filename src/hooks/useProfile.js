@@ -2,34 +2,56 @@ import { useState, useEffect } from 'react';
 import supabase from '@/lib/supabase';
 import { useToast } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
+
 export function useProfile() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const toast = useToast();
     const navigate = useNavigate();
+
     const fetchProfile = async () => {
         try {
             setLoading(true);
             setError(null);
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-            if (sessionError) {
-                throw sessionError;
-            }
-            if (!session) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
                 navigate('/login');
                 return;
             }
-            const { data: profile, error: profileError } = await supabase
+
+            // Primeiro, tenta buscar o perfil existente
+            const { data: existingProfile, error: profileError } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('id', session.user.id)
+                .eq('user_id', user.id)
                 .single();
-            if (profileError) {
+
+            if (profileError && profileError.code !== 'PGRST116') {
                 throw profileError;
             }
-            if (profile) {
-                setProfile(profile);
+
+            // Se o perfil não existir, cria um novo
+            if (!existingProfile) {
+                const { data: newProfile, error: insertError } = await supabase
+                    .from('profiles')
+                    .insert([
+                        {
+                            user_id: user.id,
+                            email: user.email,
+                            name: user.user_metadata?.name || '',
+                        }
+                    ])
+                    .select()
+                    .single();
+
+                if (insertError) {
+                    throw insertError;
+                }
+
+                setProfile(newProfile);
+            } else {
+                setProfile(existingProfile);
             }
         }
         catch (err) {
@@ -60,19 +82,21 @@ export function useProfile() {
             setLoading(false);
         }
     };
+
     useEffect(() => {
         fetchProfile();
     }, []);
+
     const updateProfile = async (updates) => {
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
                 throw new Error('Não autorizado');
             }
             const { error } = await supabase
                 .from('profiles')
                 .update(updates)
-                .eq('id', session.user.id);
+                .eq('user_id', user.id);
             if (error) {
                 throw error;
             }
@@ -97,6 +121,7 @@ export function useProfile() {
             });
         }
     };
+
     return {
         profile,
         loading,

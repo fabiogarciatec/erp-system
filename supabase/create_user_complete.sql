@@ -20,7 +20,7 @@ set search_path = public
 as $$
 declare
   v_company_id uuid;
-  v_default_role_id int;
+  v_default_role_id uuid;
   v_result json;
   v_debug_info json;
   v_step text;
@@ -47,7 +47,7 @@ begin
   if exists (
     select 1 
     from public.profiles 
-    where id = p_user_id 
+    where user_id = p_user_id 
        or email = p_email
   ) then
     return json_build_object(
@@ -59,7 +59,7 @@ begin
         'existing_profile', (
           select row_to_json(p) 
           from public.profiles p 
-          where p.id = p_user_id or p.email = p_email
+          where p.user_id = p_user_id or p.email = p_email
         )
       )
     );
@@ -104,15 +104,13 @@ begin
   v_step := 'create_profile';
   begin
     insert into public.profiles (
-      id,
+      user_id,
       email,
-      company_id,
       created_at,
       updated_at
     ) values (
       p_user_id,
       p_email,
-      v_company_id,
       now(),
       now()
     );
@@ -140,19 +138,18 @@ begin
     insert into public.user_companies (
       user_id,
       company_id,
-      is_owner,
       created_at
     ) values (
       p_user_id,
       v_company_id,
-      true,
       now()
     );
 
     raise notice 'User-company relationship created for user ID: % and company ID: %', p_user_id, v_company_id;
   exception when others then
     -- Limpar registros anteriores
-    delete from public.profiles where id = p_user_id;
+    delete from public.user_companies where user_id = p_user_id;
+    delete from public.profiles where user_id = p_user_id;
     delete from public.companies where id = v_company_id;
     
     return json_build_object(
@@ -171,13 +168,13 @@ begin
   v_step := 'get_default_role';
   select id into v_default_role_id
   from public.roles
-  where name = 'user'
+  where name = 'Super Admin'
   limit 1;
 
   if v_default_role_id is null then
     -- Limpar registros anteriores
     delete from public.user_companies where user_id = p_user_id;
-    delete from public.profiles where id = p_user_id;
+    delete from public.profiles where user_id = p_user_id;
     delete from public.companies where id = v_company_id;
     
     return json_build_object(
@@ -208,7 +205,7 @@ begin
   exception when others then
     -- Limpar registros anteriores
     delete from public.user_companies where user_id = p_user_id;
-    delete from public.profiles where id = p_user_id;
+    delete from public.profiles where user_id = p_user_id;
     delete from public.companies where id = v_company_id;
     
     return json_build_object(
@@ -242,7 +239,7 @@ exception when others then
   -- Tentar limpar registros criados
   if v_company_id is not null then
     delete from public.user_companies where company_id = v_company_id;
-    delete from public.profiles where company_id = v_company_id;
+    delete from public.profiles where user_id = p_user_id;
     delete from public.companies where id = v_company_id;
   end if;
   
@@ -253,9 +250,7 @@ exception when others then
     'debug_info', json_build_object(
       'step', v_step,
       'sqlstate', SQLSTATE,
-      'error_detail', SQLERRM,
-      'error_hint', SQLHINT,
-      'error_context', SQLCONTEXT
+      'error_detail', SQLERRM
     )
   );
 end;

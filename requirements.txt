@@ -1,3 +1,12 @@
-requests>=2.31.0
-python-dotenv>=1.0.0
-flask>=3.0.0
+mysql-connector-python==8.2.0
+SQLAlchemy==2.0.23
+python-dotenv==1.0.0
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-Migrate==4.0.5
+PyJWT==2.8.0
+bcrypt==4.1.1
+python-jose==3.3.0
+cryptography==41.0.7  # Para conexões SSL/TLS seguras
+PyMySQL==1.1.0  # Driver alternativo para MySQL

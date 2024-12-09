@@ -212,177 +212,126 @@ export const authService = {
 
   async login(email: string, password: string) {
     try {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      const { data: { user, session }, error } = await supabase.auth.signInWithPassword({
         email,
         password,
-      })
+      });
 
-      if (authError) throw authError
+      if (error) throw error;
+      if (!user || !session) throw new Error('No user or session returned from login');
 
-      // Buscar empresas do usuário
-      const { data: companies, error: companiesError } = await supabase
-        .from('user_companies')
-        .select('company:companies(*)')
-        .eq('user_id', authData.user.id)
+      const userData = await this.getCurrentUser();
+      return { user: userData, session };
+    } catch (error: any) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  },
 
-      if (companiesError) throw companiesError
+  async logout() {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      throw error;
+    }
+  },
 
-      if (!companies.length) {
-        throw new Error('Usuário não está associado a nenhuma empresa')
+  async getCurrentUser() {
+    try {
+      console.log('Getting current user from Supabase...');
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+
+      if (!authUser) {
+        console.log('No authenticated user found');
+        throw new Error('No authenticated user');
       }
 
-      // Buscar roles e permissões
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
+      console.log('Found authenticated user:', authUser);
+
+      // Buscar dados do usuário na tabela de usuários
+      const { data: userData, error: userError } = await supabase
+        .from('users')
         .select(`
-          role:roles (
-            id,
-            name,
-            description,
-            permissions:role_permissions (
-              permission:permissions (
-                id,
-                name,
-                description
+          *,
+          user_roles!inner (
+            role: roles!inner (
+              id,
+              name,
+              description,
+              role_permissions!inner (
+                permission: permissions!inner (
+                  id,
+                  name,
+                  description
+                )
               )
+            )
+          ),
+          user_companies!inner (
+            company: companies!inner (
+              id,
+              name,
+              document,
+              email,
+              phone,
+              avatar_url
             )
           )
         `)
-        .eq('user_id', authData.user.id)
+        .eq('auth_id', authUser.id)
+        .single();
 
-      if (rolesError) throw rolesError
+      if (userError) {
+        console.error('Error fetching user data:', userError);
+        throw userError;
+      }
 
-      // Transform roles data safely
-      const userRoles: UserRole[] = roles
-        .map(data => {
-          try {
-            return transformRoleData(data);
-          } catch (error) {
-            console.error('Error transforming role:', error);
-            return null;
-          }
-        })
-        .filter((role): role is UserRole => role !== null);
+      if (!userData) {
+        console.error('No user data found for auth_id:', authUser.id);
+        throw new Error('User data not found');
+      }
 
-      // Combine all permissions
-      const userPermissions: UserPermission[] = userRoles.reduce((acc, role) => {
-        role.permissions.forEach((permission) => {
+      console.log('Raw user data:', userData);
+
+      // Transform roles data
+      const roles = userData.user_roles.map((roleWrapper: RawSupabaseRoleWrapper) => 
+        transformRoleData(roleWrapper.role)
+      );
+
+      // Transform companies data
+      const companies = userData.user_companies.map((companyWrapper: RawSupabaseCompanyWrapper) => 
+        transformCompanyData(companyWrapper.company)
+      );
+
+      // Get all unique permissions from roles
+      const permissions = roles.reduce((acc: UserPermission[], role: UserRole) => {
+        role.permissions.forEach(permission => {
           if (!acc.find(p => p.id === permission.id)) {
             acc.push(permission);
           }
         });
         return acc;
-      }, [] as UserPermission[]);
+      }, []);
 
-      // Transform companies data safely
-      const userCompanies: Company[] = companies
-        .map(data => {
-          try {
-            return transformCompanyData(data);
-          } catch (error) {
-            console.error('Error transforming company:', error);
-            return null;
-          }
-        })
-        .filter((company): company is Company => company !== null);
+      const user: User = {
+        id: userData.id,
+        email: userData.email,
+        roles,
+        permissions,
+        companies,
+        currentCompany: companies[0], // Default to first company
+        company_id: companies[0]?.id,
+        empresa_id: companies[0]?.id,
+        auth_id: authUser.id
+      };
 
-      return {
-        user: {
-          id: authData.user.id,
-          email: authData.user.email!,
-          roles: userRoles,
-          permissions: userPermissions,
-          companies: userCompanies,
-          currentCompany: userCompanies[0] // Por padrão, usa a primeira empresa
-        },
-        session: authData.session
-      }
+      console.log('Transformed user data:', user);
+      return user;
     } catch (error) {
-      console.error('Login error:', error)
-      throw error
-    }
-  },
-
-  async logout() {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
-  },
-
-  async getCurrentUser(): Promise<User | null> {
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) return null
-
-    // Buscar empresas do usuário
-    const { data: companies, error: companiesError } = await supabase
-      .from('user_companies')
-      .select('company:companies(*)')
-      .eq('user_id', user.id)
-
-    if (companiesError) throw companiesError
-
-    // Buscar roles e permissões
-    const { data: roles, error: rolesError } = await supabase
-      .from('user_roles')
-      .select(`
-        role:roles (
-          id,
-          name,
-          description,
-          permissions:role_permissions (
-            permission:permissions (
-              id,
-              name,
-              description
-            )
-          )
-        )
-      `)
-      .eq('user_id', user.id)
-
-    if (rolesError) throw rolesError
-
-    // Transform roles data safely
-    const userRoles: UserRole[] = roles
-      .map(data => {
-        try {
-          return transformRoleData(data);
-        } catch (error) {
-          console.error('Error transforming role:', error);
-          return null;
-        }
-      })
-      .filter((role): role is UserRole => role !== null);
-
-    // Combine all permissions
-    const userPermissions: UserPermission[] = userRoles.reduce((acc, role) => {
-      role.permissions.forEach((permission) => {
-        if (!acc.find(p => p.id === permission.id)) {
-          acc.push(permission);
-        }
-      });
-      return acc;
-    }, [] as UserPermission[]);
-
-    // Transform companies data safely
-    const userCompanies: Company[] = companies
-      .map(data => {
-        try {
-          return transformCompanyData(data);
-        } catch (error) {
-          console.error('Error transforming company:', error);
-          return null;
-        }
-      })
-      .filter((company): company is Company => company !== null);
-
-    return {
-      id: user.id,
-      email: user.email!,
-      roles: userRoles,
-      permissions: userPermissions,
-      companies: userCompanies,
-      currentCompany: userCompanies[0] // Por padrão, usa a primeira empresa
+      console.error('Error in getCurrentUser:', error);
+      throw error;
     }
   },
 

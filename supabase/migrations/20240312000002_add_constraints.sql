@@ -1,0 +1,1 @@
+-- Esta migração não é mais necessária pois as constraints foram movidas para a primeira migração

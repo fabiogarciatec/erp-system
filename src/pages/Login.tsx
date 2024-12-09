@@ -19,7 +19,7 @@ import {
   useColorMode,
   VStack,
 } from '@chakra-ui/react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext'
 import { InputMaskChakra } from '@/components/InputMaskChakra'
 
 interface LoginFormProps {
@@ -64,41 +64,28 @@ export default function Login() {
 
     try {
       if (isRegistering) {
-        if (!companyName || !companyDocument) {
-          throw new Error('Nome e CNPJ da empresa são obrigatórios')
-        }
-
         await register({
           email,
           password,
-          companyName,
-          companyDocument,
-          companyEmail,
-          companyPhone
-        })
-        toast({
-          title: 'Registro realizado com sucesso!',
-          description: 'Por favor, verifique seu e-mail para confirmar o cadastro.',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        })
-        setIsRegistering(false)
+          name: email.split('@')[0], // Usando parte do email como nome temporário
+        });
       } else {
-        await login(email, password)
-        navigate('/dashboard')
+        await login(email, password);
       }
+      toast({
+        title: isRegistering ? 'Conta criada com sucesso!' : 'Login realizado com sucesso!',
+        status: 'success',
+      });
+      navigate('/');
     } catch (error: any) {
-      setError(error.message)
+      console.error('Auth error:', error);
       toast({
         title: 'Erro',
         description: error.message || 'Ocorreu um erro. Tente novamente.',
         status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 

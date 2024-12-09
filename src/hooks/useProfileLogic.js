@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@chakra-ui/react';
 import { useAuth } from '@/contexts/AuthContext';
 import supabase from '@/lib/supabase';
+
 export function useProfileLogic() {
     const { user } = useAuth();
     const toast = useToast();
@@ -9,6 +10,7 @@ export function useProfileLogic() {
     const [profile, setProfile] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+
     const loadUserProfile = async () => {
         try {
             if (!user?.id)
@@ -16,7 +18,7 @@ export function useProfileLogic() {
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('id', user.id)
+                .eq('user_id', user.id)
                 .single();
             if (error)
                 throw error;
@@ -32,6 +34,7 @@ export function useProfileLogic() {
             });
         }
     };
+
     const handleInputChange = (field, value) => {
         if (!profile)
             return;
@@ -40,6 +43,7 @@ export function useProfileLogic() {
             [field]: value
         }));
     };
+
     const formatPhoneForDisplay = (phone) => {
         if (!phone)
             return '';
@@ -49,6 +53,7 @@ export function useProfileLogic() {
         }
         return numbers;
     };
+
     const handleAvatarChange = async (e) => {
         if (!e.target.files || !e.target.files[0] || !user?.id)
             return;
@@ -111,7 +116,7 @@ export function useProfileLogic() {
                 avatar_url: publicUrl,
                 updated_at: new Date().toISOString()
             })
-                .eq('id', user.id);
+                .eq('user_id', user.id);
             if (updateError)
                 throw updateError;
             setProfile(prev => prev ? {
@@ -139,6 +144,7 @@ export function useProfileLogic() {
             setIsUploading(false);
         }
     };
+
     const handleRemoveAvatar = async () => {
         if (!profile?.avatar_url || !user?.id)
             return;
@@ -147,7 +153,7 @@ export function useProfileLogic() {
             const { error } = await supabase
                 .from('profiles')
                 .update({ avatar_url: null })
-                .eq('id', user.id);
+                .eq('user_id', user.id);
             if (error)
                 throw error;
             setProfile(prev => prev ? { ...prev, avatar_url: null } : null);
@@ -171,6 +177,7 @@ export function useProfileLogic() {
             setIsLoading(false);
         }
     };
+
     const handleSave = async () => {
         if (!profile || !user?.id)
             return;
@@ -184,7 +191,7 @@ export function useProfileLogic() {
                 role: profile.role,
                 updated_at: new Date().toISOString()
             })
-                .eq('id', user.id);
+                .eq('user_id', user.id);
             if (error)
                 throw error;
             toast({
@@ -207,6 +214,7 @@ export function useProfileLogic() {
             setIsLoading(false);
         }
     };
+
     const handlePasswordChange = async (currentPassword, newPassword) => {
         try {
             setIsLoading(true);
@@ -236,11 +244,13 @@ export function useProfileLogic() {
             setIsLoading(false);
         }
     };
+
     useEffect(() => {
         if (user) {
             loadUserProfile();
         }
     }, [user]);
+
     return {
         profile,
         isLoading,

@@ -33,7 +33,19 @@ end $$;
 do $$ 
 begin
     if not exists (select 1 from information_schema.columns where table_name = 'profiles' and column_name = 'user_id') then
-        alter table public.profiles add column user_id uuid not null default auth.uid();
+        -- Primeiro adiciona a coluna permitindo NULL
+        alter table public.profiles add column user_id uuid;
+        
+        -- Atualiza os registros existentes com o ID do usuário correspondente
+        update public.profiles p
+        set user_id = u.id
+        from auth.users u
+        where p.email = u.email;
+        
+        -- Agora adiciona a constraint NOT NULL e o valor default
+        alter table public.profiles 
+        alter column user_id set not null,
+        alter column user_id set default auth.uid();
     end if;
 
     if not exists (select 1 from information_schema.columns where table_name = 'profiles' and column_name = 'full_name') then
@@ -85,7 +97,7 @@ begin
 end $$;
 
 -- Remover todas as políticas existentes
-do $$
+do $$ 
 begin
     -- Remover políticas da tabela profiles
     drop policy if exists "Users can view own profile" on public.profiles;

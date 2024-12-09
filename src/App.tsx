@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ChakraProvider, ColorModeScript, extendTheme } from '@chakra-ui/react';
+import { ChakraProvider, ColorModeScript, extendTheme, ThemeConfig } from '@chakra-ui/react';
 import { AuthProvider } from './contexts/AuthContext';
 import { SidebarProvider } from './contexts/SidebarContext';
 import { PrivateRoute } from './components/PrivateRoute';
@@ -31,13 +31,17 @@ import { Backup } from './pages/configuracoes/Backup';
 import Users from './pages/configuracoes/Users';
 import Permissions from './pages/configuracoes/Permissions';
 
+interface ThemeProps {
+  colorMode: string;
+}
+
 const theme = extendTheme({
   config: {
     initialColorMode: 'system',
     useSystemColorMode: true,
-  },
+  } as ThemeConfig,
   styles: {
-    global: (props) => ({
+    global: (props: ThemeProps) => ({
       body: {
         bg: props.colorMode === 'dark' ? 'gray.800' : 'white',
         color: props.colorMode === 'dark' ? 'white' : 'gray.800',
@@ -46,7 +50,7 @@ const theme = extendTheme({
   },
   components: {
     Menu: {
-      baseStyle: (props) => ({
+      baseStyle: (props: ThemeProps) => ({
         list: {
           bg: props.colorMode === 'dark' ? 'gray.800' : 'white',
           border: '1px solid',
@@ -94,8 +98,7 @@ const App: FC = () => {
                 <Route path="/configuracoes/usuarios" element={<PrivateRoute><Users /></PrivateRoute>} />
                 <Route path="/configuracoes/permissoes" element={<PrivateRoute><Permissions /></PrivateRoute>} />
                 
-                {/* Rota padrão e 404 */}
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/" element={<Navigate to="/dashboard" />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Layout>

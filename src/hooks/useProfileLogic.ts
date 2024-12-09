@@ -4,15 +4,25 @@ import { useAuth } from '@/contexts/AuthContext';
 import supabase from '@/lib/supabase';
 
 interface UserProfile {
-  id: string;
+  user_id: string;
   email: string;
   full_name: string | null;
   avatar_url?: string | null;
   phone: string | null;
-  role?: string | null;
   created_at?: string;
   updated_at?: string;
+  role?: string;
+  role_id?: string;
 }
+
+interface RoleData {
+  role_id: string;
+  role: Array<{
+    name: string;
+  }>;
+}
+
+type EditableProfileFields = 'full_name' | 'phone';
 
 export function useProfileLogic() {
   const { user } = useAuth();
@@ -23,19 +33,44 @@ export function useProfileLogic() {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  console.log('useProfileLogic initialized with user:', user?.id);
+
   const loadUserProfile = async () => {
     try {
-      if (!user?.id) return;
+      setIsLoading(true);
+      
+      if (!user?.id) {
+        console.log('No user ID found');
+        return;
+      }
 
-      const { data, error } = await supabase
+      console.log('Starting to load profile for user:', user.id);
+
+      // Buscar o perfil
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('id', user.id)
+        .select(`
+          *,
+          user_roles (
+            roles:role_id (
+              name
+            )
+          )
+        `)
+        .eq('user_id', user.id)
         .single();
 
-      if (error) throw error;
-      setProfile(data);
+      if (profileError) throw profileError;
+
+      console.log('Raw profile data:', profileData);
+      console.log('Role:', profileData?.user_roles?.[0]?.roles);
+      
+      setProfile({
+        ...profileData,
+        role: profileData?.user_roles?.[0]?.roles?.name || 'Não definido'
+      });
     } catch (error: any) {
+      console.error('Error loading profile:', error);
       toast({
         title: 'Erro ao carregar perfil',
         description: error.message,
@@ -43,10 +78,12 @@ export function useProfileLogic() {
         duration: 3000,
         isClosable: true,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleInputChange = (field: keyof UserProfile, value: string) => {
+  const handleInputChange = (field: EditableProfileFields, value: string) => {
     if (!profile) return;
 
     if (field === 'phone') {
@@ -134,7 +171,7 @@ export function useProfileLogic() {
           avatar_url: publicUrl,
           updated_at: new Date().toISOString()
         })
-        .eq('id', user.id);
+        .eq('user_id', user.id);
 
       if (updateError) throw updateError;
 
@@ -171,7 +208,7 @@ export function useProfileLogic() {
       const { error } = await supabase
         .from('profiles')
         .update({ avatar_url: null })
-        .eq('id', user.id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -200,17 +237,29 @@ export function useProfileLogic() {
 
     setIsLoading(true);
     try {
+      const updates = {
+        user_id: user.id,
+        full_name: profile.full_name,
+        phone: profile.phone,
+        email: profile.email,
+        updated_at: new Date().toISOString()
+      };
+      
+      console.log('Profile data:', profile);
+      console.log('Updates being sent:', updates);
+      console.log('User ID:', user.id);
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          full_name: profile.full_name,
-          phone: profile.phone,
-          role: profile.role,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
+        .upsert(updates, {
+          onConflict: 'user_id',
+          ignoreDuplicates: false
+        });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       toast({
         title: 'Perfil atualizado com sucesso',
@@ -231,10 +280,43 @@ export function useProfileLogic() {
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      loadUserProfile();
+  const handlePasswordChange = async (currentPassword: string, newPassword: string) => {
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Senha alterada',
+        description: 'Sua senha foi alterada com sucesso.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      return true;
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      toast({
+        title: 'Erro ao alterar senha',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
+    console.log('useEffect triggered, user:', user?.id);
+    loadUserProfile();
   }, [user]);
 
   return {
@@ -246,6 +328,7 @@ export function useProfileLogic() {
     formatPhoneForDisplay,
     handleAvatarChange,
     handleRemoveAvatar,
-    handleSave
+    handleSave,
+    handlePasswordChange
   };
 }

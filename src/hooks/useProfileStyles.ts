@@ -7,6 +7,7 @@ export function useProfileStyles() {
       border: useColorModeValue('gray.200', 'gray.700'),
       input: useColorModeValue('white', 'gray.700'),
       inputReadOnly: useColorModeValue('gray.50', 'gray.900'),
+      inputDisabled: useColorModeValue('gray.100', 'gray.700'),
       text: useColorModeValue('gray.600', 'gray.300'),
       label: useColorModeValue('gray.700', 'gray.200'),
       icon: useColorModeValue('gray.500', 'gray.400'),
